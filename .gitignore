@@ -1,6 +1,16 @@
+node_modules/
+dist/
+.env
+*.local
+*.log
+.DS_Store
+Thumbs.db
+
+
 .agents
 .opencode
 .specify
 AGENTS.md
 api-doc.md
 DESIGN.md
+specs
