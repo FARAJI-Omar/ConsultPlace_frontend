@@ -10,6 +10,7 @@ import ConsultantsPage from './features/admin/consultants/ConsultantsPage';
 import ManagerDashboard from './pages/ManagerDashboard';
 import ConsultantDashboard from './pages/ConsultantDashboard';
 import RootRedirect from './pages/RootRedirect';
+import NotFoundPage from './pages/NotFoundPage';
 
 const router = createBrowserRouter([
   {
@@ -48,6 +49,7 @@ const router = createBrowserRouter([
       { index: true, element: <ConsultantDashboard /> },
     ],
   },
+  { path: '*', element: <NotFoundPage /> },
 ]);
 
 export default function App() {

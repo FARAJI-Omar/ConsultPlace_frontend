@@ -45,7 +45,7 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
   const [expandedGroup, setExpandedGroup] = useState(false);
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
-    `flex items-center gap-3 rounded-[8px] px-3 py-2 text-sm transition-colors whitespace-nowrap ${
+    `flex items-center gap-3 rounded-[8px] px-3 py-2 text-sm transition-colors whitespace-nowrap cursor-pointer ${
       isActive
         ? 'bg-primary-blue text-[#ffffff]'
         : 'text-[#6b7280] hover:bg-light-blue hover:text-[#111111]'
@@ -71,7 +71,7 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
           {!collapsed && <img src={smallLogo} alt="ConsultPlace" className="h-26 w-38" />}
           <button
             onClick={() => { onClose(); }}
-            className={`rounded p-1 text-[#6b7280] hover:bg-[#f3f4f6] lg:hidden ${collapsed ? 'mx-auto' : ''}`}
+            className={`cursor-pointer rounded p-1 text-[#6b7280] hover:bg-[#f3f4f6] lg:hidden ${collapsed ? 'mx-auto' : ''}`}
             aria-label="Fermer le menu"
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -101,7 +101,7 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
                 <div key={item.label} className="space-y-1">
                   <button
                     onClick={() => setExpandedGroup(!expandedGroup)}
-                    className="flex w-full items-center gap-3 rounded-[8px] px-3 py-2 text-sm font-medium text-[#6b7280] hover:bg-[#f3f4f6] hover:text-[#111111] transition-colors"
+                    className="flex w-full cursor-pointer items-center gap-3 rounded-[8px] px-3 py-2 text-sm font-medium text-[#6b7280] hover:bg-[#f3f4f6] hover:text-[#111111] transition-colors"
                   >
                     <item.icon className="h-5 w-5 shrink-0" />
                     <span className="flex-1 text-left">{item.label}</span>
@@ -151,7 +151,7 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
         <div className={`shrink-0 border-t border-[#e5e7eb] p-3 ${collapsed ? 'flex justify-center' : ''}`}>
           <button
             onClick={onToggleCollapse}
-            className="hidden lg:flex items-center gap-3 rounded-[8px] px-3 py-2 text-sm text-[#6b7280] hover:bg-[#f3f4f6] hover:text-[#111111] transition-colors w-full"
+            className="hidden lg:flex cursor-pointer items-center gap-3 rounded-[8px] px-3 py-2 text-sm text-[#6b7280] hover:bg-[#f3f4f6] hover:text-[#111111] transition-colors w-full"
             aria-label={collapsed ? 'Développer le menu' : 'Réduire le menu'}
           >
             {collapsed ? (

@@ -130,14 +130,14 @@ function DataTableInner<T>({
           <button
             onClick={() => onPageChange(pagination.currentPage - 1)}
             disabled={pagination.currentPage <= 1}
-            className="rounded border border-[#e5e7eb] px-3 py-1 text-[#111111] transition-colors hover:bg-[#f3f4f6] disabled:cursor-not-allowed disabled:text-[#d1d5db] disabled:hover:bg-transparent"
+            className="cursor-pointer rounded border border-[#e5e7eb] px-3 py-1 text-[#111111] transition-colors hover:bg-[#f3f4f6] disabled:cursor-not-allowed disabled:text-[#d1d5db] disabled:hover:bg-transparent"
           >
             Précédent
           </button>
           <button
             onClick={() => onPageChange(pagination.currentPage + 1)}
             disabled={pagination.currentPage >= pagination.totalPages}
-            className="rounded border border-[#e5e7eb] px-3 py-1 text-[#111111] transition-colors hover:bg-[#f3f4f6] disabled:cursor-not-allowed disabled:text-[#d1d5db] disabled:hover:bg-transparent"
+            className="cursor-pointer rounded border border-[#e5e7eb] px-3 py-1 text-[#111111] transition-colors hover:bg-[#f3f4f6] disabled:cursor-not-allowed disabled:text-[#d1d5db] disabled:hover:bg-transparent"
           >
             Suivant
           </button>

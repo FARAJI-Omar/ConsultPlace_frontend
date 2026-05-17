@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useLoginMutation } from './useLoginMutation';
+import newLogo from '../../assets/new-logo.png';
 
 interface FieldErrors {
   email?: string;
@@ -72,10 +73,8 @@ export default function Login() {
     <div className="flex min-h-screen items-center justify-center bg-[#ffffff] px-4">
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
-          <h1 className="text-[28px] font-semibold leading-tight tracking-[-0.5px] text-[#111111]">
-            ConsultPlace
-          </h1>
-          <p className="mt-2 text-sm text-[#6b7280]">
+          <img src={newLogo} alt="ConsultPlace" className="mx-auto h-32" />
+          <p className="mt-4 text-sm text-[#6b7280]">
             Connectez-vous à votre espace
           </p>
         </div>
@@ -106,7 +105,7 @@ export default function Login() {
               className={`mt-1 block w-full rounded-[8px] border bg-[#ffffff] px-[14px] py-[10px] text-base text-[#111111] placeholder:text-[#6b7280] focus:outline-none ${
                 fieldErrors.email
                   ? 'border-[#ef4444] focus:border-[#ef4444]'
-                  : 'border-[#e5e7eb] focus:border-[#111111]'
+                  : 'border-[#e5e7eb] focus:border-primary-blue'
               }`}
             />
             {fieldErrors.email && (
@@ -133,7 +132,7 @@ export default function Login() {
               className={`mt-1 block w-full rounded-[8px] border bg-[#ffffff] px-[14px] py-[10px] text-base text-[#111111] placeholder:text-[#6b7280] focus:outline-none ${
                 fieldErrors.password
                   ? 'border-[#ef4444] focus:border-[#ef4444]'
-                  : 'border-[#e5e7eb] focus:border-[#111111]'
+                  : 'border-[#e5e7eb] focus:border-primary-blue'
               }`}
             />
             {fieldErrors.password && (
@@ -144,7 +143,7 @@ export default function Login() {
           <button
             type="submit"
             disabled={loginMutation.isPending}
-            className="flex w-full items-center justify-center rounded-[8px] bg-[#111111] px-5 py-3 text-sm font-semibold leading-none text-[#ffffff] transition-colors hover:bg-[#242424] disabled:bg-[#e5e7eb] disabled:text-[#6b7280]"
+            className="flex w-full cursor-pointer items-center justify-center rounded-[8px] bg-primary-blue px-5 py-3 text-sm font-semibold leading-none text-[#ffffff] transition-opacity hover:opacity-90 disabled:bg-[#e5e7eb] disabled:text-[#6b7280]"
           >
             {loginMutation.isPending ? 'Connexion...' : 'Se connecter'}
           </button>

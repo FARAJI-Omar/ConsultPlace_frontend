@@ -63,7 +63,7 @@ export default function Modal({
           <h2 className="text-lg font-semibold text-[#111111]">{title}</h2>
           <button
             onClick={onClose}
-            className="rounded p-1 text-[#6b7280] transition-colors hover:bg-[#f3f4f6] hover:text-[#111111]"
+            className="cursor-pointer rounded p-1 text-[#6b7280] transition-colors hover:bg-[#f3f4f6] hover:text-[#111111]"
             aria-label="Fermer"
           >
             <svg

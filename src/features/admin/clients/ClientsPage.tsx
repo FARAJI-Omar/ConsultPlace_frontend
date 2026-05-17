@@ -67,7 +67,7 @@ export default function ClientsPage() {
       render: (item) => (
         <button
           onClick={() => openEdit(item)}
-          className="rounded p-1.5 text-[#6b7280] transition-colors hover:bg-light-blue hover:text-primary-blue"
+          className="cursor-pointer rounded p-1.5 text-[#6b7280] transition-colors hover:bg-light-blue hover:text-primary-blue"
           aria-label="Modifier"
         >
           <Pencil className="h-4 w-4" />
@@ -82,7 +82,7 @@ export default function ClientsPage() {
         <h1 className="text-2xl font-semibold text-[#111111]">Clients</h1>
         <button
           onClick={openCreate}
-          className="rounded-[8px] bg-primary-blue px-4 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-90"
+          className="cursor-pointer rounded-[8px] bg-primary-blue px-4 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-90"
         >
           Créer un client
         </button>

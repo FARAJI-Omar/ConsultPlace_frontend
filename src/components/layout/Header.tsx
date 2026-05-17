@@ -23,7 +23,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
       <div className="flex items-center gap-3">
         <button
           onClick={onToggleSidebar}
-          className="rounded p-2 text-[#6b7280] transition-colors hover:bg-[#f3f4f6] hover:text-[#111111] lg:hidden"
+          className="cursor-pointer rounded p-2 text-[#6b7280] transition-colors hover:bg-[#f3f4f6] hover:text-[#111111] lg:hidden"
           aria-label="Menu"
         >
           <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -38,7 +38,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
         </span>
         <button
           onClick={handleLogout}
-          className="rounded-[8px] border border-[#e5e7eb] px-4 py-2 text-sm text-[#111111] transition-colors hover:bg-[#f3f4f6]"
+          className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-4 py-2 text-sm text-[#111111] transition-colors hover:bg-[#f3f4f6]"
         >
           Déconnexion
         </button>

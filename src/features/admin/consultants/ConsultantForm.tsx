@@ -91,7 +91,7 @@ export default function ConsultantForm({ onSuccess }: ConsultantFormProps) {
         <button
           type="submit"
           disabled={mutation.isPending}
-          className="rounded-[8px] bg-primary-blue px-6 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-90 disabled:opacity-50"
+          className="cursor-pointer rounded-[8px] bg-primary-blue px-6 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-90 disabled:opacity-50"
         >
           {mutation.isPending ? 'Enregistrement...' : 'Créer'}
         </button>

@@ -73,7 +73,7 @@ export default function ConsultantsPage() {
         <button
           onClick={() => handleToggle(item.id, item.isActive)}
           disabled={toggleStatus.isPending}
-          className={`rounded-[8px] px-3 py-1.5 text-xs font-medium transition-colors ${
+          className={`cursor-pointer rounded-[8px] px-3 py-1.5 text-xs font-medium transition-colors ${
             item.isActive
               ? 'border border-danger text-danger hover:bg-danger-light'
               : 'border border-success text-success hover:bg-success-light'
@@ -91,7 +91,7 @@ export default function ConsultantsPage() {
         <h1 className="text-2xl font-semibold text-[#111111]">Consultants</h1>
         <button
           onClick={() => setModalOpen(true)}
-          className="rounded-[8px] bg-primary-blue px-4 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-90"
+          className="cursor-pointer rounded-[8px] bg-primary-blue px-4 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-90"
         >
           Créer un consultant
         </button>
