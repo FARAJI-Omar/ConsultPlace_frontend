@@ -3,7 +3,8 @@ import Login from './features/auth/Login';
 import AdminRoute from './components/common/Guards/AdminRoute';
 import ManagerRoute from './components/common/Guards/ManagerRoute';
 import ConsultantRoute from './components/common/Guards/ConsultantRoute';
-import AdminDashboard from './pages/AdminDashboard';
+import AdminLayout from './components/layout/AdminLayout';
+import DashboardPage from './features/admin/dashboard/DashboardPage';
 import ManagerDashboard from './pages/ManagerDashboard';
 import ConsultantDashboard from './pages/ConsultantDashboard';
 import RootRedirect from './pages/RootRedirect';
@@ -21,7 +22,12 @@ const router = createBrowserRouter([
     path: '/admin',
     element: <AdminRoute />,
     children: [
-      { index: true, element: <AdminDashboard /> },
+      {
+        element: <AdminLayout />,
+        children: [
+          { index: true, element: <DashboardPage /> },
+        ],
+      },
     ],
   },
   {
