@@ -47,8 +47,8 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     `flex items-center gap-3 rounded-[8px] px-3 py-2 text-sm transition-colors whitespace-nowrap ${
       isActive
-        ? 'bg-[#111111] text-[#ffffff]'
-        : 'text-[#6b7280] hover:bg-[#f3f4f6] hover:text-[#111111]'
+        ? 'bg-primary-blue text-[#ffffff]'
+        : 'text-[#6b7280] hover:bg-light-blue hover:text-[#111111]'
     }`;
 
   return (

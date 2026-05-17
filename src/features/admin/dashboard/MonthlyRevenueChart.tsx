@@ -83,7 +83,7 @@ export default function MonthlyRevenueChart({ data, isLoading }: MonthlyRevenueC
             <Tooltip content={<ChartTooltip />} />
             <Bar
               dataKey="totalRevenue"
-              fill="#111111"
+              fill="var(--color-primary-yellow)"
               radius={[0, 6, 6, 0]}
               maxBarSize={32}
             />

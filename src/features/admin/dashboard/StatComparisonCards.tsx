@@ -61,7 +61,7 @@ export default function StatComparisonCards({
           >
             <div className="flex items-center justify-between">
               <span className="text-sm text-[#6b7280]">{card.label}</span>
-              <Icon className="h-5 w-5 text-[#9ca3af]" />
+              <Icon className="h-5 w-5 text-primary-yellow" />
             </div>
             {isLoading ? (
               <div className="mt-2 h-8 w-32 animate-pulse rounded bg-[#e5e7eb]" />

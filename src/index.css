@@ -2,4 +2,7 @@
 
 @theme {
   --font-sans: 'Inter', sans-serif;
+  --color-primary-blue: #003EA8;
+  --color-light-blue: #DBE1FF;
+  --color-primary-yellow: #f8e356;
 }
