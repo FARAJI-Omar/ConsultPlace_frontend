@@ -37,6 +37,9 @@ function DataTableInner<T>({
     [onPageSizeChange],
   );
 
+  const headerClass =
+    'px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[#6b7280] bg-[#E1E2ED] first:rounded-tl-[8px] last:rounded-tr-[8px]';
+
   if (isLoading) {
     return (
       <div className="overflow-x-auto">
@@ -44,10 +47,7 @@ function DataTableInner<T>({
           <thead>
             <tr className="border-b border-[#e5e7eb]">
               {columns.map((col) => (
-                <th
-                  key={col.key}
-                  className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[#6b7280]"
-                >
+                <th key={col.key} className={headerClass}>
                   {col.label}
                 </th>
               ))}
@@ -85,10 +85,7 @@ function DataTableInner<T>({
         <thead>
           <tr className="border-b border-[#e5e7eb]">
             {columns.map((col) => (
-              <th
-                key={col.key}
-                className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[#6b7280]"
-              >
+              <th key={col.key} className={headerClass}>
                 {col.label}
               </th>
             ))}
