@@ -8,7 +8,7 @@ import type { ConsultantMission } from '../../../types/consultant';
 const STATUS_OPTIONS = [
   { label: 'Toutes', value: '' },
   { label: 'Actives', value: 'ACTIVE' },
-  { label: 'Closes', value: 'CLOSED' },
+  { label: 'Cloturée', value: 'CLOSED' },
 ];
 
 const STATUS_BADGE: Record<string, string> = {
