@@ -7,6 +7,10 @@ import AdminLayout from './components/layout/AdminLayout';
 import DashboardPage from './features/admin/dashboard/DashboardPage';
 import ClientsPage from './features/admin/clients/ClientsPage';
 import ConsultantsPage from './features/admin/consultants/ConsultantsPage';
+import ContractsPage from './features/admin/contracts/ContractsPage';
+import ContractDetailsPage from './features/admin/contracts/ContractDetailsPage';
+import MissionsPage from './features/admin/missions/MissionsPage';
+import MissionDetailsPage from './features/admin/missions/MissionDetailsPage';
 import ManagerDashboard from './pages/ManagerDashboard';
 import ConsultantDashboard from './pages/ConsultantDashboard';
 import RootRedirect from './pages/RootRedirect';
@@ -31,6 +35,10 @@ const router = createBrowserRouter([
           { index: true, element: <DashboardPage /> },
           { path: 'clients', element: <ClientsPage /> },
           { path: 'consultants', element: <ConsultantsPage /> },
+          { path: 'contracts', element: <ContractsPage /> },
+          { path: 'contracts/:id', element: <ContractDetailsPage /> },
+          { path: 'missions', element: <MissionsPage /> },
+          { path: 'missions/:id', element: <MissionDetailsPage /> },
         ],
       },
     ],
