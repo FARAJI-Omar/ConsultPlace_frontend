@@ -75,7 +75,7 @@ export default function DraftsPage() {
             onDeleteAttachment={(attachmentId) =>
               deleteAttachment.mutate({ id: attachmentId, timesheetId: draft.id })
             }
-            onContinueEditing={() => navigate('/consultant/timesheets/create')}
+            onContinueEditing={() => navigate('/consultant/timesheets/new')}
           />
         ))}
       </div>
@@ -103,6 +103,7 @@ function DraftCard({
   onContinueEditing,
 }: DraftCardProps) {
   const isExpanded = expandedId === draft.id;
+  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
 
   const { data: attachments, isLoading: attachmentsLoading } = useGetAttachments(
     isExpanded ? draft.id : 0,
@@ -172,10 +173,15 @@ function DraftCard({
                     <span className="inline-block rounded-[9999px] bg-[#e5e7eb] px-2 py-0.5 text-xs text-[#6b7280]">
                       PDF
                     </span>
-                    <span className="text-sm text-[#111111]">{att.filename}</span>
+                    <div className="flex flex-col">
+                      <a href={att.url} target="_blank" rel="noopener noreferrer" className="text-sm text-[#111111] underline underline-offset-2 hover:text-[#6b7280] transition-colors">{att.filename}</a>
+                      {att.uploadedAt && (
+                        <span className="text-xs text-[#6b7280] mt-0.5">Ajouté le {formatDate(att.uploadedAt)}</span>
+                      )}
+                    </div>
                   </div>
                   <button
-                    onClick={() => onDeleteAttachment(att.id)}
+                    onClick={() => setConfirmDeleteId(att.id)}
                     className="cursor-pointer rounded-[8px] px-2 py-1 text-xs font-semibold text-[#ef4444] hover:bg-[#fef2f2] transition-colors"
                   >
                     Supprimer
@@ -183,6 +189,32 @@ function DraftCard({
                 </li>
               ))}
             </ul>
+          )}
+
+          {confirmDeleteId && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setConfirmDeleteId(null)}>
+              <div className="rounded-[12px] bg-[#ffffff] p-6 shadow-lg w-80" onClick={(e) => e.stopPropagation()}>
+                <p className="text-sm font-semibold text-[#111111] mb-2">Confirmer la suppression</p>
+                <p className="text-sm text-[#6b7280] mb-6">Cette action est irréversible.</p>
+                <div className="flex justify-end gap-2">
+                  <button
+                    onClick={() => setConfirmDeleteId(null)}
+                    className="cursor-pointer rounded-[8px] border border-[#e5e7eb] bg-[#ffffff] px-4 py-2 text-xs font-semibold text-[#111111] hover:bg-[#f3f4f6] transition-colors"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    onClick={() => {
+                      onDeleteAttachment(confirmDeleteId);
+                      setConfirmDeleteId(null);
+                    }}
+                    className="cursor-pointer rounded-[8px] bg-[#ef4444] px-4 py-2 text-xs font-semibold text-[#ffffff] hover:bg-[#dc2626] transition-colors"
+                  >
+                    Supprimer
+                  </button>
+                </div>
+              </div>
+            </div>
           )}
         </div>
       )}
