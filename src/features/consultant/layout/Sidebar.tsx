@@ -51,6 +51,7 @@ const NAV_ITEMS: NavItem[] = [
     icon: Clock,
     children: [
       { label: 'Tous les relevés', path: '/consultant/timesheets', icon: FileText },
+      { label: 'Nouveau relevé', path: '/consultant/timesheets/new', icon: FileText },
       { label: 'Brouillons', path: '/consultant/timesheets/drafts', icon: FileText },
     ],
   },

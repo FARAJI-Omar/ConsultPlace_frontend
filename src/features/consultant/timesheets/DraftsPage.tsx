@@ -1,7 +1,10 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useRef } from 'react';
 import { useConsultantTimesheets } from '../../../hooks/consultant/useConsultantDashboard';
-import { useGetAttachments, useDeleteAttachment } from '../../../hooks/consultant/useAttachments';
+import {
+  useGetAttachments,
+  useDeleteAttachment,
+  useUploadAttachments,
+} from '../../../hooks/consultant/useAttachments';
 import { useSubmitTimesheet } from '../../../hooks/consultant/useTimesheets';
 import type { Timesheet } from '../../../types/models';
 
@@ -21,10 +24,10 @@ function formatDate(dateStr: string) {
 }
 
 export default function DraftsPage() {
-  const navigate = useNavigate();
   const { data: timesheets, isLoading, isError } = useConsultantTimesheets();
   const submitMutation = useSubmitTimesheet();
   const deleteAttachment = useDeleteAttachment();
+  const uploadAttachments = useUploadAttachments();
   const [expandedId, setExpandedId] = useState<number | null>(null);
 
   const drafts: Timesheet[] = (timesheets ?? []).filter(
@@ -75,7 +78,10 @@ export default function DraftsPage() {
             onDeleteAttachment={(attachmentId) =>
               deleteAttachment.mutate({ id: attachmentId, timesheetId: draft.id })
             }
-            onContinueEditing={() => navigate('/consultant/timesheets/new')}
+            onUploadFiles={(files) =>
+              uploadAttachments.mutate({ files, timesheetId: String(draft.id) })
+            }
+            isUploading={uploadAttachments.isPending && uploadAttachments.variables?.timesheetId === String(draft.id)}
           />
         ))}
       </div>
@@ -90,7 +96,8 @@ interface DraftCardProps {
   onSubmit: () => void;
   isSubmitting: boolean;
   onDeleteAttachment: (attachmentId: number) => void;
-  onContinueEditing: () => void;
+  onUploadFiles: (files: File[]) => void;
+  isUploading: boolean;
 }
 
 function DraftCard({
@@ -100,10 +107,12 @@ function DraftCard({
   onSubmit,
   isSubmitting,
   onDeleteAttachment,
-  onContinueEditing,
+  onUploadFiles,
+  isUploading,
 }: DraftCardProps) {
   const isExpanded = expandedId === draft.id;
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: attachments, isLoading: attachmentsLoading } = useGetAttachments(
     isExpanded ? draft.id : 0,
@@ -135,12 +144,6 @@ function DraftCard({
             {isExpanded ? 'Masquer les pièces jointes' : 'Gérer les pièces jointes'}
           </button>
           <button
-            onClick={onContinueEditing}
-            className="cursor-pointer rounded-[8px] border border-[#e5e7eb] bg-[#ffffff] px-3 py-2 text-xs font-semibold text-[#111111] hover:bg-[#f3f4f6] transition-colors"
-          >
-            Continuer
-          </button>
-          <button
             onClick={onSubmit}
             disabled={isSubmitting}
             className="cursor-pointer rounded-[8px] bg-[#111111] px-3 py-2 text-xs font-semibold text-[#ffffff] hover:bg-[#242424] transition-colors disabled:bg-[#e5e7eb] disabled:text-[#6b7280] disabled:cursor-not-allowed"
@@ -151,7 +154,28 @@ function DraftCard({
       </div>
 
       {isExpanded && (
-        <div className="border-t border-[#e5e7eb] px-6 py-4">
+        <div className="border-t border-[#e5e7eb] px-6 py-4 space-y-3">
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isUploading}
+            className="cursor-pointer rounded-[8px] border border-[#e5e7eb] bg-[#ffffff] px-4 py-2 text-xs font-semibold text-[#111111] hover:bg-[#f3f4f6] disabled:opacity-50 transition-colors"
+          >
+            {isUploading ? 'Ajout en cours...' : '+ Ajouter des fichiers PDF'}
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".pdf,application/pdf"
+            multiple
+            onChange={(e) => {
+              if (e.target.files && e.target.files.length > 0) {
+                onUploadFiles(Array.from(e.target.files));
+                e.target.value = '';
+              }
+            }}
+            className="hidden"
+          />
+
           {attachmentsLoading && (
             <p className="text-xs text-[#6b7280]">Chargement des pièces jointes...</p>
           )}
