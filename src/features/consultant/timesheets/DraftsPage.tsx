@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { toast } from 'sonner';
 import { useConsultantTimesheets } from '../../../hooks/consultant/useConsultantDashboard';
 import {
   useGetAttachments,
@@ -112,20 +113,16 @@ function DraftCard({
   const isExpanded = expandedId === draft.id;
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleConfirmSubmit = async () => {
     setShowSubmitConfirm(false);
-    setSubmitError(null);
     try {
       await onSubmit();
-    } catch (err: unknown) {
-      const msg =
-        (err as { response?: { data?: { error?: { message?: string } } } })
-          ?.response?.data?.error?.message ?? 'Erreur lors de la soumission.';
-      setSubmitError(msg);
+    } catch (err) {
+      const axiosErr = err as { response?: { data?: { error?: { message: string } } } };
+      toast.error(axiosErr?.response?.data?.error?.message ?? 'Erreur lors de la soumission.');
     }
   };
 
@@ -152,13 +149,10 @@ function DraftCard({
         </div>
 
         <div className="flex items-center gap-2">
-          {submitError && (
-            <p className="text-xs font-medium text-[#ef4444] max-w-[200px] text-right">{submitError}</p>
-          )}
           <button
             type="button"
             onClick={onToggleExpand}
-            className="cursor-pointer rounded-[8px] border border-[#e5e7eb] bg-[#ffffff] px-3 py-2 text-xs font-semibold text-[#111111] hover:bg-[#e7e8eb] transition-colors"
+            className="cursor-pointer rounded-[8px] border border-[#e5e7eb] bg-[#ffffff] px-3 py-2 text-xs font-semibold text-[#111111] hover:bg-[#f3f4f6] transition-colors"
           >
             {isExpanded ? 'Masquer les pièces jointes' : 'Gérer les pièces jointes'}
           </button>
@@ -166,7 +160,7 @@ function DraftCard({
             type="button"
             onClick={() => setShowSubmitConfirm(true)}
             disabled={isSubmitting}
-            className="cursor-pointer rounded-[8px] bg-green-600/80 px-3 py-2 text-xs font-semibold text-[#ffffff] hover:bg-green-800 transition-colors disabled:bg-[#e5e7eb] disabled:text-[#6b7280] disabled:cursor-not-allowed"
+            className="cursor-pointer rounded-[8px] bg-[#111111] px-3 py-2 text-xs font-semibold text-[#ffffff] hover:bg-[#242424] transition-colors disabled:bg-[#e5e7eb] disabled:text-[#6b7280] disabled:cursor-not-allowed"
           >
             {isSubmitting ? 'Soumission...' : 'Soumettre'}
           </button>

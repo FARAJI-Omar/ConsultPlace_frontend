@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
+import { toast } from 'sonner';
 import { useConsultantMissions } from '../../../hooks/consultant/useConsultantMissions';
 import { useCreateTimesheet } from '../../../hooks/consultant/useCreateTimesheet';
 import { useUploadAttachments } from '../../../hooks/consultant/useAttachments';
@@ -34,7 +35,6 @@ export default function CreateCraForm() {
   const [entries, setEntries] = useState<Record<string, number>>({});
   const [files, setFiles] = useState<File[]>([]);
   const [fileError, setFileError] = useState<string | null>(null);
-  const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -60,7 +60,7 @@ export default function CreateCraForm() {
       setMonth(month - 1);
     }
     setEntries({});
-    setSuccessMsg(null);
+    
   }
 
   function goToNextMonth() {
@@ -71,7 +71,7 @@ export default function CreateCraForm() {
       setMonth(month + 1);
     }
     setEntries({});
-    setSuccessMsg(null);
+    
   }
 
   const validateAndAddFiles = useCallback((incoming: FileList | File[]) => {
@@ -120,7 +120,7 @@ export default function CreateCraForm() {
 
   async function handleSaveDraft() {
     if (!selectedMissionId) return;
-    setSuccessMsg(null);
+    
     setFileError(null);
 
     try {
@@ -137,18 +137,18 @@ export default function CreateCraForm() {
         });
       }
 
-      setSuccessMsg('Brouillon enregistré avec succès.');
+      toast.success('Brouillon enregistré avec succès.');
       setEntries({});
       setFiles([]);
       setSelectedMissionId(null);
     } catch {
-      setFileError('Erreur lors de l\'enregistrement du brouillon.');
+      toast.error('Erreur lors de l\'enregistrement du brouillon.');
     }
   }
 
   async function handleSubmit() {
     if (!selectedMissionId) return;
-    setSuccessMsg(null);
+    
     setFileError(null);
 
     try {
@@ -165,25 +165,13 @@ export default function CreateCraForm() {
 
       await submitTimesheet.mutateAsync(timesheet.id);
 
-      setSuccessMsg('Relevé mensuel soumis avec succès.');
+      toast.success('Relevé mensuel soumis avec succès.');
       setEntries({});
       setFiles([]);
       setSelectedMissionId(null);
-    } catch (err: unknown) {
-      if (
-        err instanceof Error &&
-        'response' in err &&
-        typeof err === 'object' &&
-        err !== null
-      ) {
-        const axiosErr = err as { response?: { data?: { error?: { message?: string } } } };
-        setFileError(
-          axiosErr.response?.data?.error?.message ??
-            'Erreur lors de la soumission.',
-        );
-      } else {
-        setFileError('Erreur lors de la soumission.');
-      }
+    } catch (err) {
+      const axiosErr = err as { response?: { data?: { error?: { message: string } } } };
+      toast.error(axiosErr?.response?.data?.error?.message ?? 'Erreur lors de la soumission.');
     }
   }
 
@@ -191,12 +179,6 @@ export default function CreateCraForm() {
 
   return (
     <div className="space-y-6">
-      {successMsg && (
-        <div className="rounded-[8px] bg-[#10b981]/10 border border-[#10b981] px-4 py-3 text-sm font-medium text-[#10b981]">
-          {successMsg}
-        </div>
-      )}
-
       {fileError && (
         <div className="rounded-[8px] bg-[#ef4444]/10 border border-[#ef4444] px-4 py-3 text-sm font-medium text-[#ef4444]">
           {fileError}
