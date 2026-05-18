@@ -1,7 +1,8 @@
+import { useState, createElement } from 'react';
 import { useConsultantTimesheets } from '../../../hooks/consultant/useConsultantDashboard';
 import { DataTable, type Column } from '../../../components/common/DataTable';
 import type { Timesheet } from '../../../types/models';
-import { createElement } from 'react';
+import type { TimesheetStatus } from '../../../types/models';
 
 const monthNames = [
   'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
@@ -53,14 +54,42 @@ const columns: Column<Timesheet>[] = [
   { key: 'submittedAt', label: 'Soumis le', render: (t) => formatDate(t.submittedAt) },
 ];
 
+const statusOptions: { value: TimesheetStatus | ''; label: string }[] = [
+  { value: '', label: 'Tous les statuts' },
+  { value: 'BROUILLON', label: 'Brouillon' },
+  { value: 'SOUMIS', label: 'Soumis' },
+  { value: 'VALIDE', label: 'Validé' },
+  { value: 'REJETE', label: 'Rejeté' },
+  { value: 'FACTURE', label: 'Facturé' },
+  { value: 'PAYE', label: 'Payé' },
+];
+
 export default function TimesheetsPage() {
   const { data: timesheets, isLoading, isError } = useConsultantTimesheets();
+  const [statusFilter, setStatusFilter] = useState<TimesheetStatus | ''>('');
+
+  const filtered = timesheets?.filter(
+    (t) => !statusFilter || t.status === statusFilter,
+  ) ?? [];
 
   return (
     <div className="rounded-[12px] bg-[#f5f5f5] p-8">
-      <h1 className="text-[22px] font-semibold text-[#111111] mb-6">
-        Tous les relevés mensuels
-      </h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-[22px] font-semibold text-[#111111]">
+          Tous les relevés mensuels
+        </h1>
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value as TimesheetStatus | '')}
+          className="h-10 rounded-[8px] border border-[#e5e7eb] bg-[#ffffff] px-3 text-sm text-[#111111] focus:border-[#111111] focus:outline-none"
+        >
+          {statusOptions.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+      </div>
 
       {isError ? (
         <p className="text-sm text-[#ef4444]">
@@ -69,10 +98,10 @@ export default function TimesheetsPage() {
       ) : (
         <DataTable
           columns={columns}
-          data={timesheets ?? []}
-          pagination={{ totalItems: timesheets?.length ?? 0, totalPages: 1, currentPage: 1, itemsPerPage: timesheets?.length ?? 0 }}
+          data={filtered}
+          pagination={{ totalItems: filtered.length, totalPages: 1, currentPage: 1, itemsPerPage: filtered.length }}
           isLoading={isLoading}
-          isEmpty={!timesheets || timesheets.length === 0}
+          isEmpty={filtered.length === 0}
           emptyMessage="Aucun relevé mensuel trouvé."
           onPageChange={() => {}}
           onPageSizeChange={() => {}}

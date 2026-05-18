@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import apiClient from '../../lib/apiClient';
 import type { Timesheet } from '../../types/models';
 import type { PaginatedResponse, ApiResponse } from '../../types/api';
-import type { ConsultantMission } from '../../types/consultant';
+import type { ConsultantMission, TrackingEntry } from '../../types/consultant';
 
 export interface ConsultantEarnings {
   year: number;
@@ -37,6 +37,18 @@ export function useConsultantTimesheets() {
     queryFn: async () => {
       const { data } = await apiClient.get<ApiResponse<Timesheet[]>>(
         '/consultant/timesheets',
+      );
+      return data.data;
+    },
+  });
+}
+
+export function useConsultantTracking() {
+  return useQuery({
+    queryKey: ['consultant-tracking'],
+    queryFn: async () => {
+      const { data } = await apiClient.get<ApiResponse<TrackingEntry[]>>(
+        '/consultant/tracking',
       );
       return data.data;
     },

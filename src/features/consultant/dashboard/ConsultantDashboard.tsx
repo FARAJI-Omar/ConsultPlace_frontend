@@ -1,10 +1,13 @@
-import { useConsultantDashboard } from '../../../hooks/consultant/useConsultantDashboard';
+import { useConsultantDashboard, useConsultantTracking } from '../../../hooks/consultant/useConsultantDashboard';
 import StatsCards from './StatsCards';
+import ConsultantMonthlyRevenueChart from './ConsultantMonthlyRevenueChart';
 import Reminders from './Reminders';
 
 export default function ConsultantDashboard() {
   const { timesheets, earnings, totalMissions, activeMissions, isLoading, isError } =
     useConsultantDashboard();
+
+  const { data: trackingData, isLoading: trackingLoading } = useConsultantTracking();
 
   if (isLoading) {
     return (
@@ -26,9 +29,8 @@ export default function ConsultantDashboard() {
   const averageByMission =
     totalMissions > 0 ? Math.round(totalEarnings / totalMissions) : 0;
 
-  const unsubmittedDrafts = timesheets.filter(
-    (ts) => ts.status === 'BROUILLON',
-  );
+  const draftCount = timesheets.filter((ts) => ts.status === 'BROUILLON').length;
+  const rejectedCount = timesheets.filter((ts) => ts.status === 'REJETE').length;
 
   return (
     <div className="space-y-8">
@@ -43,10 +45,20 @@ export default function ConsultantDashboard() {
         averageByMission={averageByMission}
       />
 
-      <Reminders
-        unsubmittedDrafts={unsubmittedDrafts}
-        activeMissionCount={activeMissions}
-      />
+      <div className="flex gap-6">
+        <div className="w-[70%]">
+          <ConsultantMonthlyRevenueChart
+            data={trackingData ?? []}
+            isLoading={trackingLoading}
+          />
+        </div>
+        <div className="w-[30%]">
+          <Reminders
+            draftCount={draftCount}
+            rejectedCount={rejectedCount}
+          />
+        </div>
+      </div>
     </div>
   );
 }

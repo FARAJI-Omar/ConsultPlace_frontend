@@ -62,18 +62,13 @@ export default function CalendarGrid({ year, month, entries, onChange }: Calenda
     return cells;
   }, [daysInMonth, firstDayIndex]);
 
-  function isWeekend(dayIndex: number) {
-    const col = (firstDayIndex + dayIndex - 1) % 7;
-    return col === 5 || col === 6;
-  }
-
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       <div className="grid grid-cols-7 gap-px">
         {DAY_HEADERS.map((header) => (
           <div
             key={header}
-            className="px-2 py-1.5 text-center text-xs font-medium uppercase tracking-wider text-[#6b7280] bg-[#E1E2ED]"
+            className="px-1.5 py-2 text-center text-xs font-medium uppercase tracking-wider text-[#50555f] bg-[#E1E2ED]"
           >
             {header}
           </div>
@@ -87,16 +82,16 @@ export default function CalendarGrid({ year, month, entries, onChange }: Calenda
 
             const dayKey = `day-${day}`;
             const value = entries[dayKey] ?? 0;
-            const weekend = isWeekend(day);
 
             return (
               <div
                 key={dayKey}
-                className={`flex flex-col items-center gap-1 border border-[#e5e7eb] p-1.5 min-h-[72px] ${
-                  weekend ? 'bg-[#f8f9fa]' : 'bg-[#ffffff]'
-                }`}
+                className="flex flex-col items-center gap-2 border border-[#e5e7eb] p-1.5 min-h-[68px]"
+                style={{
+                  backgroundColor: value > 0 ? 'var(--secondary-green)' : 'rgba(225, 245, 39, 0.14)',
+                }}
               >
-                <span className="text-xs font-medium text-[#6b7280]">{day}</span>
+                <span className="text-[14px] font-semibold text-[#838996]">{day}</span>
                 <input
                   type="number"
                   min={0}
@@ -107,7 +102,7 @@ export default function CalendarGrid({ year, month, entries, onChange }: Calenda
                     const v = parseFloat(e.target.value);
                     onChange(dayKey, isNaN(v) || v < 0 ? 0 : Math.min(v, 24));
                   }}
-                  className="w-full rounded-[8px] border border-[#e5e7eb] bg-[#ffffff] px-1.5 py-1 text-center text-sm text-[#111111] focus:border-[#111111] focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                  className="w-full rounded-[4px] border border-[#e5e7eb] bg-[#ffffff] px-1 py-1.5 text-center text-[12px] font-bold text-black focus:border-[#111111] focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                 />
               </div>
             );
@@ -115,9 +110,9 @@ export default function CalendarGrid({ year, month, entries, onChange }: Calenda
         )}
       </div>
 
-      <div className="flex items-center justify-end gap-2 text-right">
-        <span className="text-sm text-[#6b7280]">Total des heures :</span>
-        <span className="text-[18px] font-semibold text-[#111111]">{totalHours}h</span>
+      <div className="flex items-center justify-end gap-1.5 text-right">
+        <span className="text-xs text-[#6b7280]">Total des heures :</span>
+        <span className="text-[14px] font-semibold text-[#111111]">{totalHours}h</span>
       </div>
     </div>
   );
