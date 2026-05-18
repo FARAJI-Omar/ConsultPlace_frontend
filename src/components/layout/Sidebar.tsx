@@ -37,8 +37,8 @@ const NAV_ITEMS = [
     ],
   },
   { label: 'Gestionnaires', path: '/admin/gestionnaires', icon: Shield },
-  { label: "Règles d'alerte", path: '/admin/alert-rules', icon: Bell },
-  { label: "Journal d'audit", path: '/admin/audit-log', icon: ScrollText },
+  { label: "Règles d'alerte", path: '/admin/alertrules', icon: Bell },
+  { label: "Journal d'audit", path: '/admin/auditlog', icon: ScrollText },
 ];
 
 export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }: SidebarProps) {

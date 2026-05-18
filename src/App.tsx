@@ -11,6 +11,9 @@ import ContractsPage from './features/admin/contracts/ContractsPage';
 import ContractDetailsPage from './features/admin/contracts/ContractDetailsPage';
 import MissionsPage from './features/admin/missions/MissionsPage';
 import MissionDetailsPage from './features/admin/missions/MissionDetailsPage';
+import GestionnairesPage from './features/admin/system/GestionnairesPage';
+import AlertRulesPage from './features/admin/system/AlertRulesPage';
+import AuditLogPage from './features/admin/system/AuditLogPage';
 import ManagerDashboard from './pages/ManagerDashboard';
 import ConsultantDashboard from './pages/ConsultantDashboard';
 import RootRedirect from './pages/RootRedirect';
@@ -39,6 +42,9 @@ const router = createBrowserRouter([
           { path: 'contracts/:id', element: <ContractDetailsPage /> },
           { path: 'missions', element: <MissionsPage /> },
           { path: 'missions/:id', element: <MissionDetailsPage /> },
+          { path: 'gestionnaires', element: <GestionnairesPage /> },
+          { path: 'alertrules', element: <AlertRulesPage /> },
+          { path: 'auditlog', element: <AuditLogPage /> },
         ],
       },
     ],
