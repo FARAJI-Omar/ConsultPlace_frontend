@@ -21,6 +21,8 @@ import ConsultantDashboard from './features/consultant/dashboard/ConsultantDashb
 import ProfilePage from './features/consultant/profile/ProfilePage';
 import ConsultantMissionsPage from './features/consultant/missions/MissionsPage';
 import ConsultantMissionDetailsPage from './features/consultant/missions/MissionDetailsPage';
+import TimesheetsPage from './features/consultant/timesheets/TimesheetsPage';
+import DraftsPage from './features/consultant/timesheets/DraftsPage';
 import RootRedirect from './pages/RootRedirect';
 import NotFoundPage from './pages/NotFoundPage';
 
@@ -72,8 +74,8 @@ const router = createBrowserRouter([
           { path: 'profile', element: <ProfilePage /> },
           { path: 'missions', element: <ConsultantMissionsPage /> },
           { path: 'missions/:id', element: <ConsultantMissionDetailsPage /> },
-          { path: 'timesheets', element: <div className="text-[#6b7280]">Relevés mensuels (à venir)</div> },
-          { path: 'timesheets/drafts', element: <div className="text-[#6b7280]">Brouillons (à venir)</div> },
+          { path: 'timesheets', element: <TimesheetsPage /> },
+          { path: 'timesheets/drafts', element: <DraftsPage /> },
           { path: 'timesheets/create', element: <div className="text-[#6b7280]">Nouveau relevé mensuel (à venir)</div> },
         ],
       },

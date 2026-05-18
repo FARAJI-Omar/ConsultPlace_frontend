@@ -1,0 +1,191 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useConsultantTimesheets } from '../../../hooks/consultant/useConsultantDashboard';
+import { useGetAttachments, useDeleteAttachment } from '../../../hooks/consultant/useAttachments';
+import { useSubmitTimesheet } from '../../../hooks/consultant/useTimesheets';
+import type { Timesheet } from '../../../types/models';
+
+const monthNames = [
+  'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+  'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre',
+];
+
+function formatMonth(month: string) {
+  const [year, m] = month.split('-');
+  return `${monthNames[parseInt(m, 10) - 1]} ${year}`;
+}
+
+function formatDate(dateStr: string) {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+export default function DraftsPage() {
+  const navigate = useNavigate();
+  const { data: timesheets, isLoading, isError } = useConsultantTimesheets();
+  const submitMutation = useSubmitTimesheet();
+  const deleteAttachment = useDeleteAttachment();
+  const [expandedId, setExpandedId] = useState<number | null>(null);
+
+  const drafts: Timesheet[] = (timesheets ?? []).filter(
+    (t) => t.status === 'BROUILLON',
+  );
+
+  const handleSubmit = async (id: number) => {
+    try {
+      await submitMutation.mutateAsync(id);
+    } catch {
+      // Error handled by React Query
+    }
+  };
+
+  return (
+    <div className="rounded-[12px] bg-[#f5f5f5] p-8">
+      <h1 className="text-[22px] font-semibold text-[#111111] mb-6">
+        Brouillons
+      </h1>
+
+      {isLoading && (
+        <p className="text-sm text-[#6b7280]">Chargement...</p>
+      )}
+
+      {isError && (
+        <p className="text-sm text-[#ef4444]">
+          Erreur lors du chargement des brouillons.
+        </p>
+      )}
+
+      {!isLoading && !isError && drafts.length === 0 && (
+        <p className="text-sm text-[#6b7280]">
+          Aucun brouillon pour le moment.
+        </p>
+      )}
+
+      <div className="space-y-4">
+        {drafts.map((draft) => (
+          <DraftCard
+            key={draft.id}
+            draft={draft}
+            expandedId={expandedId}
+            onToggleExpand={() =>
+              setExpandedId(expandedId === draft.id ? null : draft.id)
+            }
+            onSubmit={() => handleSubmit(draft.id)}
+            isSubmitting={submitMutation.isPending && submitMutation.variables === draft.id}
+            onDeleteAttachment={(attachmentId) =>
+              deleteAttachment.mutate({ id: attachmentId, timesheetId: draft.id })
+            }
+            onContinueEditing={() => navigate('/consultant/timesheets/create')}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+interface DraftCardProps {
+  draft: Timesheet;
+  expandedId: number | null;
+  onToggleExpand: () => void;
+  onSubmit: () => void;
+  isSubmitting: boolean;
+  onDeleteAttachment: (attachmentId: number) => void;
+  onContinueEditing: () => void;
+}
+
+function DraftCard({
+  draft,
+  expandedId,
+  onToggleExpand,
+  onSubmit,
+  isSubmitting,
+  onDeleteAttachment,
+  onContinueEditing,
+}: DraftCardProps) {
+  const isExpanded = expandedId === draft.id;
+
+  const { data: attachments, isLoading: attachmentsLoading } = useGetAttachments(
+    isExpanded ? draft.id : 0,
+  );
+
+  return (
+    <div className="rounded-[12px] bg-[#ffffff] border border-[#e5e7eb] overflow-hidden">
+      <div className="flex items-center justify-between px-6 py-4">
+        <div className="flex items-center gap-6">
+          <div>
+            <p className="text-sm font-medium text-[#111111]">
+              {formatMonth(draft.month)}
+            </p>
+            <p className="text-xs text-[#6b7280]">
+              {draft.mission?.title ?? 'Mission inconnue'}
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="text-sm text-[#111111]">{draft.totalHours}h</p>
+            <p className="text-xs text-[#6b7280]">Créé le {formatDate(draft.createdAt)}</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onToggleExpand}
+            className="cursor-pointer rounded-[8px] border border-[#e5e7eb] bg-[#ffffff] px-3 py-2 text-xs font-semibold text-[#111111] hover:bg-[#f3f4f6] transition-colors"
+          >
+            {isExpanded ? 'Masquer les pièces jointes' : 'Gérer les pièces jointes'}
+          </button>
+          <button
+            onClick={onContinueEditing}
+            className="cursor-pointer rounded-[8px] border border-[#e5e7eb] bg-[#ffffff] px-3 py-2 text-xs font-semibold text-[#111111] hover:bg-[#f3f4f6] transition-colors"
+          >
+            Continuer
+          </button>
+          <button
+            onClick={onSubmit}
+            disabled={isSubmitting}
+            className="cursor-pointer rounded-[8px] bg-[#111111] px-3 py-2 text-xs font-semibold text-[#ffffff] hover:bg-[#242424] transition-colors disabled:bg-[#e5e7eb] disabled:text-[#6b7280] disabled:cursor-not-allowed"
+          >
+            {isSubmitting ? 'Soumission...' : 'Soumettre'}
+          </button>
+        </div>
+      </div>
+
+      {isExpanded && (
+        <div className="border-t border-[#e5e7eb] px-6 py-4">
+          {attachmentsLoading && (
+            <p className="text-xs text-[#6b7280]">Chargement des pièces jointes...</p>
+          )}
+
+          {!attachmentsLoading && (!attachments || attachments.length === 0) && (
+            <p className="text-xs text-[#6b7280]">
+              Aucune pièce jointe pour ce brouillon.
+            </p>
+          )}
+
+          {!attachmentsLoading && attachments && attachments.length > 0 && (
+            <ul className="space-y-2">
+              {attachments.map((att) => (
+                <li
+                  key={att.id}
+                  className="flex items-center justify-between rounded-[8px] bg-[#f5f5f5] px-4 py-2"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="inline-block rounded-[9999px] bg-[#e5e7eb] px-2 py-0.5 text-xs text-[#6b7280]">
+                      PDF
+                    </span>
+                    <span className="text-sm text-[#111111]">{att.filename}</span>
+                  </div>
+                  <button
+                    onClick={() => onDeleteAttachment(att.id)}
+                    className="cursor-pointer rounded-[8px] px-2 py-1 text-xs font-semibold text-[#ef4444] hover:bg-[#fef2f2] transition-colors"
+                  >
+                    Supprimer
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
