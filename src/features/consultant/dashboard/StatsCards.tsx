@@ -32,19 +32,30 @@ export default function StatsCards({
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-      {stats.map((stat) => (
-        <div
-          key={stat.label}
-          className="rounded-[12px] bg-[#f5f5f5] p-8"
-        >
-          <p className="text-[18px] font-semibold text-[#111111] leading-[1.4] mb-2">
-            {stat.value}
-          </p>
-          <p className="text-[16px] text-[#374151] leading-[1.5]">
-            {stat.label}
-          </p>
-        </div>
-      ))}
+      {stats.map((stat) => {
+        const isGainsTotaux = stat.label === 'Gains totaux';
+        return (
+          <div
+            key={stat.label}
+            className={`rounded-[12px] p-8 transition-all ${
+              isGainsTotaux
+                ? 'bg-green-500/20 border border-transparent shadow-sm'
+                : 'bg-[#f5f5f5] border border-transparent shadow-sm'
+            }`}
+          >
+            <p
+              className="text-[18px] font-semibold leading-[1.4] mb-2 text-[#111111]"
+            >
+              {stat.value}
+            </p>
+            <p
+              className="text-[16px] leading-[1.5] text-[#374151]"
+            >
+              {stat.label}
+            </p>
+          </div>
+        );
+      })}
     </div>
   );
 }
