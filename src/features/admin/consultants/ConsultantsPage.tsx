@@ -75,8 +75,8 @@ export default function ConsultantsPage() {
           disabled={toggleStatus.isPending}
           className={`cursor-pointer rounded-[8px] px-3 py-1.5 text-xs font-medium transition-colors ${
             item.isActive
-              ? 'border border-danger text-danger hover:bg-danger-light'
-              : 'border border-success text-success hover:bg-success-light'
+              ? 'border border-red-600 hover:bg-red-600/40'
+              : 'border border-green-600 text-success hover:bg-green-600/40'
           } disabled:opacity-50`}
         >
           {item.isActive ? 'Désactiver' : 'Activer'}
