@@ -1,5 +1,6 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import Login from './features/auth/Login';
+import GuestGuard from './components/common/Guards/GuestGuard';
 import AdminRoute from './components/common/Guards/AdminRoute';
 import ManagerRoute from './components/common/Guards/ManagerRoute';
 import ConsultantRoute from './components/common/Guards/ConsultantRoute';
@@ -26,7 +27,7 @@ const router = createBrowserRouter([
   },
   {
     path: '/login',
-    element: <Login />,
+    element: <GuestGuard><Login /></GuestGuard>,
   },
   {
     path: '/admin',
