@@ -16,7 +16,9 @@ import GestionnairesPage from './features/admin/system/GestionnairesPage';
 import AlertRulesPage from './features/admin/system/AlertRulesPage';
 import AuditLogPage from './features/admin/system/AuditLogPage';
 import ManagerDashboard from './pages/ManagerDashboard';
-import ConsultantDashboard from './pages/ConsultantDashboard';
+import ConsultantLayout from './features/consultant/layout/ConsultantLayout';
+import ConsultantDashboard from './features/consultant/dashboard/ConsultantDashboard';
+import ProfilePage from './features/consultant/profile/ProfilePage';
 import RootRedirect from './pages/RootRedirect';
 import NotFoundPage from './pages/NotFoundPage';
 
@@ -61,7 +63,18 @@ const router = createBrowserRouter([
     path: '/consultant',
     element: <ConsultantRoute />,
     children: [
-      { index: true, element: <ConsultantDashboard /> },
+      {
+        element: <ConsultantLayout />,
+        children: [
+          { index: true, element: <ConsultantDashboard /> },
+          { path: 'profile', element: <ProfilePage /> },
+          { path: 'missions', element: <div className="text-[#6b7280]">Missions (à venir)</div> },
+          { path: 'missions/:id', element: <div className="text-[#6b7280]">Détails de la mission (à venir)</div> },
+          { path: 'timesheets', element: <div className="text-[#6b7280]">Relevés mensuels (à venir)</div> },
+          { path: 'timesheets/drafts', element: <div className="text-[#6b7280]">Brouillons (à venir)</div> },
+          { path: 'timesheets/create', element: <div className="text-[#6b7280]">Nouveau relevé mensuel (à venir)</div> },
+        ],
+      },
     ],
   },
   { path: '*', element: <NotFoundPage /> },
