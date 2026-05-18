@@ -6,6 +6,7 @@ import {
   Clock,
   FileText,
   User,
+  Wallet,
   PanelLeftClose,
   PanelLeftOpen,
   ChevronDown,
@@ -44,6 +45,7 @@ type NavItem = NavLeaf | NavGroup;
 const NAV_ITEMS: NavItem[] = [
   { label: 'Tableau de bord', path: '/consultant', icon: LayoutDashboard },
   { label: 'Mes missions', path: '/consultant/missions', icon: Briefcase },
+  { label: 'Paiements', path: '/consultant/payments', icon: Wallet },
   {
     label: 'Relevés Mensuels',
     icon: Clock,

@@ -23,6 +23,7 @@ import ConsultantMissionsPage from './features/consultant/missions/MissionsPage'
 import ConsultantMissionDetailsPage from './features/consultant/missions/MissionDetailsPage';
 import TimesheetsPage from './features/consultant/timesheets/TimesheetsPage';
 import DraftsPage from './features/consultant/timesheets/DraftsPage';
+import PaymentsHistoryPage from './features/consultant/payments/PaymentsHistoryPage';
 import RootRedirect from './pages/RootRedirect';
 import NotFoundPage from './pages/NotFoundPage';
 
@@ -77,6 +78,7 @@ const router = createBrowserRouter([
           { path: 'timesheets', element: <TimesheetsPage /> },
           { path: 'timesheets/drafts', element: <DraftsPage /> },
           { path: 'timesheets/create', element: <div className="text-[#6b7280]">Nouveau relevé mensuel (à venir)</div> },
+          { path: 'payments', element: <PaymentsHistoryPage /> },
         ],
       },
     ],
