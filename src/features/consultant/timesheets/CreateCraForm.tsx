@@ -35,6 +35,7 @@ export default function CreateCraForm() {
   const [files, setFiles] = useState<File[]>([]);
   const [fileError, setFileError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: missionsData, isLoading: missionsLoading } = useConsultantMissions({
@@ -323,13 +324,38 @@ export default function CreateCraForm() {
         </button>
         <button
           type="button"
-          onClick={handleSubmit}
+          onClick={() => setShowSubmitConfirm(true)}
           disabled={!selectedMissionId || files.length === 0 || isOrchestrating}
           className="cursor-pointer rounded-[8px] bg-[#111111] px-5 py-2.5 text-sm font-semibold text-[#ffffff] hover:bg-[#242424] disabled:bg-[#e5e7eb] disabled:text-[#6b7280] disabled:cursor-not-allowed transition-colors"
         >
           {submitTimesheet.isPending ? 'Soumission...' : 'Soumettre'}
         </button>
       </div>
+
+      {showSubmitConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowSubmitConfirm(false)}>
+          <div className="rounded-[12px] bg-[#ffffff] p-6 shadow-lg w-80" onClick={(e) => e.stopPropagation()}>
+            <p className="text-sm font-semibold text-[#111111] mb-2">Confirmer la soumission</p>
+            <p className="text-sm text-[#6b7280] mb-6">Envoyer ce relevé mensuel pour validation ?</p>
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setShowSubmitConfirm(false)}
+                className="cursor-pointer rounded-[8px] border border-[#e5e7eb] bg-[#ffffff] px-4 py-2 text-xs font-semibold text-[#111111] hover:bg-[#f3f4f6] transition-colors"
+              >
+                Annuler
+              </button>
+              <button
+                type="button"
+                onClick={() => { setShowSubmitConfirm(false); handleSubmit(); }}
+                className="cursor-pointer rounded-[8px] bg-[#111111] px-4 py-2 text-xs font-semibold text-[#ffffff] hover:bg-[#242424] transition-colors"
+              >
+                Confirmer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

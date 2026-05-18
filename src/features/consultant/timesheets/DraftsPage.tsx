@@ -23,6 +23,9 @@ function formatDate(dateStr: string) {
   return d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
+const MAX_FILES = 10;
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
+
 export default function DraftsPage() {
   const { data: timesheets, isLoading, isError } = useConsultantTimesheets();
   const submitMutation = useSubmitTimesheet();
@@ -112,6 +115,8 @@ function DraftCard({
 }: DraftCardProps) {
   const isExpanded = expandedId === draft.id;
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
+  const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
+  const [fileError, setFileError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: attachments, isLoading: attachmentsLoading } = useGetAttachments(
@@ -138,13 +143,15 @@ function DraftCard({
 
         <div className="flex items-center gap-2">
           <button
+            type="button"
             onClick={onToggleExpand}
             className="cursor-pointer rounded-[8px] border border-[#e5e7eb] bg-[#ffffff] px-3 py-2 text-xs font-semibold text-[#111111] hover:bg-[#f3f4f6] transition-colors"
           >
             {isExpanded ? 'Masquer les pièces jointes' : 'Gérer les pièces jointes'}
           </button>
           <button
-            onClick={onSubmit}
+            type="button"
+            onClick={() => setShowSubmitConfirm(true)}
             disabled={isSubmitting}
             className="cursor-pointer rounded-[8px] bg-[#111111] px-3 py-2 text-xs font-semibold text-[#ffffff] hover:bg-[#242424] transition-colors disabled:bg-[#e5e7eb] disabled:text-[#6b7280] disabled:cursor-not-allowed"
           >
@@ -156,22 +163,40 @@ function DraftCard({
       {isExpanded && (
         <div className="border-t border-[#e5e7eb] px-6 py-4 space-y-3">
           <button
+            type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploading}
             className="cursor-pointer rounded-[8px] border border-[#e5e7eb] bg-[#ffffff] px-4 py-2 text-xs font-semibold text-[#111111] hover:bg-[#f3f4f6] disabled:opacity-50 transition-colors"
           >
             {isUploading ? 'Ajout en cours...' : '+ Ajouter des fichiers PDF'}
           </button>
+          {fileError && (
+            <p className="text-xs font-medium text-[#ef4444]">{fileError}</p>
+          )}
+
           <input
             ref={fileInputRef}
             type="file"
             accept=".pdf,application/pdf"
             multiple
             onChange={(e) => {
-              if (e.target.files && e.target.files.length > 0) {
-                onUploadFiles(Array.from(e.target.files));
-                e.target.value = '';
+              setFileError(null);
+              const selected = e.target.files;
+              if (!selected || selected.length === 0) return;
+
+              const incoming = Array.from(selected);
+              const nonPdf = incoming.find((f) => f.type !== 'application/pdf' && !f.name.toLowerCase().endsWith('.pdf'));
+              if (nonPdf) { setFileError('Seuls les fichiers PDF sont acceptés.'); e.target.value = ''; return; }
+
+              const oversized = incoming.find((f) => f.size > MAX_FILE_SIZE);
+              if (oversized) { setFileError('Chaque fichier ne doit pas dépasser 10 Mo.'); e.target.value = ''; return; }
+
+              if (incoming.length + (attachments?.length ?? 0) > MAX_FILES) {
+                setFileError(`Maximum ${MAX_FILES} fichiers par relevé.`); e.target.value = ''; return;
               }
+
+              onUploadFiles(incoming);
+              e.target.value = '';
             }}
             className="hidden"
           />
@@ -205,6 +230,7 @@ function DraftCard({
                     </div>
                   </div>
                   <button
+                    type="button"
                     onClick={() => setConfirmDeleteId(att.id)}
                     className="cursor-pointer rounded-[8px] px-2 py-1 text-xs font-semibold text-[#ef4444] hover:bg-[#fef2f2] transition-colors"
                   >
@@ -222,12 +248,14 @@ function DraftCard({
                 <p className="text-sm text-[#6b7280] mb-6">Cette action est irréversible.</p>
                 <div className="flex justify-end gap-2">
                   <button
+                    type="button"
                     onClick={() => setConfirmDeleteId(null)}
                     className="cursor-pointer rounded-[8px] border border-[#e5e7eb] bg-[#ffffff] px-4 py-2 text-xs font-semibold text-[#111111] hover:bg-[#f3f4f6] transition-colors"
                   >
                     Annuler
                   </button>
                   <button
+                    type="button"
                     onClick={() => {
                       onDeleteAttachment(confirmDeleteId);
                       setConfirmDeleteId(null);
@@ -235,6 +263,31 @@ function DraftCard({
                     className="cursor-pointer rounded-[8px] bg-[#ef4444] px-4 py-2 text-xs font-semibold text-[#ffffff] hover:bg-[#dc2626] transition-colors"
                   >
                     Supprimer
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {showSubmitConfirm && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowSubmitConfirm(false)}>
+              <div className="rounded-[12px] bg-[#ffffff] p-6 shadow-lg w-80" onClick={(e) => e.stopPropagation()}>
+                <p className="text-sm font-semibold text-[#111111] mb-2">Confirmer la soumission</p>
+                <p className="text-sm text-[#6b7280] mb-6">Envoyer ce brouillon pour validation ?</p>
+                <div className="flex justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowSubmitConfirm(false)}
+                    className="cursor-pointer rounded-[8px] border border-[#e5e7eb] bg-[#ffffff] px-4 py-2 text-xs font-semibold text-[#111111] hover:bg-[#f3f4f6] transition-colors"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setShowSubmitConfirm(false); onSubmit(); }}
+                    className="cursor-pointer rounded-[8px] bg-[#111111] px-4 py-2 text-xs font-semibold text-[#ffffff] hover:bg-[#242424] transition-colors"
+                  >
+                    Confirmer
                   </button>
                 </div>
               </div>
