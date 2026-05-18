@@ -53,6 +53,7 @@ const NAV_ITEMS: NavItem[] = [
       { label: 'Tous les relevés', path: '/consultant/timesheets', icon: FileText },
       { label: 'Nouveau relevé', path: '/consultant/timesheets/new', icon: FileText },
       { label: 'Brouillons', path: '/consultant/timesheets/drafts', icon: FileText },
+      { label: 'Rejetés', path: '/consultant/timesheets/rejected', icon: FileText },
     ],
   },
   { label: 'Profil', path: '/consultant/profile', icon: User },

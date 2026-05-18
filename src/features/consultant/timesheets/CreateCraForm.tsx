@@ -141,8 +141,11 @@ export default function CreateCraForm() {
       setEntries({});
       setFiles([]);
       setSelectedMissionId(null);
-    } catch {
-      toast.error('Erreur lors de l\'enregistrement du brouillon.');
+    } catch (err: unknown) {
+      const msg =
+        (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error?.message ??
+        'Erreur lors de l\'enregistrement du brouillon.';
+      toast.error(msg);
     }
   }
 
@@ -169,9 +172,11 @@ export default function CreateCraForm() {
       setEntries({});
       setFiles([]);
       setSelectedMissionId(null);
-    } catch (err) {
-      const axiosErr = err as { response?: { data?: { error?: { message: string } } } };
-      toast.error(axiosErr?.response?.data?.error?.message ?? 'Erreur lors de la soumission.');
+    } catch (err: unknown) {
+      const msg =
+        (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error?.message ??
+        'Au moins une pièce jointe est requise pour soumettre.';
+      toast.error(msg);
     }
   }
 
@@ -308,7 +313,7 @@ export default function CreateCraForm() {
           type="button"
           onClick={() => setShowSubmitConfirm(true)}
           disabled={!selectedMissionId || files.length === 0 || isOrchestrating}
-          className="cursor-pointer rounded-[8px] bg-[#111111] px-5 py-2.5 text-sm font-semibold text-[#ffffff] hover:bg-[#242424] disabled:bg-[#e5e7eb] disabled:text-[#6b7280] disabled:cursor-not-allowed transition-colors"
+          className="cursor-pointer rounded-[8px] bg-green-600 px-5 py-2.5 text-sm font-semibold text-[#ffffff] hover:bg-green-700 disabled:bg-[#e5e7eb] disabled:text-[#6b7280] disabled:cursor-not-allowed transition-colors"
         >
           {submitTimesheet.isPending ? 'Soumission...' : 'Soumettre'}
         </button>
@@ -330,7 +335,7 @@ export default function CreateCraForm() {
               <button
                 type="button"
                 onClick={() => { setShowSubmitConfirm(false); handleSubmit(); }}
-                className="cursor-pointer rounded-[8px] bg-[#111111] px-4 py-2 text-xs font-semibold text-[#ffffff] hover:bg-[#242424] transition-colors"
+                className="cursor-pointer rounded-[8px] bg-green-600 px-4 py-2 text-xs font-semibold text-[#ffffff] hover:bg-green-700 transition-colors"
               >
                 Confirmer
               </button>

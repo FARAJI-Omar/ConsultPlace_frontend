@@ -23,6 +23,7 @@ import ConsultantMissionsPage from './features/consultant/missions/MissionsPage'
 import ConsultantMissionDetailsPage from './features/consultant/missions/MissionDetailsPage';
 import TimesheetsPage from './features/consultant/timesheets/TimesheetsPage';
 import DraftsPage from './features/consultant/timesheets/DraftsPage';
+import RejectedPage from './features/consultant/timesheets/RejectedPage';
 import CreateCraPage from './features/consultant/timesheets/CreateCraPage';
 import PaymentsHistoryPage from './features/consultant/payments/PaymentsHistoryPage';
 import RootRedirect from './pages/RootRedirect';
@@ -78,6 +79,7 @@ const router = createBrowserRouter([
           { path: 'missions/:id', element: <ConsultantMissionDetailsPage /> },
           { path: 'timesheets', element: <TimesheetsPage /> },
           { path: 'timesheets/drafts', element: <DraftsPage /> },
+          { path: 'timesheets/rejected', element: <RejectedPage /> },
           { path: 'timesheets/new', element: <CreateCraPage /> },
           { path: 'payments', element: <PaymentsHistoryPage /> },
         ],

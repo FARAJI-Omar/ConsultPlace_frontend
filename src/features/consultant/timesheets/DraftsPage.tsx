@@ -39,7 +39,15 @@ export default function DraftsPage() {
   );
 
   const handleSubmit = async (id: number) => {
-    await submitMutation.mutateAsync(id);
+    try {
+      await submitMutation.mutateAsync(id);
+      toast.success('Relevé mensuel soumis avec succès.');
+    } catch (err: unknown) {
+      const msg =
+        (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error?.message ??
+        'Au moins une pièce jointe est requise pour soumettre.';
+      throw new Error(msg);
+    }
   };
 
   return (
@@ -75,12 +83,28 @@ export default function DraftsPage() {
             }
             onSubmit={() => handleSubmit(draft.id)}
             isSubmitting={submitMutation.isPending && submitMutation.variables === draft.id}
-            onDeleteAttachment={(attachmentId) =>
-              deleteAttachment.mutate({ id: attachmentId, timesheetId: draft.id })
-            }
-            onUploadFiles={(files) =>
-              uploadAttachments.mutate({ files, timesheetId: String(draft.id) })
-            }
+            onDeleteAttachment={async (attachmentId) => {
+              try {
+                await deleteAttachment.mutateAsync({ id: attachmentId, timesheetId: draft.id });
+                toast.success('Pièce jointe supprimée.');
+              } catch (err: unknown) {
+                const msg =
+                  (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error?.message ??
+                  'Erreur lors de la suppression.';
+                toast.error(msg);
+              }
+            }}
+            onUploadFiles={async (files) => {
+              try {
+                await uploadAttachments.mutateAsync({ files, timesheetId: String(draft.id) });
+                toast.success('Fichier(s) ajouté(s).');
+              } catch (err: unknown) {
+                const msg =
+                  (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error?.message ??
+                  'Erreur lors de l\'ajout.';
+                toast.error(msg);
+              }
+            }}
             isUploading={uploadAttachments.isPending && uploadAttachments.variables?.timesheetId === String(draft.id)}
           />
         ))}
@@ -95,8 +119,8 @@ interface DraftCardProps {
   onToggleExpand: () => void;
   onSubmit: () => void;
   isSubmitting: boolean;
-  onDeleteAttachment: (attachmentId: number) => void;
-  onUploadFiles: (files: File[]) => void;
+  onDeleteAttachment: (attachmentId: number) => Promise<void>;
+  onUploadFiles: (files: File[]) => Promise<void>;
   isUploading: boolean;
 }
 
@@ -121,8 +145,7 @@ function DraftCard({
     try {
       await onSubmit();
     } catch (err) {
-      const axiosErr = err as { response?: { data?: { error?: { message: string } } } };
-      toast.error(axiosErr?.response?.data?.error?.message ?? 'Erreur lors de la soumission.');
+      toast.error(err instanceof Error ? err.message : 'Erreur lors de la soumission.');
     }
   };
 
@@ -160,7 +183,7 @@ function DraftCard({
             type="button"
             onClick={() => setShowSubmitConfirm(true)}
             disabled={isSubmitting}
-            className="cursor-pointer rounded-[8px] bg-[#111111] px-3 py-2 text-xs font-semibold text-[#ffffff] hover:bg-[#242424] transition-colors disabled:bg-[#e5e7eb] disabled:text-[#6b7280] disabled:cursor-not-allowed"
+            className="cursor-pointer rounded-[8px] bg-green-600 px-3 py-2 text-xs font-semibold text-[#ffffff] hover:bg-green-700 transition-colors disabled:bg-[#e5e7eb] disabled:text-[#6b7280] disabled:cursor-not-allowed"
           >
             {isSubmitting ? 'Soumission...' : 'Soumettre'}
           </button>
@@ -295,7 +318,7 @@ function DraftCard({
               <button
                 type="button"
                 onClick={handleConfirmSubmit}
-                className="cursor-pointer rounded-[8px] bg-[#111111] px-4 py-2 text-xs font-semibold text-[#ffffff] hover:bg-[#242424] transition-colors"
+                className="cursor-pointer rounded-[8px] bg-green-600 px-4 py-2 text-xs font-semibold text-[#ffffff] hover:bg-green-700 transition-colors"
               >
                 Confirmer
               </button>
