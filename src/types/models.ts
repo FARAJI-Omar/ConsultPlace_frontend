@@ -39,14 +39,18 @@ export interface Contract {
   createdAt: string;
   updatedAt: string;
   documents?: DocumentFile[];
+  attachments?: DocumentFile[];
   client?: Partial<Client>;
 }
 
 export interface DocumentFile {
   id: number;
+  timesheetId?: number | null;
+  contractId?: number | null;
   filename: string;
   url: string;
   type: 'CONTRACT_DOC' | 'PROOF' | 'CRA' | 'INVOICE';
+  uploadedAt?: string;
 }
 
 export interface Mission {
