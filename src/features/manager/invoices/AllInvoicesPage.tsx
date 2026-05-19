@@ -32,6 +32,7 @@ export default function AllInvoicesPage() {
   const [vatRate, setVatRate] = useState('20');
   const [cancelConfirm, setCancelConfirm] = useState<number | null>(null);
   const [confirmMarkPaid, setConfirmMarkPaid] = useState<Invoice | null>(null);
+  const [markPaidDate, setMarkPaidDate] = useState(new Date().toISOString().split('T')[0]);
   const [confirmSendReminder, setConfirmSendReminder] = useState<Invoice | null>(null);
   const [confirmStopReminder, setConfirmStopReminder] = useState<Invoice | null>(null);
   const [confirmGenerate, setConfirmGenerate] = useState(false);
@@ -58,10 +59,9 @@ export default function AllInvoicesPage() {
   const handlePageChange = useCallback((p: number) => setPage(p), []);
   const handlePageSizeChange = useCallback((s: number) => { setLimit(s); setPage(1); }, []);
 
-  const handleMarkPaid = (invoice: Invoice) => {
-    const today = new Date().toISOString().split('T')[0];
+  const handleMarkPaid = (invoice: Invoice, paymentDate: string) => {
     markPaidMutation.mutate(
-      { invoiceId: invoice.id, paymentDate: today },
+      { invoiceId: invoice.id, paymentDate },
       {
         onSuccess: () => {
           toast.success(`Facture ${invoice.ref} marquée comme payée`);
@@ -184,20 +184,32 @@ export default function AllInvoicesPage() {
       label: 'Actions',
       render: (inv) => (
         <div className="flex gap-1.5 flex-wrap">
-          <button
-            onClick={() => setConfirmMarkPaid(inv)}
-            disabled={markPaidMutation.isPending || inv.status === 'PAID' || inv.status === 'CANCELED'}
-            className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-2 py-1 text-xs font-medium text-[#111111] transition-colors hover:bg-[#f3f4f6] disabled:cursor-not-allowed disabled:text-[#d1d5db]"
-          >
-            Marquer payée
-          </button>
-          <button
-            onClick={() => setPayoutModal(inv)}
-            disabled={payoutMutation.isPending || inv.status === 'CANCELED'}
-            className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-2 py-1 text-xs font-medium text-[#111111] transition-colors hover:bg-[#f3f4f6] disabled:cursor-not-allowed disabled:text-[#d1d5db]"
-          >
-            Payer consultant
-          </button>
+          {(inv.status === 'PENDING' || inv.status === 'PARTIAL_PAID') && (
+            <button
+              onClick={() => setConfirmMarkPaid(inv)}
+              disabled={markPaidMutation.isPending}
+              className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-2 py-1 text-xs font-medium text-[#111111] transition-colors hover:bg-[#f3f4f6] disabled:cursor-not-allowed disabled:text-[#d1d5db]"
+            >
+              Marquer payée
+            </button>
+          )}
+          {inv.status === 'PAID' && (
+            inv.payments?.some((p) => p.type === 'CONSULTANT' && p.status === 'COMPLETED')
+              ? (
+                <span className="inline-flex items-center rounded-[8px] bg-green-50 px-2.5 py-1 text-xs font-medium text-green-700">
+                  Le consultant est rémunéré.
+                </span>
+              )
+              : (
+                <button
+                  onClick={() => setPayoutModal(inv)}
+                  disabled={payoutMutation.isPending}
+                  className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-2 py-1 text-xs font-medium text-[#111111] transition-colors hover:bg-[#f3f4f6] disabled:cursor-not-allowed disabled:text-[#d1d5db]"
+                >
+                  Payer consultant
+                </button>
+              )
+          )}
           <button
             onClick={() => handleDownloadPdf(inv.id)}
             disabled={downloadPdfMutation.isPending}
@@ -206,38 +218,42 @@ export default function AllInvoicesPage() {
             Télécharger PDF
           </button>
           {(inv.status === 'PENDING' || inv.status === 'PARTIAL_PAID') && (
-            <button
-              onClick={() => setConfirmSendReminder(inv)}
-              disabled={sendReminderMutation.isPending}
-              className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-2 py-1 text-xs font-medium text-[#111111] transition-colors hover:bg-[#f3f4f6] disabled:cursor-not-allowed disabled:text-[#d1d5db]"
-            >
-              Envoyer relance
-            </button>
+            <>
+              <button
+                onClick={() => setConfirmSendReminder(inv)}
+                disabled={sendReminderMutation.isPending}
+                className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-2 py-1 text-xs font-medium text-[#111111] transition-colors hover:bg-[#f3f4f6] disabled:cursor-not-allowed disabled:text-[#d1d5db]"
+              >
+                Envoyer relance
+              </button>
+              {inv.reminderFrequency ? (
+                <button
+                  onClick={() => setConfirmStopReminder(inv)}
+                  disabled={stopAutoReminderMutation.isPending}
+                  className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-2 py-1 text-xs font-medium text-[#ef4444] transition-colors hover:bg-[#fef2f2] disabled:cursor-not-allowed disabled:text-[#d1d5db]"
+                >
+                  Arrêter relance auto
+                </button>
+              ) : (
+                <button
+                  onClick={() => handleSetAutoReminder(inv)}
+                  disabled={setAutoReminderMutation.isPending}
+                  className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-2 py-1 text-xs font-medium text-[#111111] transition-colors hover:bg-[#f3f4f6] disabled:cursor-not-allowed disabled:text-[#d1d5db]"
+                >
+                  Relance auto
+                </button>
+              )}
+            </>
           )}
-          {inv.reminderFrequency ? (
+          {inv.status !== 'CANCELED' && (
             <button
-              onClick={() => setConfirmStopReminder(inv)}
-              disabled={stopAutoReminderMutation.isPending}
+              onClick={() => setCancelConfirm(inv.id)}
+              disabled={cancelDisabled(inv.status)}
               className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-2 py-1 text-xs font-medium text-[#ef4444] transition-colors hover:bg-[#fef2f2] disabled:cursor-not-allowed disabled:text-[#d1d5db]"
             >
-              Arrêter relance auto
-            </button>
-          ) : (
-            <button
-              onClick={() => handleSetAutoReminder(inv)}
-              disabled={setAutoReminderMutation.isPending}
-              className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-2 py-1 text-xs font-medium text-[#111111] transition-colors hover:bg-[#f3f4f6] disabled:cursor-not-allowed disabled:text-[#d1d5db]"
-            >
-              Relance auto
+              Annuler
             </button>
           )}
-          <button
-            onClick={() => setCancelConfirm(inv.id)}
-            disabled={cancelDisabled(inv.status)}
-            className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-2 py-1 text-xs font-medium text-[#ef4444] transition-colors hover:bg-[#fef2f2] disabled:cursor-not-allowed disabled:text-[#d1d5db]"
-          >
-            Annuler
-          </button>
         </div>
       ),
     },
@@ -407,13 +423,28 @@ export default function AllInvoicesPage() {
       )}
 
       {confirmMarkPaid && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4" onClick={() => setConfirmMarkPaid(null)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4" onClick={() => {
+          setConfirmMarkPaid(null);
+          setMarkPaidDate(new Date().toISOString().split('T')[0]);
+        }}>
           <div className="w-full max-w-sm rounded-[12px] bg-[#ffffff] p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
             <h2 className="mb-2 text-lg font-semibold text-[#111111]">Marquer comme payée</h2>
-            <p className="mb-6 text-sm text-[#6b7280]">Confirmer que la facture {confirmMarkPaid.ref} est payée&nbsp;?</p>
+            <p className="mb-4 text-sm text-[#6b7280]">Confirmer que la facture {confirmMarkPaid.ref} est payée&nbsp;?</p>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-[#111111] mb-1">Date de paiement</label>
+              <input
+                type="date"
+                value={markPaidDate}
+                onChange={(e) => setMarkPaidDate(e.target.value)}
+                className="w-full rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111]"
+              />
+            </div>
             <div className="flex justify-end gap-3">
-              <button onClick={() => setConfirmMarkPaid(null)} className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-4 py-2 text-sm text-[#111111] transition-colors hover:bg-[#f3f4f6]">Annuler</button>
-              <button onClick={() => handleMarkPaid(confirmMarkPaid)} disabled={markPaidMutation.isPending} className="cursor-pointer rounded-[8px] bg-[#10b981] px-4 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-90 disabled:opacity-50">
+              <button onClick={() => {
+                setConfirmMarkPaid(null);
+                setMarkPaidDate(new Date().toISOString().split('T')[0]);
+              }} className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-4 py-2 text-sm text-[#111111] transition-colors hover:bg-[#f3f4f6]">Annuler</button>
+              <button onClick={() => handleMarkPaid(confirmMarkPaid, markPaidDate)} disabled={markPaidMutation.isPending} className="cursor-pointer rounded-[8px] bg-[#10b981] px-4 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-90 disabled:opacity-50">
                 {markPaidMutation.isPending ? 'Traitement...' : 'Confirmer'}
               </button>
             </div>
