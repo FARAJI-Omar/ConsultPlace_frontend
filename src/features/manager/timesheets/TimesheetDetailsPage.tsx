@@ -1,6 +1,7 @@
 import { useParams, Link } from 'react-router-dom';
 import { FileText, Download } from 'lucide-react';
 import { useManagerTimesheetDetail } from '../../../hooks/manager/useManagerTimesheets';
+import { Skeleton } from '../../../components/ui/skeleton';
 
 function formatMonth(month: string) {
   const [y, m] = month.split('-');
@@ -42,7 +43,35 @@ export default function TimesheetDetailsPage() {
   const ts = data?.data;
 
   if (isLoading) {
-    return <p className="text-sm text-[#6b7280]">Chargement...</p>;
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <Skeleton className="h-9 w-20" />
+          <Skeleton className="h-9 w-64" />
+        </div>
+        <div className="rounded-[12px] bg-[#f5f5f5] p-6">
+          <div className="grid grid-cols-2 gap-6">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i}>
+                <Skeleton className="mb-1 h-3 w-20" />
+                <Skeleton className="h-5 w-32" />
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="rounded-[12px] bg-[#f5f5f5] p-6">
+          <Skeleton className="mb-4 h-6 w-40" />
+          <div className="grid grid-cols-7 gap-1">
+            {Array.from({ length: 7 }).map((_, i) => (
+              <Skeleton key={i} className="h-4 w-full" />
+            ))}
+            {Array.from({ length: 35 }).map((_, i) => (
+              <Skeleton key={`c-${i}`} className="h-14 w-full" />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (!ts) {
@@ -86,7 +115,7 @@ export default function TimesheetDetailsPage() {
           </svg>
           Retour
         </Link>
-        <h1 className="text-2xl font-semibold text-[#111111]">Détail du CRA</h1>
+        <h1 className="text-2xl font-semibold text-[#111111]">Détail du relevé</h1>
       </div>
 
       <div className="rounded-[12px] bg-[#f5f5f5] p-6">
@@ -97,7 +126,7 @@ export default function TimesheetDetailsPage() {
           </div>
           <div>
             <p className="text-[#6b7280]">Consultant</p>
-            <p className="font-medium text-[#111111]">{ts.consultant.name} ({ts.consultant.email})</p>
+            <p className="font-medium text-[#111111]">{ts.consultant.name}</p>
           </div>
           <div>
             <p className="text-[#6b7280]">Mois</p>

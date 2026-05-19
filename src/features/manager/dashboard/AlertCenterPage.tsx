@@ -1,5 +1,6 @@
 import { useAlerts, useUpdateAlertStatus } from '../../../hooks/manager/useTracking';
 import { toast } from 'sonner';
+import { Skeleton, SkeletonCard } from '../../../components/ui/skeleton';
 
 export default function AlertCenterPage() {
   const { data: alerts, isLoading } = useAlerts();
@@ -26,7 +27,28 @@ export default function AlertCenterPage() {
       <h1 className="text-2xl font-semibold text-[#111111]">Centre d'alertes</h1>
 
       {isLoading ? (
-        <p className="text-sm text-[#6b7280]">Chargement...</p>
+        <>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            {Array.from({ length: 3 }).map((_, i) => <SkeletonCard key={i} />)}
+          </div>
+          <div className="rounded-[12px] bg-[#f5f5f5] p-6">
+            <Skeleton className="mb-4 h-6 w-1/4" />
+            <div className="space-y-3">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="flex items-center justify-between rounded-[8px] border border-[#e5e7eb] bg-[#ffffff] px-4 py-3">
+                  <div className="flex items-start gap-3 flex-1">
+                    <Skeleton className="mt-1 h-2 w-2 rounded-full" />
+                    <div className="space-y-2 flex-1">
+                      <Skeleton className="h-4 w-1/3" />
+                      <Skeleton className="h-3 w-2/3" />
+                    </div>
+                  </div>
+                  <Skeleton className="h-8 w-20 shrink-0" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
       ) : (
         <>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">

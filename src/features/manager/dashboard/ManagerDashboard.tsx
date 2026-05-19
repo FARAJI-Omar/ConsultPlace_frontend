@@ -6,6 +6,7 @@ import {
   type ChartConfig,
 } from '../../../components/ui/chart';
 import { Bar, BarChart, XAxis, YAxis, Cell } from 'recharts';
+import { Skeleton, SkeletonCard } from '../../../components/ui/skeleton';
 
 const BAR_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
 
@@ -32,42 +33,49 @@ export default function ManagerDashboard() {
       </h1>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        <div className="rounded-[12px] bg-[#f5f5f5] p-6">
-          <p className="text-sm font-medium text-[#6b7280]">Factures en attente</p>
-          <p className="mt-2 text-3xl font-semibold text-[#111111]">
-            {kpisLoading ? '...' : kpis?.pendingInvoices ?? 0}
-          </p>
-        </div>
-        <div className="rounded-[12px] bg-[#f5f5f5] p-6">
-          <p className="text-sm font-medium text-[#6b7280]">Total dû -en attente- (TTC)</p>
-          <p className="mt-2 text-3xl font-semibold text-[#111111]">
-            {kpisLoading ? '...' : `${(kpis?.totalPendingInvoices ?? 0).toLocaleString()} DH`}
-          </p>
-        </div>
-        <div className="rounded-[12px] bg-[#f5f5f5] p-6">
-          <p className="text-sm font-medium text-[#6b7280]">Marge cabinet</p>
-          <p className="mt-2 text-3xl font-semibold text-[#111111]">
-            {kpisLoading ? '...' : `${(kpis?.cabinet_margin ?? 0).toLocaleString()} DH`}
-          </p>
-        </div>
-        <div className="rounded-[12px] bg-[#f5f5f5] p-6">
-          <p className="text-sm font-medium text-[#6b7280]">Encaissé (TTC)</p>
-          <p className="mt-2 text-3xl font-semibold text-[#111111]">
-            {kpisLoading ? '...' : `${(kpis?.Cashed_in ?? 0).toLocaleString()} DH`}
-          </p>
-        </div>
-        <div className="rounded-[12px] bg-[#f5f5f5] p-6">
-          <p className="text-sm font-medium text-[#6b7280]">Total versé (mois)</p>
-          <p className="mt-2 text-3xl font-semibold text-[#111111]">
-            {summaryLoading ? '...' : `${(monthlySummary?.grandTotal ?? 0).toLocaleString()} DH`}
-          </p>
-        </div>
+        {kpisLoading
+          ? Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)
+          : <>
+              <div className="rounded-[12px] bg-[#f5f5f5] p-6">
+                <p className="text-sm font-medium text-[#6b7280]">Factures en attente</p>
+                <p className="mt-2 text-3xl font-semibold text-[#111111]">{kpis?.pendingInvoices ?? 0}</p>
+              </div>
+              <div className="rounded-[12px] bg-[#f5f5f5] p-6">
+                <p className="text-sm font-medium text-[#6b7280]">Total dû -en attente- (TTC)</p>
+                <p className="mt-2 text-3xl font-semibold text-[#111111]">{(kpis?.totalPendingInvoices ?? 0).toLocaleString()} DH</p>
+              </div>
+              <div className="rounded-[12px] bg-[#f5f5f5] p-6">
+                <p className="text-sm font-medium text-[#6b7280]">Marge cabinet</p>
+                <p className="mt-2 text-3xl font-semibold text-[#111111]">{(kpis?.cabinet_margin ?? 0).toLocaleString()} DH</p>
+              </div>
+              <div className="rounded-[12px] bg-[#f5f5f5] p-6">
+                <p className="text-sm font-medium text-[#6b7280]">Encaissé (TTC)</p>
+                <p className="mt-2 text-3xl font-semibold text-[#111111]">{(kpis?.Cashed_in ?? 0).toLocaleString()} DH</p>
+              </div>
+            </>
+        }
+        {summaryLoading ? <SkeletonCard /> : (
+          <div className="rounded-[12px] bg-[#f5f5f5] p-6">
+            <p className="text-sm font-medium text-[#6b7280]">Total versé (mois)</p>
+            <p className="mt-2 text-3xl font-semibold text-[#111111]">{(monthlySummary?.grandTotal ?? 0).toLocaleString()} DH</p>
+          </div>
+        )}
       </div>
 
       <div className="rounded-[12px] bg-[#f5f5f5] p-6">
         <h2 className="text-lg font-semibold text-[#111111]">Alertes critiques</h2>
         {alertsLoading ? (
-          <p className="mt-4 text-sm text-[#6b7280]">Chargement...</p>
+          <div className="mt-4 space-y-3">
+            {Array.from({ length: 2 }).map((_, i) => (
+              <div key={i} className="flex items-center justify-between rounded-[8px] border border-[#e5e7eb] px-4 py-3">
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-4 w-1/3" />
+                  <Skeleton className="h-3 w-2/3" />
+                </div>
+                <Skeleton className="h-8 w-28 shrink-0" />
+              </div>
+            ))}
+          </div>
         ) : criticalAlerts.length === 0 ? (
           <p className="mt-4 text-sm text-[#6b7280]">Aucune alerte critique</p>
         ) : (
