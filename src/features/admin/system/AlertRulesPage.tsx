@@ -48,8 +48,8 @@ export default function AlertRulesPage() {
         const labels: Record<string, string> = {
           LATE_INVOICE: 'Facture en retard',
           LATE_PAYOUT: 'Paiement en retard',
-          UNBILLED_CRA: 'CRA non facturé',
-          PENDING_CRA: 'CRA en attente',
+          UNBILLED_CRA: 'Relevé non facturé',
+          PENDING_CRA: 'Relevé en attente',
           UPCOMING_BILL: 'Facture à venir',
         };
         return labels[item.event] ?? item.event;

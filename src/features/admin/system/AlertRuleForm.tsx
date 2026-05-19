@@ -14,8 +14,8 @@ const TYPES: AlertType[] = ['CRITICAL', 'WARNING', 'INFO'];
 const EVENT_OPTIONS: { value: AlertEvent; label: string }[] = [
   { value: 'LATE_INVOICE', label: 'Facture en retard' },
   { value: 'LATE_PAYOUT', label: 'Paiement en retard' },
-  { value: 'UNBILLED_CRA', label: 'CRA non facturé' },
-  { value: 'PENDING_CRA', label: 'CRA en attente' },
+  { value: 'UNBILLED_CRA', label: 'Relevé non facturé' },
+  { value: 'PENDING_CRA', label: 'Relevé en attente' },
   { value: 'UPCOMING_BILL', label: 'Facture à venir' },
 ];
 

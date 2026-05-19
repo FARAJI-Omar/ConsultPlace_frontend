@@ -115,7 +115,7 @@ export default function PendingCrasPage() {
         pagination={data?.pagination ?? { totalItems: 0, totalPages: 1, currentPage: 1, itemsPerPage: limit }}
         isLoading={isLoading}
         isEmpty={!isLoading && filteredData.length === 0}
-        emptyMessage="Aucun CRA trouvé"
+        emptyMessage="Aucun Relevé trouvé"
         onPageChange={handlePageChange}
         onPageSizeChange={handlePageSizeChange}
       />

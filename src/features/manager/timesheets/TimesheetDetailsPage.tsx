@@ -77,7 +77,7 @@ export default function TimesheetDetailsPage() {
   if (!ts) {
     return (
       <div className="space-y-4">
-        <p className="text-sm text-[#6b7280]">CRA introuvable</p>
+        <p className="text-sm text-[#6b7280]">Relevé introuvable</p>
         <Link to="/manager/timesheets" className="text-sm text-[#3b82f6] hover:underline">Retour à la liste</Link>
       </div>
     );

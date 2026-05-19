@@ -31,7 +31,7 @@ export default function ReviewCraModal({ timesheetId, open, onClose }: ReviewCra
       { id: timesheetId, payload: { status: 'VALIDE' } },
       {
         onSuccess: () => {
-          toast.success('CRA approuvé avec succès');
+          toast.success('Relevé approuvé avec succès');
           onClose();
         },
         onError: () => {
@@ -47,7 +47,7 @@ export default function ReviewCraModal({ timesheetId, open, onClose }: ReviewCra
       { id: timesheetId, payload: { status: 'REJETE', reason: rejectReason.trim() } },
       {
         onSuccess: () => {
-          toast.success('CRA rejeté');
+          toast.success('Relevé rejeté');
           onClose();
         },
         onError: () => {
@@ -225,7 +225,7 @@ export default function ReviewCraModal({ timesheetId, open, onClose }: ReviewCra
         >
           <div className="w-full max-w-sm rounded-[12px] bg-[#ffffff] p-6 shadow-xl">
             <h2 className="mb-2 text-lg font-semibold text-[#111111]">
-              Approuver le CRA
+              Approuver le Relevé
             </h2>
             <p className="mb-6 text-sm text-[#6b7280]">
               Êtes-vous sûr de vouloir approuver ce CRA&nbsp;? Cette action générera un PDF et ne peut pas être annulée.

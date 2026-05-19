@@ -226,7 +226,7 @@ export default function InvoiceDetailsPage() {
 
       {invoice.timesheet && (
         <div className="rounded-[12px] bg-[#f5f5f5] p-6">
-          <h2 className="mb-4 text-lg font-semibold text-[#111111]">CRA associé</h2>
+          <h2 className="mb-4 text-lg font-semibold text-[#111111]">Relevé associé</h2>
           <div className="space-y-3 text-sm">
             <div className="flex justify-between"><span className="text-[#6b7280]">Mission</span><span className="font-medium text-[#111111]">{invoice.timesheet.mission.title}</span></div>
             <div className="flex justify-between"><span className="text-[#6b7280]">Mois</span><span className="font-medium text-[#111111]">{invoice.timesheet.month}</span></div>
