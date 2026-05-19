@@ -4,6 +4,7 @@ import { DataTable } from '../../../components/common/DataTable';
 import { useInvoices, useMarkPaid, useDownloadPdf, useGenerateInvoice, useCancelInvoice } from '../../../hooks/manager/useInvoices';
 import { useTriggerPayout } from '../../../hooks/manager/usePayouts';
 import { useSendReminder, useSetAutoReminder, useStopAutoReminder } from '../../../hooks/manager/useReminders';
+import { useManagerTimesheets } from '../../../hooks/manager/useManagerTimesheets';
 import { toast } from 'sonner';
 import type { Column } from '../../../components/common/DataTable';
 import type { Invoice } from '../../../types/manager';
@@ -41,6 +42,7 @@ export default function AllInvoicesPage() {
   const [reminderFrequency, setReminderFrequency] = useState<'7' | '15' | '30'>('15');
 
   const { data, isLoading } = useInvoices(page, limit, statusFilter || undefined);
+  const validTimesheetsQuery = useManagerTimesheets(1, 1000, 'VALIDE');
   const markPaidMutation = useMarkPaid();
   const downloadPdfMutation = useDownloadPdf();
   const generateMutation = useGenerateInvoice();
@@ -49,6 +51,9 @@ export default function AllInvoicesPage() {
   const sendReminderMutation = useSendReminder();
   const setAutoReminderMutation = useSetAutoReminder();
   const stopAutoReminderMutation = useStopAutoReminder();
+
+  const validTimesheets = validTimesheetsQuery.data?.data ?? [];
+  const selectedTimesheet = validTimesheets.find(ts => ts.id === parseInt(generateTimesheetId, 10));
 
   const handlePageChange = useCallback((p: number) => setPage(p), []);
   const handlePageSizeChange = useCallback((s: number) => { setLimit(s); setPage(1); }, []);
@@ -280,14 +285,19 @@ export default function AllInvoicesPage() {
             <h2 className="mb-4 text-lg font-semibold text-[#111111]">Générer une facture</h2>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-[#111111] mb-1">ID du CRA validé</label>
-                <input
-                  type="number"
+                <label className="block text-sm font-medium text-[#111111] mb-1">CRA validé</label>
+                <select
                   value={generateTimesheetId}
                   onChange={(e) => setGenerateTimesheetId(e.target.value)}
                   className="w-full rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111]"
-                  placeholder="Ex: 42"
-                />
+                >
+                  <option value="">Sélectionner un CRA</option>
+                  {validTimesheets.map((ts) => (
+                    <option key={ts.id} value={ts.id}>
+                      {ts.month} | {ts.consultant.name} | {ts.mission.title}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-[#111111] mb-1">TVA (%)</label>
@@ -445,7 +455,7 @@ export default function AllInvoicesPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4" onClick={() => setConfirmGenerate(false)}>
           <div className="w-full max-w-sm rounded-[12px] bg-[#ffffff] p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
             <h2 className="mb-2 text-lg font-semibold text-[#111111]">Générer la facture</h2>
-            <p className="mb-6 text-sm text-[#6b7280]">Créer une facture pour le CRA n°{generateTimesheetId} avec TVA à {vatRate}%&nbsp;?</p>
+            <p className="mb-6 text-sm text-[#6b7280]">Créer une facture pour {selectedTimesheet ? `${selectedTimesheet.month} | ${selectedTimesheet.consultant.name} | ${selectedTimesheet.mission.title}` : `CRA n°${generateTimesheetId}`} avec TVA à {vatRate}%&nbsp;?</p>
             <div className="flex justify-end gap-3">
               <button onClick={() => setConfirmGenerate(false)} className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-4 py-2 text-sm text-[#111111] transition-colors hover:bg-[#f3f4f6]">Annuler</button>
               <button onClick={handleGenerateInvoice} disabled={generateMutation.isPending} className="cursor-pointer rounded-[8px] bg-[#3b82f6] px-4 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-90 disabled:opacity-50">
