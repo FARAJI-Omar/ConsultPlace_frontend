@@ -4,3 +4,7 @@
 AGENTS.md
 api-doc.md
 DESIGN.md
+node_modules
+specs
+dist/
+.env
