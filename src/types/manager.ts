@@ -84,6 +84,8 @@ export interface Invoice {
   createdAt: string;
   updatedAt: string;
   payments?: PaymentRecord[];
+  paid?: number | null;
+  rest?: number | null;
   documents?: string[];
   timesheet?: { id: number; month: string; days: number; status: string; mission: { id: number; title: string; contractId: number } };
   client?: { id: number; raison_sociale: string; email: string };
@@ -91,10 +93,14 @@ export interface Invoice {
 }
 
 export interface PaymentRecord {
+  id: number;
   invoiceId: number;
+  consultantId: number;
+  ref: string;
   amount: number;
-  newStatus: string;
-  remainingBalance: number;
+  status: string;
+  type: string;
+  date: string;
 }
 
 export interface PaymentPayload {

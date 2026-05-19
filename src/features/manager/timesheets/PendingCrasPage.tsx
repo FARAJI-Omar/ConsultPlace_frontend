@@ -94,7 +94,7 @@ export default function PendingCrasPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-[#111111]">CRA des consultants</h1>
+        <h1 className="text-2xl font-semibold text-[#111111]">Relevés des consultants</h1>
         <div className="flex items-center gap-2">
           <label className="text-sm text-[#6b7280]">Statut:</label>
           <select

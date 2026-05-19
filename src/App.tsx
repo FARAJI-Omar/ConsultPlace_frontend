@@ -19,6 +19,11 @@ import ManagerDashboard from './features/manager/dashboard/ManagerDashboard';
 import AlertCenterPage from './features/manager/dashboard/AlertCenterPage';
 import PendingCrasPage from './features/manager/timesheets/PendingCrasPage';
 import TimesheetDetailsPage from './features/manager/timesheets/TimesheetDetailsPage';
+import InvoicesLayout from './features/manager/invoices/InvoicesLayout';
+import AllInvoicesPage from './features/manager/invoices/AllInvoicesPage';
+import InvoiceDetailsPage from './features/manager/invoices/InvoiceDetailsPage';
+import PartialPaymentsPage from './features/manager/invoices/PartialPaymentsPage';
+import PayoutTrackingPage from './features/manager/payouts/PayoutTrackingPage';
 import ManagerLayout from './features/manager/layout/ManagerLayout';
 import ConsultantLayout from './features/consultant/layout/ConsultantLayout';
 import ConsultantDashboard from './features/consultant/dashboard/ConsultantDashboard';
@@ -74,10 +79,16 @@ const router = createBrowserRouter([
           { path: 'alerts', element: <AlertCenterPage /> },
           { path: 'timesheets', element: <PendingCrasPage /> },
           { path: 'timesheets/:id', element: <TimesheetDetailsPage /> },
-          { path: 'invoices', element: <div className="text-center text-[#6b7280] py-12">Factures — à venir</div> },
-          { path: 'invoices/:id', element: <div className="text-center text-[#6b7280] py-12">Détail facture — à venir</div> },
-          { path: 'invoices/partial-payments', element: <div className="text-center text-[#6b7280] py-12">Paiements partiels — à venir</div> },
-          { path: 'payouts', element: <div className="text-center text-[#6b7280] py-12">Paiements consultants — à venir</div> },
+          {
+            path: 'invoices',
+            element: <InvoicesLayout />,
+            children: [
+              { index: true, element: <AllInvoicesPage /> },
+              { path: ':id', element: <InvoiceDetailsPage /> },
+              { path: 'partial-payments', element: <PartialPaymentsPage /> },
+            ],
+          },
+          { path: 'payouts', element: <PayoutTrackingPage /> },
           { path: 'tracking', element: <div className="text-center text-[#6b7280] py-12">Tracking — à venir</div> },
           { path: 'forecasts', element: <div className="text-center text-[#6b7280] py-12">Prévisions — à venir</div> },
         ],
