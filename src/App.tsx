@@ -24,6 +24,8 @@ import AllInvoicesPage from './features/manager/invoices/AllInvoicesPage';
 import InvoiceDetailsPage from './features/manager/invoices/InvoiceDetailsPage';
 import PartialPaymentsPage from './features/manager/invoices/PartialPaymentsPage';
 import PayoutTrackingPage from './features/manager/payouts/PayoutTrackingPage';
+import GlobalTrackingPage from './features/manager/tracking/GlobalTrackingPage';
+import ForecastsPage from './features/manager/tracking/ForecastsPage';
 import ManagerLayout from './features/manager/layout/ManagerLayout';
 import ConsultantLayout from './features/consultant/layout/ConsultantLayout';
 import ConsultantDashboard from './features/consultant/dashboard/ConsultantDashboard';
@@ -89,8 +91,8 @@ const router = createBrowserRouter([
             ],
           },
           { path: 'payouts', element: <PayoutTrackingPage /> },
-          { path: 'tracking', element: <div className="text-center text-[#6b7280] py-12">Tracking — à venir</div> },
-          { path: 'forecasts', element: <div className="text-center text-[#6b7280] py-12">Prévisions — à venir</div> },
+          { path: 'tracking', element: <GlobalTrackingPage /> },
+          { path: 'forecasts', element: <ForecastsPage /> },
         ],
       },
     ],

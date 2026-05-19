@@ -89,7 +89,7 @@ export default function PayoutTrackingPage() {
                   <th className="px-3 py-2 text-left text-xs font-medium text-[#6b7280]">Facture</th>
                   <th className="px-3 py-2 text-left text-xs font-medium text-[#6b7280]">Mois</th>
                   <th className="px-3 py-2 text-left text-xs font-medium text-[#6b7280]">Consultant</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-[#6b7280]">Mission</th>
+                  {/* <th className="px-3 py-2 text-l moeft text-xs font-medium text-[#6b7280]">Mission</th> */}
                   <th className="px-3 py-2 text-left text-xs font-medium text-[#6b7280]">Actions</th>
                 </tr>
               </thead>
@@ -99,7 +99,7 @@ export default function PayoutTrackingPage() {
                     <td className="px-3 py-2 font-medium text-[#111111]">{inv.ref}</td>
                     <td className="px-3 py-2 text-[#6b7280]">{inv.timesheet?.month ?? '-'}</td>
                     <td className="px-3 py-2 text-[#111111]">{inv.consultant?.name ?? '-'}</td>
-                    <td className="px-3 py-2 text-[#6b7280]">{inv.timesheet?.mission?.title ?? '-'}</td>
+                    {/* <td className="px-3 py-2 text-[#6b7280]">{inv.timesheet?.mission?.title ?? '-'}</td> */}
                     <td className="px-3 py-2">
                       <button
                         onClick={() => setPayoutModal({ id: inv.id, ref: inv.ref })}
