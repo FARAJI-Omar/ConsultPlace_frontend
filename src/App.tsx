@@ -15,7 +15,11 @@ import MissionDetailsPage from './features/admin/missions/MissionDetailsPage';
 import GestionnairesPage from './features/admin/system/GestionnairesPage';
 import AlertRulesPage from './features/admin/system/AlertRulesPage';
 import AuditLogPage from './features/admin/system/AuditLogPage';
-import ManagerDashboard from './pages/ManagerDashboard';
+import ManagerDashboard from './features/manager/dashboard/ManagerDashboard';
+import AlertCenterPage from './features/manager/dashboard/AlertCenterPage';
+import PendingCrasPage from './features/manager/timesheets/PendingCrasPage';
+import TimesheetDetailsPage from './features/manager/timesheets/TimesheetDetailsPage';
+import ManagerLayout from './features/manager/layout/ManagerLayout';
 import ConsultantLayout from './features/consultant/layout/ConsultantLayout';
 import ConsultantDashboard from './features/consultant/dashboard/ConsultantDashboard';
 import ProfilePage from './features/consultant/profile/ProfilePage';
@@ -63,7 +67,21 @@ const router = createBrowserRouter([
     path: '/manager',
     element: <ManagerRoute />,
     children: [
-      { index: true, element: <ManagerDashboard /> },
+      {
+        element: <ManagerLayout />,
+        children: [
+          { index: true, element: <ManagerDashboard /> },
+          { path: 'alerts', element: <AlertCenterPage /> },
+          { path: 'timesheets', element: <PendingCrasPage /> },
+          { path: 'timesheets/:id', element: <TimesheetDetailsPage /> },
+          { path: 'invoices', element: <div className="text-center text-[#6b7280] py-12">Factures — à venir</div> },
+          { path: 'invoices/:id', element: <div className="text-center text-[#6b7280] py-12">Détail facture — à venir</div> },
+          { path: 'invoices/partial-payments', element: <div className="text-center text-[#6b7280] py-12">Paiements partiels — à venir</div> },
+          { path: 'payouts', element: <div className="text-center text-[#6b7280] py-12">Paiements consultants — à venir</div> },
+          { path: 'tracking', element: <div className="text-center text-[#6b7280] py-12">Tracking — à venir</div> },
+          { path: 'forecasts', element: <div className="text-center text-[#6b7280] py-12">Prévisions — à venir</div> },
+        ],
+      },
     ],
   },
   {

@@ -11,7 +11,13 @@ export default function RootRedirect() {
     return <Navigate to="/login" replace />;
   }
 
+  const rolePaths: Record<string, string> = {
+    ADMIN: '/admin',
+    GESTIONNAIRE: '/manager',
+    CONSULTANT: '/consultant',
+  };
+
   return (
-    <Navigate to={`/${user.role.toLowerCase()}`} replace />
+    <Navigate to={rolePaths[user.role] || `/login`} replace />
   );
 }
