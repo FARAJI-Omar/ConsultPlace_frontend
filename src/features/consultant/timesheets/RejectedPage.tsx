@@ -7,6 +7,7 @@ import {
   useUploadAttachments,
 } from '../../../hooks/consultant/useAttachments';
 import { useSubmitTimesheet } from '../../../hooks/consultant/useTimesheets';
+import { formatDate } from '../../../lib/utils';
 import type { Timesheet } from '../../../types/models';
 
 const monthNames = [
@@ -17,11 +18,6 @@ const monthNames = [
 function formatMonth(month: string) {
   const [year, m] = month.split('-');
   return `${monthNames[parseInt(m, 10) - 1]} ${year}`;
-}
-
-function formatDate(dateStr: string) {
-  const d = new Date(dateStr);
-  return d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
 const MAX_FILES = 10;

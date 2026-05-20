@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { DataTable } from '../../../components/common/DataTable';
 import { useManagerTimesheets } from '../../../hooks/manager/useManagerTimesheets';
+import { formatDate } from '../../../lib/utils';
 import ReviewCraModal from './ReviewCraModal';
 import type { Column } from '../../../components/common/DataTable';
 import type { ManagerTimesheet } from '../../../types/manager';
@@ -65,7 +66,7 @@ export default function PendingCrasPage() {
     {
       key: 'submittedAt',
       label: 'Soumis le',
-      render: (ts) => (ts.submittedAt ? new Date(ts.submittedAt).toLocaleDateString() : '-'),
+      render: (ts) => formatDate(ts.submittedAt),
     },
     {
       key: 'actions',

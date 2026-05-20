@@ -1,6 +1,7 @@
 import { useState, createElement } from 'react';
 import { useConsultantTimesheets } from '../../../hooks/consultant/useConsultantDashboard';
 import { DataTable, type Column } from '../../../components/common/DataTable';
+import { formatDate } from '../../../lib/utils';
 import type { Timesheet } from '../../../types/models';
 import type { TimesheetStatus } from '../../../types/models';
 
@@ -12,12 +13,6 @@ const monthNames = [
 function formatMonth(month: string) {
   const [year, m] = month.split('-');
   return `${monthNames[parseInt(m, 10) - 1]} ${year}`;
-}
-
-function formatDate(dateStr?: string | null) {
-  if (!dateStr) return '—';
-  const d = new Date(dateStr);
-  return d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
 const statusStyles: Record<string, string> = {

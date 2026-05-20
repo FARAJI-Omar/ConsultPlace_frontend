@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { DataTable } from '../../../components/common/DataTable';
 import type { Column } from '../../../components/common/DataTable';
 import { useConsultantMissions } from '../../../hooks/consultant/useConsultantMissions';
+import { formatDate } from '../../../lib/utils';
 import type { ConsultantMission } from '../../../types/consultant';
 
 const STATUS_OPTIONS = [
@@ -57,16 +58,12 @@ export default function MissionsPage() {
     {
       key: 'startDate',
       label: 'Date début',
-      render: (mission) =>
-        new Date(mission.startDate).toLocaleDateString('fr-FR'),
+      render: (mission) => formatDate(mission.startDate),
     },
     {
       key: 'endDate',
       label: 'Date fin',
-      render: (mission) =>
-        mission.endDate
-          ? new Date(mission.endDate).toLocaleDateString('fr-FR')
-          : '-',
+      render: (mission) => formatDate(mission.endDate),
     },
     {
       key: 'actions',

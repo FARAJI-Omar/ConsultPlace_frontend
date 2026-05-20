@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import apiClient from '../../../lib/apiClient';
 import { useConsultantTimesheets } from '../../../hooks/consultant/useConsultantDashboard';
+import { formatDate } from '../../../lib/utils';
 import type { PaginatedResponse, ApiResponse } from '../../../types/api';
 import type { ConsultantMission, TrackingEntry } from '../../../types/consultant';
 
@@ -129,15 +130,13 @@ export default function MissionDetailsPage() {
           <div>
             <p className="text-sm text-[#6b7280] mb-1">Date début</p>
             <p className="text-[16px] text-[#111111] font-medium">
-              {new Date(mission.startDate).toLocaleDateString('fr-FR')}
+              {formatDate(mission.startDate)}
             </p>
           </div>
           <div>
             <p className="text-sm text-[#6b7280] mb-1">Date fin</p>
             <p className="text-[16px] text-[#111111] font-medium">
-              {mission.endDate
-                ? new Date(mission.endDate).toLocaleDateString('fr-FR')
-                : '-'}
+              {formatDate(mission.endDate)}
             </p>
           </div>
           <div>
@@ -220,11 +219,7 @@ export default function MissionDetailsPage() {
                         </span>
                       </td>
                       <td className="px-4 py-3 text-[#111111]">
-                        {ts.submittedAt
-                          ? new Date(ts.submittedAt).toLocaleDateString(
-                              'fr-FR',
-                            )
-                          : '-'}
+                        {formatDate(ts.submittedAt)}
                       </td>
                     </tr>
                   ))}

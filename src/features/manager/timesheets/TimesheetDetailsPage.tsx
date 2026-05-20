@@ -1,6 +1,7 @@
 import { useParams, Link } from 'react-router-dom';
 import { FileText, Download } from 'lucide-react';
 import { useManagerTimesheetDetail } from '../../../hooks/manager/useManagerTimesheets';
+import { formatDate } from '../../../lib/utils';
 import { Skeleton } from '../../../components/ui/skeleton';
 
 function formatMonth(month: string) {
@@ -152,7 +153,7 @@ export default function TimesheetDetailsPage() {
           </div>
           <div>
             <p className="text-[#6b7280]">Soumis le</p>
-            <p className="font-medium text-[#111111]">{ts.submittedAt ? new Date(ts.submittedAt).toLocaleDateString() : '-'}</p>
+            <p className="font-medium text-[#111111]">{formatDate(ts.submittedAt)}</p>
           </div>
           {ts.status === 'REJETE' && ts.rejectionReason && (
             <div className="col-span-2">

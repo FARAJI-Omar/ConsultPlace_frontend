@@ -1,6 +1,7 @@
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { useGetMissionById } from '../../../hooks/useMissions';
+import { formatDate } from '../../../lib/utils';
 
 export default function MissionDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -62,11 +63,11 @@ export default function MissionDetailsPage() {
             </div>
             <div className="flex justify-between">
               <dt className="text-[#6b7280]">Date de début</dt>
-              <dd className="font-medium text-[#111111]">{mission.startDate}</dd>
+              <dd className="font-medium text-[#111111]">{formatDate(mission.startDate)}</dd>
             </div>
             <div className="flex justify-between">
               <dt className="text-[#6b7280]">Date de fin</dt>
-              <dd className="font-medium text-[#111111]">{mission.endDate ?? '—'}</dd>
+              <dd className="font-medium text-[#111111]">{formatDate(mission.endDate)}</dd>
             </div>
             <div className="flex justify-between">
               <dt className="text-[#6b7280]">Statut</dt>

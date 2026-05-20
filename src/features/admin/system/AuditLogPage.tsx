@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { DataTable, type Column } from '../../../components/common/DataTable';
 import { useGetAuditLogs } from '../../../hooks/useAuditLog';
+import { formatDate } from '../../../lib/utils';
 import type { AuditLogEntry } from '../../../hooks/useAuditLog';
 
 export default function AuditLogPage() {
@@ -24,7 +25,7 @@ export default function AuditLogPage() {
     { key: 'entityId', label: 'ID entité', render: (item) => String(item.entityId) },
     { key: 'userRole', label: 'Rôle' },
     { key: 'ipAddress', label: 'Adresse IP' },
-    { key: 'timestamp', label: 'Date' },
+    { key: 'timestamp', label: 'Date', render: (item) => formatDate(item.timestamp) },
   ];
 
   return (

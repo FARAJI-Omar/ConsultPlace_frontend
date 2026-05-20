@@ -1,5 +1,6 @@
 import { useAlerts, useUpdateAlertStatus } from '../../../hooks/manager/useTracking';
 import { toast } from 'sonner';
+import { formatDate } from '../../../lib/utils';
 import { Skeleton, SkeletonCard } from '../../../components/ui/skeleton';
 
 export default function AlertCenterPage() {
@@ -83,7 +84,7 @@ export default function AlertCenterPage() {
                           <p className="text-sm font-medium text-[#111111]">{alert.title}</p>
                           <p className="text-xs text-[#6b7280]">{alert.message}</p>
                           <p className="mt-1 text-xs text-[#898989]">
-                            {new Date(alert.createdAt).toLocaleDateString()}
+                            {formatDate(alert.createdAt)}
                           </p>
                         </div>
                       </div>

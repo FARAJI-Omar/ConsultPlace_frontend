@@ -6,6 +6,7 @@ import { DataTable, type Column } from '../../../components/common/DataTable';
 import Modal from '../../../components/common/Modal';
 import MissionForm from './MissionForm';
 import { useGetMissions, useCloseMission, type Mission } from '../../../hooks/useMissions';
+import { formatDate } from '../../../lib/utils';
 
 export default function MissionsPage() {
   const [page, setPage] = useState(1);
@@ -58,11 +59,11 @@ export default function MissionsPage() {
       label: 'Consultant',
       render: (item) => item.consultant?.name ?? '—',
     },
-    { key: 'startDate', label: 'Début' },
+    { key: 'startDate', label: 'Début', render: (item) => formatDate(item.startDate) },
     {
       key: 'endDate',
       label: 'Fin',
-      render: (item) => item.endDate ?? '—',
+      render: (item) => formatDate(item.endDate),
     },
     {
       key: 'status',

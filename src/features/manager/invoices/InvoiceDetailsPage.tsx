@@ -5,6 +5,7 @@ import { useSendReminder, useSetAutoReminder, useStopAutoReminder } from '../../
 import { toast } from 'sonner';
 import { FileText, Download, Mail, XCircle } from 'lucide-react';
 import { useState } from 'react';
+import { formatDate } from '../../../lib/utils';
 import { Skeleton } from '../../../components/ui/skeleton';
 
 const statusBadge: Record<string, string> = {
@@ -189,9 +190,9 @@ export default function InvoiceDetailsPage() {
           <h2 className="mb-4 text-lg font-semibold text-[#111111]">Informations</h2>
           <div className="space-y-3 text-sm">
             <div className="flex justify-between"><span className="text-[#6b7280]">Référence</span><span className="font-medium text-[#111111]">{invoice.ref}</span></div>
-            <div className="flex justify-between"><span className="text-[#6b7280]">Date d'émission</span><span className="font-medium text-[#111111]">{invoice.issueDate}</span></div>
-            <div className="flex justify-between"><span className="text-[#6b7280]">Date d'échéance</span><span className="font-medium text-[#111111]">{invoice.dueDate}</span></div>
-            {invoice.paymentDate && <div className="flex justify-between"><span className="text-[#6b7280]">Date de paiement</span><span className="font-medium text-[#111111]">{invoice.paymentDate}</span></div>}
+            <div className="flex justify-between"><span className="text-[#6b7280]">Date d'émission</span><span className="font-medium text-[#111111]">{formatDate(invoice.issueDate)}</span></div>
+            <div className="flex justify-between"><span className="text-[#6b7280]">Date d'échéance</span><span className="font-medium text-[#111111]">{formatDate(invoice.dueDate)}</span></div>
+            {invoice.paymentDate && <div className="flex justify-between"><span className="text-[#6b7280]">Date de paiement</span><span className="font-medium text-[#111111]">{formatDate(invoice.paymentDate)}</span></div>}
           </div>
         </div>
 
@@ -252,7 +253,7 @@ export default function InvoiceDetailsPage() {
                   <tr key={p.id} className="border-b border-[#e5e7eb]">
                     <td className="px-3 py-2 text-xs text-[#6b7280]">{p.ref}</td>
                     <td className="px-3 py-2 text-[#111111]">{(p.amount ?? 0).toLocaleString()} DH</td>
-                    <td className="px-3 py-2 text-[#6b7280]">{new Date(p.date).toLocaleDateString()}</td>
+                    <td className="px-3 py-2 text-[#6b7280]">{formatDate(p.date)}</td>
                   </tr>
                 ))}
               </tbody>

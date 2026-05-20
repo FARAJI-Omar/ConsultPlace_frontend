@@ -3,6 +3,7 @@ import { usePayoutsHistory, useTriggerPayout } from '../../../hooks/manager/useP
 import { useInvoices } from '../../../hooks/manager/useInvoices';
 import { Skeleton, SkeletonCard, SkeletonTable } from '../../../components/ui/skeleton';
 import { toast } from 'sonner';
+import { formatDate } from '../../../lib/utils';
 
 const statusBadge: Record<string, string> = {
   COMPLETED: 'bg-[#d1fae5] text-[#10b981]',
@@ -137,7 +138,7 @@ export default function PayoutTrackingPage() {
                   <tr key={entry.id} className="border-b border-[#e5e7eb]">
                     <td className="px-3 py-2 font-medium text-[#111111]">{entry.invoiceRef}</td>
                     <td className="px-3 py-2 text-[#111111]">{entry.amount.toLocaleString()} DH</td>
-                    <td className="px-3 py-2 text-[#6b7280]">{new Date(entry.date).toLocaleDateString()}</td>
+                    <td className="px-3 py-2 text-[#6b7280]">{formatDate(entry.date)}</td>
                     <td className="px-3 py-2">
                       <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${statusBadge[entry.status] || 'bg-[#e5e7eb] text-[#6b7280]'}`}>
                         {statusLabels[entry.status] || entry.status}

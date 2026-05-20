@@ -5,6 +5,7 @@ import { DataTable, type Column } from '../../../components/common/DataTable';
 import Modal from '../../../components/common/Modal';
 import ContractForm from './ContractForm';
 import { useGetContracts } from '../../../hooks/useContracts';
+import { formatDate } from '../../../lib/utils';
 
 interface ContractRow {
   id: number;
@@ -37,8 +38,8 @@ export default function ContractsPage() {
       label: 'Client',
       render: (item) => item.client?.raison_sociale ?? '—',
     },
-    { key: 'startDate', label: 'Date de Début' },
-    { key: 'endDate', label: 'Date de Fin' },
+    { key: 'startDate', label: 'Date de Début', render: (item) => formatDate(item.startDate) },
+    { key: 'endDate', label: 'Date de Fin', render: (item) => formatDate(item.endDate) },
     { key: 'profile', label: 'Profil' },
     {
       key: 'dailyRate',

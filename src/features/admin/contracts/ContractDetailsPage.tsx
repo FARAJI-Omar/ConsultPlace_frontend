@@ -2,6 +2,7 @@ import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Eye, FileText } from 'lucide-react';
 import { useGetContractById } from '../../../hooks/useContracts';
 import { useGetMissionsByContract } from '../../../hooks/useMissions';
+import { formatDate } from '../../../lib/utils';
 
 export default function ContractDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -62,11 +63,11 @@ export default function ContractDetailsPage() {
             </div>
             <div className="flex justify-between">
               <dt className="text-[#6b7280]">Date de début</dt>
-              <dd className="font-medium text-[#111111]">{contract.startDate}</dd>
+              <dd className="font-medium text-[#111111]">{formatDate(contract.startDate)}</dd>
             </div>
             <div className="flex justify-between">
               <dt className="text-[#6b7280]">Date de fin</dt>
-              <dd className="font-medium text-[#111111]">{contract.endDate}</dd>
+              <dd className="font-medium text-[#111111]">{formatDate(contract.endDate)}</dd>
             </div>
             <div className="flex justify-between">
               <dt className="text-[#6b7280]">Profil</dt>

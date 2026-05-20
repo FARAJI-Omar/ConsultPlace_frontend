@@ -262,7 +262,7 @@ export default function GlobalTrackingPage() {
           pagination={data?.pagination ?? { totalItems: 0, totalPages: 1, currentPage: 1, itemsPerPage: limit }}
           isLoading={isLoading}
           isEmpty={!isLoading && (data?.data?.length ?? 0) === 0}
-          emptyMessage="Aucune donnée de tracking"
+          emptyMessage="Aucune donnée"
           onPageChange={handlePageChange}
           onPageSizeChange={handlePageSizeChange}
         />
