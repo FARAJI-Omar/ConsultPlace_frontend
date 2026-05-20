@@ -9,7 +9,7 @@ import type { PaginatedResponse, ApiResponse } from '../../types/api';
 
 interface TrackingFilters {
   status?: string;
-  clientId?: number;
+  client?: string;
   startDate?: string;
   endDate?: string;
 }
@@ -23,7 +23,7 @@ export function useGlobalTracking(
   params.set('page', String(page));
   params.set('limit', String(limit));
   if (filters.status) params.set('status', filters.status);
-  if (filters.clientId) params.set('clientId', String(filters.clientId));
+  if (filters.client) params.set('client', filters.client);
   if (filters.startDate) params.set('startDate', filters.startDate);
   if (filters.endDate) params.set('endDate', filters.endDate);
 
@@ -61,11 +61,11 @@ export function useMarginForecast() {
 export function exportTrackingCSV(filters: TrackingFilters) {
   const params = new URLSearchParams();
   if (filters.status) params.set('status', filters.status);
-  if (filters.clientId) params.set('clientId', String(filters.clientId));
+  if (filters.client) params.set('client', filters.client);
   if (filters.startDate) params.set('startDate', filters.startDate);
   if (filters.endDate) params.set('endDate', filters.endDate);
 
-  const token = localStorage.getItem('authToken');
+  const token = localStorage.getItem('token');
   const query = params.toString();
   const url = `${import.meta.env.VITE_API_BASE_URL}/api/tracking/global/export${query ? `?${query}` : ''}`;
 

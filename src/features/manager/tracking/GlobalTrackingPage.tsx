@@ -1,7 +1,6 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { DataTable } from '../../../components/common/DataTable';
 import { useGlobalTracking, exportTrackingCSV } from '../../../hooks/manager/useAdvancedTracking';
-import { useGetClients } from '../../../hooks/useClients';
 import { toast } from 'sonner';
 import type { Column } from '../../../components/common/DataTable';
 import type { TrackingRow } from '../../../types/manager';
@@ -28,23 +27,84 @@ const statusLabels: Record<string, string> = {
   CANCELED: 'Annulé',
 };
 
+const currentYear = new Date().getFullYear();
+
+const periodeOptions = [
+  { value: '', label: 'Toute période' },
+  { value: 'Q1', label: `Q1 ${currentYear}` },
+  { value: 'Q2', label: `Q2 ${currentYear}` },
+  { value: '3M', label: '3 derniers mois' },
+  { value: 'CUSTOM', label: 'Personnalisée' },
+];
+
+function computeDateRange(
+  periode: string,
+  customStart: string,
+  customEnd: string,
+): { startDate?: string; endDate?: string } {
+  const year = currentYear;
+  switch (periode) {
+    case 'Q1':
+      return {
+        startDate: `${year}-01-01T00:00:00.000Z`,
+        endDate: `${year}-03-31T23:59:59.000Z`,
+      };
+    case 'Q2':
+      return {
+        startDate: `${year}-04-01T00:00:00.000Z`,
+        endDate: `${year}-06-30T23:59:59.000Z`,
+      };
+    case '3M': {
+      const now = new Date();
+      const threeMonthsAgo = new Date(now);
+      threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+      return {
+        startDate: threeMonthsAgo.toISOString(),
+        endDate: now.toISOString(),
+      };
+    }
+    case 'CUSTOM':
+      if (customStart && customEnd) {
+        const [sd, sm, sy] = customStart.split('/');
+        const [ed, em, ey] = customEnd.split('/');
+        return {
+          startDate: `${sy}-${sm}-${sd}T00:00:00.000Z`,
+          endDate: `${ey}-${em}-${ed}T23:59:59.000Z`,
+        };
+      }
+      return {};
+    default:
+      return {};
+  }
+}
+
 export default function GlobalTrackingPage() {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [statusFilter, setStatusFilter] = useState('');
-  const [clientIdFilter, setClientIdFilter] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [clientFilter, setClientFilter] = useState('');
+  const [periodeFilter, setPeriodeFilter] = useState('');
+  const [customStart, setCustomStart] = useState('');
+  const [customEnd, setCustomEnd] = useState('');
   const [exporting, setExporting] = useState(false);
+
+  const dateRange = useMemo(
+    () => computeDateRange(periodeFilter, customStart, customEnd),
+    [periodeFilter, customStart, customEnd],
+  );
 
   const { data, isLoading } = useGlobalTracking(page, limit, {
     status: statusFilter || undefined,
-    clientId: clientIdFilter ? Number(clientIdFilter) : undefined,
-    startDate: startDate || undefined,
-    endDate: endDate || undefined,
+    client: clientFilter || undefined,
+    startDate: dateRange.startDate,
+    endDate: dateRange.endDate,
   });
 
-  const clientsQuery = useGetClients();
+  const clientOptions = useMemo(() => {
+    if (!data?.data) return [];
+    const names = new Set(data.data.map((r) => r.client));
+    return Array.from(names).sort((a, b) => a.localeCompare(b, 'fr'));
+  }, [data?.data]);
 
   const handlePageChange = useCallback((p: number) => setPage(p), []);
   const handlePageSizeChange = useCallback((s: number) => { setLimit(s); setPage(1); }, []);
@@ -52,11 +112,12 @@ export default function GlobalTrackingPage() {
   const handleExport = async () => {
     setExporting(true);
     try {
+      const range = computeDateRange(periodeFilter, customStart, customEnd);
       await exportTrackingCSV({
         status: statusFilter || undefined,
-        clientId: clientIdFilter ? Number(clientIdFilter) : undefined,
-        startDate: startDate || undefined,
-        endDate: endDate || undefined,
+        client: clientFilter || undefined,
+        ...(range.startDate ? { startDate: range.startDate } : {}),
+        ...(range.endDate ? { endDate: range.endDate } : {}),
       });
       toast.success('Export CSV démarré');
     } catch {
@@ -67,7 +128,7 @@ export default function GlobalTrackingPage() {
   };
 
   const columns: Column<TrackingRow>[] = [
-    { key: 'ref', label: 'Réf' },
+    { key: 'month', label: 'Mois', render: (r) => r.timesheet?.month ?? '—' },
     { key: 'client', label: 'Client' },
     { key: 'consultant', label: 'Consultant' },
     { key: 'amount', label: 'Montant HT', render: (r) => `${(r.amount ?? 0).toLocaleString()} DH` },
@@ -98,7 +159,7 @@ export default function GlobalTrackingPage() {
           disabled={exporting}
           className="cursor-pointer rounded-[8px] bg-[#3b82f6] px-4 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-90 disabled:opacity-50"
         >
-          {exporting ? 'Export...' : 'Exporter CSV'}
+          {exporting ? 'Exportation...' : 'Exporter CSV'}
         </button>
       </div>
 
@@ -118,34 +179,52 @@ export default function GlobalTrackingPage() {
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-[#6b7280]">Client</label>
           <select
-            value={clientIdFilter}
-            onChange={(e) => { setClientIdFilter(e.target.value); setPage(1); }}
+            value={clientFilter}
+            onChange={(e) => { setClientFilter(e.target.value); setPage(1); }}
             className="rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111] min-w-[180px]"
           >
             <option value="">Tous les clients</option>
-            {(clientsQuery.data?.data ?? []).map((c) => (
-              <option key={c.id} value={c.id}>{c.raison_sociale}</option>
+            {clientOptions.map((name) => (
+              <option key={name} value={name}>{name}</option>
             ))}
           </select>
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-[#6b7280]">Date début</label>
-          <input
-            type="date"
-            value={startDate}
-            onChange={(e) => { setStartDate(e.target.value); setPage(1); }}
+          <label className="text-xs font-medium text-[#6b7280]">Période</label>
+          <select
+            value={periodeFilter}
+            onChange={(e) => { setPeriodeFilter(e.target.value); setPage(1); }}
             className="rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111]"
-          />
+          >
+            {periodeOptions.map((o) => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
+          </select>
         </div>
-        <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-[#6b7280]">Date fin</label>
-          <input
-            type="date"
-            value={endDate}
-            onChange={(e) => { setEndDate(e.target.value); setPage(1); }}
-            className="rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111]"
-          />
-        </div>
+        {periodeFilter === 'CUSTOM' && (
+          <>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-[#6b7280]">De (jj/mm/aaaa)</label>
+              <input
+                type="text"
+                placeholder="jj/mm/aaaa"
+                value={customStart}
+                onChange={(e) => { setCustomStart(e.target.value); setPage(1); }}
+                className="rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111] w-[150px]"
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-[#6b7280]">À (jj/mm/aaaa)</label>
+              <input
+                type="text"
+                placeholder="jj/mm/aaaa"
+                value={customEnd}
+                onChange={(e) => { setCustomEnd(e.target.value); setPage(1); }}
+                className="rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111] w-[150px]"
+              />
+            </div>
+          </>
+        )}
       </div>
 
       <DataTable
