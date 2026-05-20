@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo } from 'react';
+import { formatDate } from '../../../lib/utils';
 import { DataTable } from '../../../components/common/DataTable';
 import { useGlobalTracking, exportTrackingCSV } from '../../../hooks/manager/useAdvancedTracking';
 import { toast } from 'sonner';
@@ -33,6 +34,8 @@ const periodeOptions = [
   { value: '', label: 'Toute période' },
   { value: 'Q1', label: `Q1 ${currentYear}` },
   { value: 'Q2', label: `Q2 ${currentYear}` },
+  { value: 'Q3', label: `Q3 ${currentYear}` },
+  { value: 'Q4', label: `Q4 ${currentYear}` },
   { value: '3M', label: '3 derniers mois' },
   { value: 'CUSTOM', label: 'Personnalisée' },
 ];
@@ -53,6 +56,16 @@ function computeDateRange(
       return {
         startDate: `${year}-04-01T00:00:00.000Z`,
         endDate: `${year}-06-30T23:59:59.000Z`,
+      };
+    case 'Q3':
+      return {
+        startDate: `${year}-07-01T00:00:00.000Z`,
+        endDate: `${year}-09-30T23:59:59.000Z`,
+      };
+    case 'Q4':
+      return {
+        startDate: `${year}-10-01T00:00:00.000Z`,
+        endDate: `${year}-12-31T23:59:59.000Z`,
       };
     case '3M': {
       const now = new Date();
@@ -130,7 +143,22 @@ export default function GlobalTrackingPage() {
   const columns: Column<TrackingRow>[] = [
     { key: 'month', label: 'Mois', render: (r) => r.timesheet?.month ?? '—' },
     { key: 'client', label: 'Client' },
-    { key: 'consultant', label: 'Consultant' },
+    {
+      key: 'consultant',
+      label: 'Consultant',
+      render: (r) => {
+        const parts = r.consultant.trim().split(/\s+/);
+        const initials = parts.slice(0, 2).map((p) => p[0]?.toUpperCase()).join('');
+        return (
+          <div className="flex items-center gap-2">
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#3b82f6] text-xs font-semibold text-[#ffffff]">
+              {initials}
+            </span>
+            <span>{r.consultant}</span>
+          </div>
+        );
+      },
+    },
     { key: 'amount', label: 'Montant HT', render: (r) => `${(r.amount ?? 0).toLocaleString()} DH` },
     { key: 'vat', label: 'TVA', render: (r) => `${(r.vat ?? 0).toLocaleString()} DH` },
     { key: 'total', label: 'Total TTC', render: (r) => `${(r.total ?? 0).toLocaleString()} DH` },
@@ -143,9 +171,9 @@ export default function GlobalTrackingPage() {
         </span>
       ),
     },
-    { key: 'issueDate', label: 'Date émission' },
-    { key: 'dueDate', label: 'Date échéance' },
-    { key: 'paymentDate', label: 'Date paiement', render: (r) => r.paymentDate ?? '—' },
+    { key: 'issueDate', label: 'Date émission', render: (r) => formatDate(r.issueDate) },
+    { key: 'dueDate', label: 'Date échéance', render: (r) => formatDate(r.dueDate) },
+    { key: 'paymentDate', label: 'Date paiement', render: (r) => formatDate(r.paymentDate) },
     { key: 'totalPaid', label: 'Total payé', render: (r) => `${(r.totalPaid ?? 0).toLocaleString()} DH` },
     { key: 'cabinet_margin', label: 'Marge cabinet', render: (r) => `${(r.cabinet_margin ?? 0).toLocaleString()} DH` },
   ];
@@ -153,7 +181,7 @@ export default function GlobalTrackingPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-[#111111]">Tracking global</h1>
+        <h1 className="text-2xl font-semibold text-[#111111]">Suivi global</h1>
         <button
           onClick={handleExport}
           disabled={exporting}
@@ -227,16 +255,18 @@ export default function GlobalTrackingPage() {
         )}
       </div>
 
-      <DataTable
-        columns={columns}
-        data={data?.data ?? []}
-        pagination={data?.pagination ?? { totalItems: 0, totalPages: 1, currentPage: 1, itemsPerPage: limit }}
-        isLoading={isLoading}
-        isEmpty={!isLoading && (data?.data?.length ?? 0) === 0}
-        emptyMessage="Aucune donnée de tracking"
-        onPageChange={handlePageChange}
-        onPageSizeChange={handlePageSizeChange}
-      />
+      <div className="[&_table]:text-xs [&_th]:!text-xs [&_td]:!text-xs">
+        <DataTable
+          columns={columns}
+          data={data?.data ?? []}
+          pagination={data?.pagination ?? { totalItems: 0, totalPages: 1, currentPage: 1, itemsPerPage: limit }}
+          isLoading={isLoading}
+          isEmpty={!isLoading && (data?.data?.length ?? 0) === 0}
+          emptyMessage="Aucune donnée de tracking"
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+        />
+      </div>
     </div>
   );
 }
