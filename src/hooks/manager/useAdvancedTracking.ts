@@ -67,7 +67,7 @@ export function exportTrackingCSV(filters: TrackingFilters) {
 
   const token = localStorage.getItem('token');
   const query = params.toString();
-  const url = `${import.meta.env.VITE_API_BASE_URL}/api/tracking/global/export${query ? `?${query}` : ''}`;
+  const url = `${import.meta.env.VITE_API_BASE_URL}/tracking/global/export${query ? `?${query}` : ''}`;
 
   return fetch(url, {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
