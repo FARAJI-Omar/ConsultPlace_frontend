@@ -60,6 +60,22 @@ export default function ContractForm({ onSuccess }: ContractFormProps) {
     e.preventDefault();
     setErrors({});
 
+    const newErrors: Record<string, string> = {};
+    if (!form.clientId) newErrors.clientId = 'Ce champ est requis';
+    if (!form.startDate) newErrors.startDate = 'Ce champ est requis';
+    if (!form.endDate) newErrors.endDate = 'Ce champ est requis';
+    if (!form.profile) newErrors.profile = 'Ce champ est requis';
+    if (!form.dailyRate) {
+      newErrors.dailyRate = 'Ce champ est requis';
+    } else if (Number(form.dailyRate) <= 0) {
+      newErrors.dailyRate = 'Le taux journalier doit être un nombre positif';
+    }
+    if (form.startDate && form.endDate && form.startDate >= form.endDate) {
+      newErrors.endDate = 'La date de fin doit être postérieure à la date de début';
+    }
+    setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) return;
+
     mutation.mutate(
       {
         clientId: Number(form.clientId),
@@ -96,6 +112,7 @@ export default function ContractForm({ onSuccess }: ContractFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <p className="text-xs text-red-500">(*) Champ obligatoire</p>
       {FIELDS.map(({ key, label, required, type }) => (
         <div key={key}>
           <label className="mb-1 block text-sm font-medium text-[#111111]">
@@ -134,7 +151,7 @@ export default function ContractForm({ onSuccess }: ContractFormProps) {
               }`}
             />
           )}
-          {errors[key] && (
+          {type !== 'date' && errors[key] && (
             <p className="mt-1 text-xs text-red-500">{errors[key]}</p>
           )}
         </div>

@@ -63,6 +63,17 @@ export default function MissionForm({ onSuccess }: MissionFormProps) {
     e.preventDefault();
     setErrors({});
 
+    const newErrors: Record<string, string> = {};
+    if (!form.contractId) newErrors.contractId = 'Ce champ est requis';
+    if (!form.consultantId) newErrors.consultantId = 'Ce champ est requis';
+    if (!form.title) newErrors.title = 'Ce champ est requis';
+    if (!form.startDate) newErrors.startDate = 'Ce champ est requis';
+    if (form.startDate && form.endDate && form.startDate >= form.endDate) {
+      newErrors.endDate = 'La date de fin doit être postérieure à la date de début';
+    }
+    setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) return;
+
     mutation.mutate(
       {
         contractId: Number(form.contractId),
@@ -99,6 +110,7 @@ export default function MissionForm({ onSuccess }: MissionFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <p className="text-xs text-red-500">(*) Champ obligatoire</p>
       {FIELDS.map(({ key, label, required, type, options }) => (
         <div key={key}>
           <label className="mb-1 block text-sm font-medium text-[#111111]">
@@ -136,7 +148,7 @@ export default function MissionForm({ onSuccess }: MissionFormProps) {
               }`}
             />
           )}
-          {errors[key] && (
+          {type !== 'date' && errors[key] && (
             <p className="mt-1 text-xs text-red-500">{errors[key]}</p>
           )}
         </div>

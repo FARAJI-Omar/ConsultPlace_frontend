@@ -123,6 +123,19 @@ export default function AlertRuleForm({ rule, onSuccess }: AlertRuleFormProps) {
     setErrors({});
     setClientErrors([]);
 
+    const requiredErrors: string[] = [];
+    if (!form.type) requiredErrors.push('Ce champ est requis');
+    if (!form.event) requiredErrors.push('Ce champ est requis');
+    if (form.threshold === undefined || form.threshold === null) {
+      requiredErrors.push('Ce champ est requis');
+    } else if (Number(form.threshold) <= 0) {
+      requiredErrors.push('Le seuil doit être un nombre positif');
+    }
+    if (requiredErrors.length > 0) {
+      setClientErrors(requiredErrors);
+      return;
+    }
+
     const event = form.event;
     const titleErrors = form.titleTemplate ? validateTemplate(form.titleTemplate, event) : [];
     const messageErrors = form.messageTemplate ? validateTemplate(form.messageTemplate, event) : [];
@@ -189,6 +202,7 @@ export default function AlertRuleForm({ rule, onSuccess }: AlertRuleFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <p className="text-xs text-red-500">(*) Champ obligatoire</p>
       <div>
         <label className="mb-1 block text-sm font-medium text-[#111111]">
           Type <span className="text-red-500 ml-0.5">*</span>

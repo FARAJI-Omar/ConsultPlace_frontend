@@ -57,7 +57,7 @@ function DataTableInner<T>({
           <thead>
             <tr className="border-b border-[#e5e7eb]">
               {columns.map((col, idx) => (
-                <th key={col.key} className={`${headerClass}${idx === columns.length - 1 ? ` ${lastColClass} bg-[#E1E2ED] text-center` : ''}`}>
+              <th key={col.key} className={`${headerClass}${idx === columns.length - 1 ? ` ${lastColClass} bg-[#949e4b] text-center` : ''}`}>
                   {col.label}
                 </th>
               ))}
@@ -95,7 +95,7 @@ function DataTableInner<T>({
         <thead>
           <tr className="border-b border-[#e5e7eb]">
             {columns.map((col, idx) => (
-              <th key={col.key} className={`${headerClass}${idx === columns.length - 1 ? ` ${lastColClass} bg-[#949e4b] text-center` : ''}`}>
+              <th key={col.key} className={`${headerClass}${idx === columns.length - 1 ? ` ${lastColClass} bg-[#E1E2ED] text-center` : ''}`}>
                 {col.label}
               </th>
             ))}

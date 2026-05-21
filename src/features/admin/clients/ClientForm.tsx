@@ -59,6 +59,20 @@ export default function ClientForm({ client, onSuccess }: ClientFormProps) {
     e.preventDefault();
     setErrors({});
 
+    const newErrors: Record<string, string> = {};
+    if (!form.raison_sociale) newErrors.raison_sociale = 'Ce champ est requis';
+    if (!form.rc) newErrors.rc = 'Ce champ est requis';
+    if (!form.identifiant_commun) newErrors.identifiant_commun = 'Ce champ est requis';
+    if (!form.contact) newErrors.contact = 'Ce champ est requis';
+    if (!form.email) {
+      newErrors.email = 'Ce champ est requis';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      newErrors.email = "L'email n'est pas valide";
+    }
+    if (!form.address) newErrors.address = 'Ce champ est requis';
+    setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) return;
+
     mutation.mutate(
       { id: client?.id, data: form },
       {

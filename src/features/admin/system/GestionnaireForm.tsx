@@ -25,6 +25,20 @@ export default function GestionnaireForm({ onSuccess }: GestionnaireFormProps) {
     e.preventDefault();
     setErrors({});
 
+    const newErrors: Record<string, string> = {};
+    if (!form.email) {
+      newErrors.email = 'Ce champ est requis';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      newErrors.email = "L'email n'est pas valide";
+    }
+    if (!form.password) {
+      newErrors.password = 'Ce champ est requis';
+    } else if (form.password.length < 6) {
+      newErrors.password = 'Le mot de passe doit contenir au moins 6 caractères';
+    }
+    setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) return;
+
     mutation.mutate(form, {
       onSuccess: () => {
         toast.success('Gestionnaire créé avec succès');
@@ -48,6 +62,7 @@ export default function GestionnaireForm({ onSuccess }: GestionnaireFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <p className="text-xs text-red-500">(*) Champ obligatoire</p>
       {FIELDS.map(({ key, label, required, type }) => (
         <div key={key}>
           <label className="mb-1 block text-sm font-medium text-[#111111]">

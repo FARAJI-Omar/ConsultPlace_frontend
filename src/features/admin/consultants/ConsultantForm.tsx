@@ -40,6 +40,27 @@ export default function ConsultantForm({ onSuccess }: ConsultantFormProps) {
     e.preventDefault();
     setErrors({});
 
+    const newErrors: Record<string, string> = {};
+    if (!form.name) newErrors.name = 'Ce champ est requis';
+    if (!form.email) {
+      newErrors.email = 'Ce champ est requis';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      newErrors.email = "L'email n'est pas valide";
+    }
+    if (!form.profile) newErrors.profile = 'Ce champ est requis';
+    if (!form.dailyRate) {
+      newErrors.dailyRate = 'Ce champ est requis';
+    } else if (Number(form.dailyRate) <= 0) {
+      newErrors.dailyRate = 'Le taux journalier doit être un nombre positif';
+    }
+    if (!form.password) {
+      newErrors.password = 'Ce champ est requis';
+    } else if (form.password.length < 6) {
+      newErrors.password = 'Le mot de passe doit contenir au moins 6 caractères';
+    }
+    setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) return;
+
     mutation.mutate(
       {
         name: form.name,
@@ -67,6 +88,7 @@ export default function ConsultantForm({ onSuccess }: ConsultantFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <p className="text-xs text-red-500">(*) Champ obligatoire</p>
       {FIELDS.map(({ key, label, required, type }) => (
         <div key={key}>
           <label className="mb-1 block text-sm font-medium text-[#111111]">
