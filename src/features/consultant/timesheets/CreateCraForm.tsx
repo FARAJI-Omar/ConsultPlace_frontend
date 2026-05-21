@@ -46,7 +46,7 @@ function generateDefaultEntries(year: number, month: number, holidays: { date: s
 const MAX_FILES = 10;
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
-export default function CreateCraForm() {
+export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?: number }) {
   const now = new Date();
   const currentYear = now.getFullYear();
   const currentMonth = now.getMonth();
@@ -54,7 +54,7 @@ export default function CreateCraForm() {
   const year = currentYear;
   const month = currentMonth;
 
-  const [selectedMissionId, setSelectedMissionId] = useState<number | null>(null);
+  const [selectedMissionId, setSelectedMissionId] = useState<number | null>(defaultMissionId ?? null);
   const [entriesByMonth, setEntriesByMonth] = useState<Record<string, Record<string, number>>>({});
   const [touchedByMonth, setTouchedByMonth] = useState<Record<string, string[]>>({});
   const [files, setFiles] = useState<File[]>([]);

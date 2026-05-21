@@ -21,7 +21,7 @@ export default function MissionsPage() {
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
-  const [status, setStatus] = useState('');
+  const [status, setStatus] = useState('ACTIVE');
 
   const { data, isLoading } = useConsultantMissions({
     page,
@@ -69,12 +69,20 @@ export default function MissionsPage() {
       key: 'actions',
       label: 'Actions',
       render: (mission) => (
-        <button
-          onClick={() => navigate(`/consultant/missions/${mission.id}`)}
-          className="cursor-pointer text-[#3b82f6] hover:text-[#111111] transition-colors text-sm font-medium"
-        >
-          Voir détails
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => navigate(`/consultant/missions/${mission.id}`)}
+            className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-3 py-1.5 text-xs font-medium text-[#111111] transition-colors hover:bg-[#f3f4f6]"
+          >
+            Voir détails
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); navigate(`/consultant/timesheets/new?missionId=${mission.id}`); }}
+            className="cursor-pointer rounded-[8px] bg-[#3b82f6] px-3 py-1.5 text-xs font-medium text-[#ffffff] transition-colors hover:bg-[#2563eb]"
+          >
+            + Créer relevé
+          </button>
+        </div>
       ),
     },
   ];
