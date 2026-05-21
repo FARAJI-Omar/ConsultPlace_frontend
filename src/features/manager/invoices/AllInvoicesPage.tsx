@@ -280,7 +280,7 @@ export default function AllInvoicesPage() {
         </div>
         <button
           onClick={() => setGenerateModal(true)}
-          className="cursor-pointer rounded-[8px] bg-[#3b82f6] px-4 py-2 text-sm font-medium text-[#ffffff] transition-colors hover:bg-[#2563eb]"
+          className="cursor-pointer rounded-[8px] bg-[#003ea8] px-4 py-2 text-sm font-medium text-[#ffffff] transition-colors hover:bg-[#2563eb]"
         >
           Générer une facture
         </button>
