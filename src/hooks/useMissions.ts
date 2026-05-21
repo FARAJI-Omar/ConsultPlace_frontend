@@ -10,6 +10,7 @@ export interface Mission {
   startDate: string;
   endDate: string | null;
   status: 'ACTIVE' | 'CLOSED';
+  attachments?: { id: number; filename: string; url: string; type: string; createdAt: string }[];
   contract?: { id: number; ref: string };
   consultant?: { id: number; name: string };
   createdAt: string;
@@ -22,6 +23,7 @@ export interface MissionFormData {
   title: string;
   startDate: string;
   endDate?: string;
+  files?: File[];
 }
 
 export function useGetMissions(page = 1, limit = 10) {
@@ -64,10 +66,20 @@ export function useMutateMission() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: MissionFormData) =>
-      apiClient
-        .post<{ success: true; data: Mission }>('/missions', data)
-        .then((res) => res.data.data),
+    mutationFn: (data: MissionFormData) => {
+      const formData = new FormData();
+      formData.append('contractId', String(data.contractId));
+      formData.append('consultantId', String(data.consultantId));
+      formData.append('title', data.title);
+      formData.append('startDate', data.startDate);
+      if (data.endDate) formData.append('endDate', data.endDate);
+      if (data.files) {
+        data.files.forEach((file) => formData.append('files', file));
+      }
+      return apiClient
+        .post<{ success: true; data: Mission }>('/missions', formData)
+        .then((res) => res.data.data);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['missions'] });
     },

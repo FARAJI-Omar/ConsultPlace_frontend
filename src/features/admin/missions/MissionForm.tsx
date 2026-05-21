@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { toast } from 'sonner';
+import { Upload, X } from 'lucide-react';
 import { parseApiError } from '../../../utils/errorParser';
 import { useMutateMission } from '../../../hooks/useMissions';
 import { useGetContracts } from '../../../hooks/useContracts';
@@ -10,6 +11,9 @@ interface MissionFormProps {
   onSuccess: () => void;
 }
 
+const MAX_FILES = 10;
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
+
 export default function MissionForm({ onSuccess }: MissionFormProps) {
   const [form, setForm] = useState({
     contractId: '',
@@ -18,7 +22,9 @@ export default function MissionForm({ onSuccess }: MissionFormProps) {
     startDate: '',
     endDate: '',
   });
+  const [files, setFiles] = useState<File[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const { data: contractsData } = useGetContracts(1, 200);
   const { data: consultantsData } = useGetConsultants(1, 200);
@@ -34,6 +40,25 @@ export default function MissionForm({ onSuccess }: MissionFormProps) {
     });
   };
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = Array.from(e.target.files ?? []);
+    const remaining = MAX_FILES - files.length;
+    const allowed = selected.slice(0, remaining);
+
+    const oversized = allowed.filter((f) => f.size > MAX_FILE_SIZE);
+    if (oversized.length > 0) {
+      toast.error('Certains fichiers dépassent la limite de 10 Mo');
+      return;
+    }
+
+    setFiles((prev) => [...prev, ...allowed]);
+    if (fileRef.current) fileRef.current.value = '';
+  };
+
+  const removeFile = (index: number) => {
+    setFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
@@ -45,6 +70,7 @@ export default function MissionForm({ onSuccess }: MissionFormProps) {
         title: form.title,
         startDate: form.startDate,
         endDate: form.endDate || undefined,
+        files: files.length > 0 ? files : undefined,
       },
       {
         onSuccess: () => {
@@ -115,6 +141,51 @@ export default function MissionForm({ onSuccess }: MissionFormProps) {
           )}
         </div>
       ))}
+
+      <div>
+        <label className="mb-1 block text-sm font-medium text-[#111111]">
+          Documents (PDF, max 10 fichiers, 10 Mo chacun)
+        </label>
+        <div
+          onClick={() => fileRef.current?.click()}
+          className="flex cursor-pointer items-center gap-2 rounded-[8px] border border-dashed border-[#e5e7eb] px-3 py-4 text-sm text-[#6b7280] transition-colors hover:border-primary-blue hover:text-primary-blue"
+        >
+          <Upload className="h-4 w-4" />
+          <span>Cliquez pour ajouter des fichiers</span>
+        </div>
+        <input
+          ref={fileRef}
+          type="file"
+          accept=".pdf"
+          multiple
+          onChange={handleFileSelect}
+          className="hidden"
+        />
+        {files.length > 0 && (
+          <ul className="mt-2 space-y-1">
+            {files.map((file, i) => (
+              <li key={i} className="flex items-center justify-between rounded bg-[#f9fafb] px-3 py-1.5 text-sm text-[#111111]">
+                <span className="truncate">{file.name}</span>
+                <button
+                  type="button"
+                  onClick={() => removeFile(i)}
+                  className="cursor-pointer rounded p-0.5 text-[#6b7280] transition-colors hover:text-red-500"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </li>
+            ))}
+            {files.length < MAX_FILES && (
+              <li
+                onClick={() => fileRef.current?.click()}
+                className="cursor-pointer text-xs text-primary-blue hover:underline"
+              >
+                + Ajouter plus de fichiers
+              </li>
+            )}
+          </ul>
+        )}
+      </div>
 
       <div className="flex justify-end gap-3 pt-2">
         <button

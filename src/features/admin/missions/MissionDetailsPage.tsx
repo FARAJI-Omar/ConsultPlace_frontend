@@ -1,5 +1,5 @@
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, FileText, Download } from 'lucide-react';
 import { useGetMissionById } from '../../../hooks/useMissions';
 import { formatDate } from '../../../lib/utils';
 
@@ -86,6 +86,34 @@ export default function MissionDetailsPage() {
           </dl>
         </div>
       </div>
+
+      {mission.attachments && mission.attachments.length > 0 && (
+        <div className="rounded-[12px] border border-[#e5e7eb] p-6">
+          <h2 className="mb-4 text-lg font-semibold text-[#111111]">
+            Documents
+          </h2>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {mission.attachments.map((att) => (
+              <a
+                key={att.id}
+                href={att.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 rounded-[8px] border border-[#e5e7eb] bg-[#ffffff] px-4 py-3 transition-colors hover:bg-[#f9fafb]"
+              >
+                <div className="flex h-10 w-10 items-center justify-center rounded-[8px] bg-[#eff6ff]">
+                  <FileText className="h-5 w-5 text-[#3b82f6]" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-[#111111]">{att.filename}</p>
+                  <p className="text-xs text-[#6b7280]">Document</p>
+                </div>
+                <Download className="h-4 w-4 shrink-0 text-[#6b7280]" />
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -138,7 +138,7 @@ export default function MissionsPage() {
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
         title="Créer une mission"
-        size="md"
+        size="lg"
       >
         <MissionForm onSuccess={() => setModalOpen(false)} />
       </Modal>

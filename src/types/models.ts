@@ -51,7 +51,7 @@ export interface DocumentFile {
   contractId?: number | null;
   filename: string;
   url: string;
-  type: 'CONTRACT_DOC' | 'PROOF' | 'CRA' | 'INVOICE';
+  type: 'CONTRACT_DOC' | 'PROOF' | 'CRA' | 'INVOICE' | 'MISSION_DOC';
   uploadedAt?: string;
 }
 
@@ -168,6 +168,8 @@ export interface AlertRule {
   event: AlertEvent;
   threshold: number;
   isActive: boolean;
+  titleTemplate: string | null;
+  messageTemplate: string | null;
 }
 
 export interface Gestionnaire {
