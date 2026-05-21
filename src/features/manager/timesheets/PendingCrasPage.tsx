@@ -53,7 +53,9 @@ export default function PendingCrasPage() {
   const columns: Column<ManagerTimesheet>[] = [
     { key: 'month', label: 'Mois', render: (ts) => formatMonth(ts.month) },
     { key: 'missionTitle', label: 'Mission', render: (ts) => ts.mission.title },
-    { key: 'consultantName', label: 'Consultant', render: (ts) => ts.consultant.name },
+    { key: 'consultantName', label: 'Consultant', render: (ts) => (
+      <span className="inline-block rounded-[6px] bg-[#EFF6FF] px-2.5 py-1 text-sm font-medium text-[#111111]">{ts.consultant.name}</span>
+    ) },
     {
       key: 'status',
       label: 'Statut',
@@ -94,10 +96,10 @@ export default function PendingCrasPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div>
         <h1 className="text-2xl font-semibold text-[#111111]">Relevés des consultants</h1>
-        <div className="flex items-center gap-2">
-          <label className="text-sm text-[#6b7280]">Statut:</label>
+        <div className="mt-4 flex items-center gap-2">
+          <label className="text-sm font-medium text-[#111111]">Filtrer par statut:</label>
           <select
             value={statusFilter}
             onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}

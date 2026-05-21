@@ -58,10 +58,8 @@ export default function ReviewCraModal({ timesheetId, open, onClose }: ReviewCra
   };
 
   const attachments = timesheet?.attachments?.filter(
-    (a) => a.type === 'PROOF' || a.type === 'CRA_PDF',
+    (a) => a.type === 'PROOF' || a.type === 'MISSION_DOC',
   ) ?? [];
-
-  const contractDocs = timesheet?.contractDocuments ?? [];
 
   return (
     <>
@@ -145,25 +143,6 @@ export default function ReviewCraModal({ timesheetId, open, onClose }: ReviewCra
                 </div>
               )}
 
-              {contractDocs.length > 0 && (
-                <div>
-                  <h3 className="mb-2 text-sm font-medium text-[#111111]">Documents du contrat</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {contractDocs.map((doc) => (
-                      <a
-                        key={doc.id}
-                        href={doc.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-block rounded-full bg-[#f3f4f6] px-3 py-1 text-xs text-[#3b82f6] hover:underline"
-                      >
-                        {doc.filename}
-                      </a>
-                    ))}
-                  </div>
-                </div>
-              )}
-
               {rejectMode && (
                 <div>
                   <label className="block text-sm font-medium text-[#111111] mb-1">Motif du rejet</label>
@@ -228,7 +207,7 @@ export default function ReviewCraModal({ timesheetId, open, onClose }: ReviewCra
               Approuver le Relevé
             </h2>
             <p className="mb-6 text-sm text-[#6b7280]">
-              Êtes-vous sûr de vouloir approuver ce CRA&nbsp;? Cette action générera un PDF et ne peut pas être annulée.
+              Êtes-vous sûr de vouloir approuver ce relevé&nbsp;? Cette action ne peut pas être annulée.
             </p>
             <div className="flex justify-end gap-3">
               <button
