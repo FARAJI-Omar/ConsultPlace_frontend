@@ -68,7 +68,7 @@ export default function ConsultantsPage() {
     },
     {
       key: 'actions',
-      label: '',
+      label: 'Actions',
       render: (item) => (
         <button
           onClick={() => handleToggle(item.id, item.isActive)}

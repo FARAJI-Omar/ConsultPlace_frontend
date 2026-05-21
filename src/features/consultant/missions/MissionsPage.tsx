@@ -67,7 +67,7 @@ export default function MissionsPage() {
     },
     {
       key: 'actions',
-      label: '',
+      label: 'Actions',
       render: (mission) => (
         <button
           onClick={() => navigate(`/consultant/missions/${mission.id}`)}

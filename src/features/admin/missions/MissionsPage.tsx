@@ -82,7 +82,7 @@ export default function MissionsPage() {
     },
     {
       key: 'actions',
-      label: '',
+      label: 'Actions',
       render: (item) => (
         <div className="flex items-center gap-1">
           <Link

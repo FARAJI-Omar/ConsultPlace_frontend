@@ -71,7 +71,7 @@ export default function AlertRulesPage() {
     },
     {
       key: 'actions',
-      label: '',
+      label: 'Actions',
       render: (item) => (
         <button
           onClick={() => openEdit(item)}

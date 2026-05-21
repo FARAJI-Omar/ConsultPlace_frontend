@@ -48,7 +48,7 @@ export default function ContractsPage() {
     },
     {
       key: 'actions',
-      label: '',
+      label: 'Actions',
       render: (item) => (
         <button
           onClick={() => navigate(`/admin/contracts/${item.id}`)}
