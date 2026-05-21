@@ -1,4 +1,4 @@
-import { memo, useCallback } from 'react';
+import { memo, useCallback, useState } from 'react';
 import type { Pagination } from '../../types/api';
 
 export interface Column<T> {
@@ -30,15 +30,25 @@ function DataTableInner<T>({
   onPageChange,
   onPageSizeChange,
 }: DataTableProps<T>) {
+  const [selectedRow, setSelectedRow] = useState<number | null>(null);
+
   const handlePageSizeChange = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
+      setSelectedRow(null);
       onPageSizeChange(Number(e.target.value));
     },
     [onPageSizeChange],
   );
 
+  const handleRowClick = (idx: number) => {
+    setSelectedRow((prev) => (prev === idx ? null : idx));
+  };
+
   const headerClass =
-    'px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[#6b7280] bg-[#E1E2ED] first:rounded-tl-[8px] last:rounded-tr-[8px]';
+    'whitespace-nowrap px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-[#6b7280] bg-[#E1E2ED] first:rounded-tl-[8px] last:rounded-tr-[8px]';
+
+  const lastColClass = 'sticky right-0 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.15)]';
+  const cellClass = 'whitespace-nowrap px-4 py-3 text-[#111111] bg-[#ffffff] hover:bg-[#f9fafb]';
 
   if (isLoading) {
     return (
@@ -46,8 +56,8 @@ function DataTableInner<T>({
         <table className="w-full border-collapse text-sm">
           <thead>
             <tr className="border-b border-[#e5e7eb]">
-              {columns.map((col) => (
-                <th key={col.key} className={headerClass}>
+              {columns.map((col, idx) => (
+                <th key={col.key} className={`${headerClass}${idx === columns.length - 1 ? ` ${lastColClass} bg-[#E1E2ED] text-center` : ''}`}>
                   {col.label}
                 </th>
               ))}
@@ -56,8 +66,8 @@ function DataTableInner<T>({
           <tbody>
             {Array.from({ length: 5 }).map((_, i) => (
               <tr key={i} className="border-b border-[#e5e7eb]">
-                {columns.map((col) => (
-                  <td key={col.key} className="px-4 py-3">
+                {columns.map((col, idx) => (
+                  <td key={col.key} className={`${cellClass}${idx === columns.length - 1 ? ` ${lastColClass} text-center` : ''}`}>
                     <div className="h-4 w-3/4 animate-pulse rounded bg-[#e5e7eb]" />
                   </td>
                 ))}
@@ -84,26 +94,34 @@ function DataTableInner<T>({
       <table className="w-full border-collapse text-sm">
         <thead>
           <tr className="border-b border-[#e5e7eb]">
-            {columns.map((col) => (
-              <th key={col.key} className={headerClass}>
+            {columns.map((col, idx) => (
+              <th key={col.key} className={`${headerClass}${idx === columns.length - 1 ? ` ${lastColClass} bg-[#949e4b] text-center` : ''}`}>
                 {col.label}
               </th>
             ))}
           </tr>
         </thead>
         <tbody>
-          {data.map((item, idx) => (
-            <tr
-              key={idx}
-              className="border-b border-[#e5e7eb] transition-colors hover:bg-[#f9fafb]"
-            >
-              {columns.map((col) => (
-                <td key={col.key} className="px-4 py-3 text-[#111111]">
-                  {col.render ? col.render(item) : String((item as Record<string, unknown>)[col.key] ?? '')}
-                </td>
-              ))}
-            </tr>
-          ))}
+          {data.map((item, idx) => {
+            const isSelected = selectedRow === idx;
+            return (
+              <tr
+                key={idx}
+                onClick={() => handleRowClick(idx)}
+                className="border-b border-[#e5e7eb]"
+              >
+              {columns.map((col, colIdx) => {
+                const isLast = colIdx === columns.length - 1;
+                const cellClassName = `whitespace-nowrap px-4 py-3 text-[#111111]${isLast ? ` ${lastColClass} text-center` : ''}${isSelected ? ' bg-yellow-100/50' : ' bg-[#ffffff] hover:bg-[#f9fafb]'}`;
+                return (
+                  <td key={col.key} className={cellClassName}>
+                    {col.render ? col.render(item) : String((item as Record<string, unknown>)[col.key] ?? '')}
+                  </td>
+                );
+              })}
+              </tr>
+            );
+          })}
         </tbody>
       </table>
 
@@ -128,14 +146,14 @@ function DataTableInner<T>({
             Page {pagination.currentPage} sur {pagination.totalPages}
           </span>
           <button
-            onClick={() => onPageChange(pagination.currentPage - 1)}
+            onClick={() => { setSelectedRow(null); onPageChange(pagination.currentPage - 1); }}
             disabled={pagination.currentPage <= 1}
             className="cursor-pointer rounded border border-[#e5e7eb] px-3 py-1 text-[#111111] transition-colors hover:bg-[#f3f4f6] disabled:cursor-not-allowed disabled:text-[#d1d5db] disabled:hover:bg-transparent"
           >
             Précédent
           </button>
           <button
-            onClick={() => onPageChange(pagination.currentPage + 1)}
+            onClick={() => { setSelectedRow(null); onPageChange(pagination.currentPage + 1); }}
             disabled={pagination.currentPage >= pagination.totalPages}
             className="cursor-pointer rounded border border-[#e5e7eb] px-3 py-1 text-[#111111] transition-colors hover:bg-[#f3f4f6] disabled:cursor-not-allowed disabled:text-[#d1d5db] disabled:hover:bg-transparent"
           >
