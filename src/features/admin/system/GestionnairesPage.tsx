@@ -62,7 +62,7 @@ export default function GestionnairesPage() {
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
         title="Créer un gestionnaire"
-        size="sm"
+        size="lg"
       >
         <GestionnaireForm onSuccess={() => setModalOpen(false)} />
       </Modal>
