@@ -6,6 +6,8 @@ interface Client {
   id: number;
   raison_sociale: string;
   rc: string;
+  identifiant_commun: string;
+  identifiant_fiscal: string | null;
   contact: string;
   email: string;
   address: string;
@@ -18,6 +20,8 @@ interface Client {
 interface ClientFormData {
   raison_sociale: string;
   rc: string;
+  identifiant_commun: string;
+  identifiant_fiscal?: string;
   contact: string;
   email: string;
   address: string;

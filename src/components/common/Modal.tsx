@@ -54,7 +54,7 @@ export default function Modal({
     >
       <div
         ref={contentRef}
-        className={`w-full ${SIZE_CLASSES[size]} rounded-[12px] bg-[#ffffff] shadow-xl`}
+        className={`w-full ${SIZE_CLASSES[size]} rounded-[12px] bg-[#ffffff] shadow-xl max-h-[90%] overflow-y-auto`}
         role="dialog"
         aria-modal="true"
         aria-label={title}

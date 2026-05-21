@@ -7,6 +7,8 @@ interface Client {
   id: number;
   raison_sociale: string;
   rc: string;
+  identifiant_commun: string;
+  identifiant_fiscal: string | null;
   contact: string;
   email: string;
   address: string;
@@ -21,6 +23,8 @@ interface ClientFormProps {
 const FIELDS: { key: string; label: string; required: boolean; type?: string }[] = [
   { key: 'raison_sociale', label: 'Raison sociale', required: true },
   { key: 'rc', label: 'Registre de Commerce', required: true },
+  { key: 'identifiant_commun', label: "Identifiant Commun d'Entreprise (ICE)", required: true },
+  { key: 'identifiant_fiscal', label: 'Identifiant Fiscal (IF)', required: false },
   { key: 'contact', label: 'Contact', required: true },
   { key: 'email', label: 'Email', required: true, type: 'email' },
   { key: 'address', label: 'Adresse', required: true },
@@ -31,6 +35,8 @@ export default function ClientForm({ client, onSuccess }: ClientFormProps) {
   const [form, setForm] = useState({
     raison_sociale: client?.raison_sociale ?? '',
     rc: client?.rc ?? '',
+    identifiant_commun: client?.identifiant_commun ?? '',
+    identifiant_fiscal: client?.identifiant_fiscal ?? '',
     contact: client?.contact ?? '',
     email: client?.email ?? '',
     address: client?.address ?? '',
@@ -74,6 +80,7 @@ export default function ClientForm({ client, onSuccess }: ClientFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <p className="text-xs text-red-500">(*) Champ obligatoire</p>
       {FIELDS.map(({ key, label, required, type }) => (
         <div key={key}>
           <label className="mb-1 block text-sm font-medium text-[#111111]">

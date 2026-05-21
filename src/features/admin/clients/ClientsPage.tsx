@@ -9,6 +9,8 @@ interface ClientRow {
   id: number;
   raison_sociale: string;
   rc: string;
+  identifiant_commun: string;
+  identifiant_fiscal: string | null;
   contact: string;
   email: string;
   address: string;
@@ -48,6 +50,16 @@ export default function ClientsPage() {
   const columns: Column<ClientRow>[] = [
     { key: 'raison_sociale', label: 'Raison sociale' },
     { key: 'rc', label: 'Registre de Commerce' },
+    {
+      key: 'identifiant_commun',
+      label: 'ICE',
+      render: (item) => item.identifiant_commun || '—',
+    },
+    {
+      key: 'identifiant_fiscal',
+      label: 'IF',
+      render: (item) => item.identifiant_fiscal ?? '—',
+    },
     { key: 'contact', label: 'Contact' },
     { key: 'email', label: 'Email' },
     { key: 'address', label: 'Adresse' },
@@ -63,14 +75,14 @@ export default function ClientsPage() {
     },
     {
       key: 'actions',
-      label: '',
+      label: 'Actions',
       render: (item) => (
         <button
           onClick={() => openEdit(item)}
           className="cursor-pointer rounded p-1.5 text-[#6b7280] transition-colors hover:bg-light-blue hover:text-primary-blue"
           aria-label="Modifier"
         >
-          <Pencil className="h-4 w-4" />
+          <Pencil className="h-4 w-4 text-blue-600" />
         </button>
       ),
     },

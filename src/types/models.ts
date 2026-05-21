@@ -8,6 +8,8 @@ export interface Client {
   id: number;
   raison_sociale: string;
   rc: string;
+  identifiant_commun: string;
+  identifiant_fiscal: string | null;
   contact: string;
   email: string;
   address: string;
