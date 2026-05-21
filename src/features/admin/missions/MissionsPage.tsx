@@ -57,7 +57,9 @@ export default function MissionsPage() {
     {
       key: 'consultant',
       label: 'Consultant',
-      render: (item) => item.consultant?.name ?? '—',
+      render: (item) => (
+        <span className="inline-block rounded-[6px] bg-[#EFF6FF] px-2.5 py-1 text-sm font-medium text-[#111111]">{item.consultant?.name ?? '—'}</span>
+      ),
     },
     { key: 'startDate', label: 'Début', render: (item) => formatDate(item.startDate) },
     {

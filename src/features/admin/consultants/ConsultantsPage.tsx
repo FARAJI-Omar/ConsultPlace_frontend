@@ -50,7 +50,9 @@ export default function ConsultantsPage() {
   };
 
   const columns: Column<ConsultantRow>[] = [
-    { key: 'name', label: 'Nom' },
+    { key: 'name', label: 'Nom complet', render: (item) => (
+      <span className="inline-block rounded-[6px] bg-[#EFF6FF] px-2.5 py-1 text-sm font-medium text-[#111111]">{item.name}</span>
+    ) },
     { key: 'email', label: 'Email' },
     { key: 'profile', label: 'Profil' },
     {

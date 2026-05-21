@@ -166,7 +166,9 @@ export default function AllInvoicesPage() {
 
   const columns: Column<Invoice>[] = [
     { key: 'ref', label: 'Réf', render: (inv) => <Link to={`/manager/invoices/${inv.id}`} className="text-[#3b82f6] hover:underline">{inv.ref}</Link> },
-    { key: 'client', label: 'Client', render: (inv) => inv.client?.raison_sociale ?? '-' },
+    { key: 'client', label: 'Client', render: (inv) => (
+      <span className="inline-block rounded-[6px] bg-[#EFF6FF] px-2.5 py-1 text-sm font-medium text-[#111111]">{inv.client?.raison_sociale ?? '-'}</span>
+    ) },
     { key: 'amount', label: 'Montant HT', render: (inv) => `${(inv.amount ?? 0).toLocaleString()} DH` },
     { key: 'vat', label: 'TVA', render: (inv) => `${(inv.vat ?? 0).toLocaleString()} DH (${inv.vatRate ?? 0}%)` },
     { key: 'total', label: 'Total TTC', render: (inv) => `${(inv.total ?? 0).toLocaleString()} DH` },

@@ -36,7 +36,9 @@ export default function ContractsPage() {
     {
       key: 'client',
       label: 'Client',
-      render: (item) => item.client?.raison_sociale ?? '—',
+      render: (item) => (
+        <span className="inline-block rounded-[6px] bg-[#EFF6FF] px-2.5 py-1 text-sm font-medium text-[#111111]">{item.client?.raison_sociale ?? '—'}</span>
+      ),
     },
     { key: 'startDate', label: 'Date de Début', render: (item) => formatDate(item.startDate) },
     { key: 'endDate', label: 'Date de Fin', render: (item) => formatDate(item.endDate) },

@@ -48,7 +48,9 @@ export default function ClientsPage() {
   };
 
   const columns: Column<ClientRow>[] = [
-    { key: 'raison_sociale', label: 'Raison sociale' },
+    { key: 'raison_sociale', label: 'Raison sociale', render: (item) => (
+      <span className="inline-block rounded-[6px] bg-[#EFF6FF] px-2.5 py-1 text-sm font-medium text-[#111111]">{item.raison_sociale}</span>
+    ) },
     { key: 'rc', label: 'Registre de Commerce' },
     {
       key: 'identifiant_commun',
