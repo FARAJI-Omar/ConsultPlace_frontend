@@ -9,6 +9,7 @@ import type { AlertRule } from '../../../hooks/useAlertRules';
 export default function AlertRulesPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingRule, setEditingRule] = useState<AlertRule | null>(null);
+  const [popoverMessage, setPopoverMessage] = useState<{ id: number; text: string } | null>(null);
 
   const { data, isLoading } = useGetAlertRules();
 
@@ -29,17 +30,24 @@ export default function AlertRulesPage() {
 
   const columns: Column<AlertRule>[] = [
     { key: 'type', label: 'Type',
-      render: (item) => (
-        <span
-          className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
-            item.type === 'CRITICAL' ? 'bg-red-100 text-red-700' :
-            item.type === 'WARNING' ? 'bg-yellow-100 text-yellow-700' :
-            'bg-blue-100 text-blue-700'
-          }`}
-        >
-          {item.type}
-        </span>
-      )
+      render: (item) => {
+        const typeLabels: Record<string, string> = {
+          CRITICAL: 'Critique',
+          WARNING: 'Avertissement',
+          INFO: 'Information',
+        };
+        return (
+          <span
+            className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
+              item.type === 'CRITICAL' ? 'bg-red-100 text-red-700' :
+              item.type === 'WARNING' ? 'bg-yellow-100 text-yellow-700' :
+              'bg-blue-100 text-blue-700'
+            }`}
+          >
+            {typeLabels[item.type] ?? item.type}
+          </span>
+        );
+      }
     },
     {
       key: 'event',
@@ -55,7 +63,38 @@ export default function AlertRulesPage() {
         return labels[item.event] ?? item.event;
       },
     },
-    { key: 'threshold', label: 'Seuil (jours)', render: (item) => `${item.threshold} jours` },
+    {
+      key: 'threshold',
+      label: 'Seuil (jours)',
+      render: (item) => {
+        const prefix =
+          item.event === 'LATE_INVOICE' && item.type === 'CRITICAL' ? '>' :
+          item.event === 'LATE_INVOICE' && item.type === 'WARNING' ? '<' : '';
+        return `${prefix}${item.threshold} jours`;
+      },
+    },
+    {
+      key: 'titleTemplate',
+      label: 'Titre personnalisé',
+      render: (item) => (
+        <span className="max-w-[180px] truncate block text-xs" title={item.titleTemplate ?? ''}>
+          {item.titleTemplate ?? '—'}
+        </span>
+      ),
+    },
+    {
+      key: 'messageTemplate',
+      label: 'Message personnalisé',
+      render: (item) => (
+        <span
+          onClick={() => setPopoverMessage({ id: item.id, text: item.messageTemplate ?? '' })}
+          className="max-w-[200px] truncate block text-xs cursor-pointer hover:text-primary-blue transition-colors"
+          title={item.messageTemplate ?? ''}
+        >
+          {item.messageTemplate ?? '—'}
+        </span>
+      ),
+    },
     {
       key: 'isActive',
       label: 'Active',
@@ -90,7 +129,8 @@ export default function AlertRulesPage() {
         <h1 className="text-2xl font-semibold text-[#111111]">Règles d'alerte</h1>
         <button
           onClick={openCreate}
-          className="cursor-pointer rounded-[8px] bg-primary-blue px-4 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-90"
+          disabled
+          className="cursor-pointer rounded-[8px] bg-primary-blue px-4 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Créer une règle
         </button>
@@ -111,13 +151,38 @@ export default function AlertRulesPage() {
         isOpen={modalOpen}
         onClose={closeModal}
         title={editingRule ? "Modifier la règle d'alerte" : "Créer une règle d'alerte"}
-        size="md"
+        size="lg"
       >
         <AlertRuleForm
           rule={editingRule ?? undefined}
           onSuccess={closeModal}
         />
       </Modal>
+
+      {popoverMessage && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4"
+          onClick={() => setPopoverMessage(null)}
+        >
+          <div
+            className="max-w-lg w-full rounded-[12px] bg-[#ffffff] p-5 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold text-[#111111]">Message personnalisé</h3>
+              <button
+                onClick={() => setPopoverMessage(null)}
+                className="cursor-pointer rounded p-1 text-[#6b7280] hover:text-[#111111] transition-colors"
+              >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <p className="text-sm text-[#111111] whitespace-pre-wrap break-words">{popoverMessage.text}</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
