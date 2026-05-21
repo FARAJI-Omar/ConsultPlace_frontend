@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import type { HolidayInfo } from '../../../hooks/consultant/useMoroccoHolidays';
 
 const DAY_HEADERS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 
@@ -24,14 +25,25 @@ export interface CalendarGridProps {
   year: number;
   month: number;
   entries: Record<string, number>;
+  holidays: HolidayInfo[];
+  touchedDays: Set<string>;
+  totalHours?: number;
   onChange: (dayKey: string, hours: number) => void;
 }
 
-export default function CalendarGrid({ year, month, entries, onChange }: CalendarGridProps) {
+export default function CalendarGrid({ year, month, entries, holidays, touchedDays, totalHours: totalHoursProp, onChange }: CalendarGridProps) {
   const daysInMonth = getDaysInMonth(year, month);
   const firstDayIndex = getFirstDayOfMonth(year, month);
 
-  const totalHours = useMemo(
+  const holidayMap = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const h of holidays) {
+      map.set(h.date, h.name);
+    }
+    return map;
+  }, [holidays]);
+
+  const totalHours = totalHoursProp ?? useMemo(
     () => Object.values(entries).reduce((sum, h) => sum + h, 0),
     [entries],
   );
@@ -62,6 +74,12 @@ export default function CalendarGrid({ year, month, entries, onChange }: Calenda
     return cells;
   }, [daysInMonth, firstDayIndex]);
 
+  function getDayBg(value: number, isHolidayDay: boolean, isTouched: boolean): string {
+    if (isTouched && isHolidayDay && value > 0) return '#fee2e2';
+    if (value > 0) return 'var(--secondary-green)';
+    return '#f3f4f6';
+  }
+
   return (
     <div className="space-y-2">
       <div className="grid grid-cols-7 gap-px">
@@ -82,16 +100,21 @@ export default function CalendarGrid({ year, month, entries, onChange }: Calenda
 
             const dayKey = `day-${day}`;
             const value = entries[dayKey] ?? 0;
+            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            const holidayName = holidayMap.get(dateStr) ?? null;
+            const isHolidayDay = holidayName !== null;
+            const isTouched = touchedDays.has(dayKey);
 
             return (
               <div
                 key={dayKey}
-                className="flex flex-col items-center gap-2 border border-[#e5e7eb] p-1.5 min-h-[68px]"
-                style={{
-                  backgroundColor: value > 0 ? 'var(--secondary-green)' : 'rgba(225, 245, 39, 0.14)',
-                }}
+                className="flex flex-col items-center gap-1 border border-[#e5e7eb] p-1.5 min-h-[80px]"
+                style={{ backgroundColor: getDayBg(value, isHolidayDay, isTouched) }}
               >
                 <span className="text-[14px] font-semibold text-[#838996]">{day}</span>
+                {holidayName && (
+                  <span className="text-[10px] leading-tight text-center text-[#6b7280] line-clamp-2">{holidayName}</span>
+                )}
                 <input
                   type="number"
                   min={0}

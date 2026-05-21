@@ -1,9 +1,10 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useMemo } from 'react';
 import { toast } from 'sonner';
 import { useConsultantMissions } from '../../../hooks/consultant/useConsultantMissions';
 import { useCreateTimesheet } from '../../../hooks/consultant/useCreateTimesheet';
 import { useUploadAttachments } from '../../../hooks/consultant/useAttachments';
 import { useSubmitTimesheet } from '../../../hooks/consultant/useSubmitTimesheet';
+import { useMoroccoHolidays } from '../../../hooks/consultant/useMoroccoHolidays';
 import CalendarGrid from './CalendarGrid';
 import type { DailyEntry } from '../../../types/models';
 
@@ -21,6 +22,27 @@ function formatEntriesForApi(entries: Record<string, number>): DailyEntry[] {
     }));
 }
 
+function isWeekend(day: number, year: number, month: number): boolean {
+  const d = new Date(year, month, day);
+  const jsDay = d.getDay();
+  return jsDay === 0 || jsDay === 6;
+}
+
+function generateDefaultEntries(year: number, month: number, holidays: { date: string }[]): Record<string, number> {
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const holidayDates = new Set(holidays.map((h) => h.date));
+  const entries: Record<string, number> = {};
+  for (let day = 1; day <= daysInMonth; day++) {
+    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    if (isWeekend(day, year, month) || holidayDates.has(dateStr)) {
+      entries[`day-${day}`] = 0;
+    } else {
+      entries[`day-${day}`] = 8;
+    }
+  }
+  return entries;
+}
+
 const MAX_FILES = 10;
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
@@ -29,14 +51,21 @@ export default function CreateCraForm() {
   const currentYear = now.getFullYear();
   const currentMonth = now.getMonth();
 
+  const year = currentYear;
+  const month = currentMonth;
+
   const [selectedMissionId, setSelectedMissionId] = useState<number | null>(null);
-  const [year, setYear] = useState(currentYear);
-  const [month, setMonth] = useState(currentMonth);
-  const [entries, setEntries] = useState<Record<string, number>>({});
+  const [entriesByMonth, setEntriesByMonth] = useState<Record<string, Record<string, number>>>({});
+  const [touchedByMonth, setTouchedByMonth] = useState<Record<string, string[]>>({});
   const [files, setFiles] = useState<File[]>([]);
   const [fileError, setFileError] = useState<string | null>(null);
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
+  const [showWeekendWarning, setShowWeekendWarning] = useState(false);
+  const [weekendDayLabels, setWeekendDayLabels] = useState<string[]>([]);
+  const [pendingWeekendAction, setPendingWeekendAction] = useState<'save' | 'submit' | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const holidays = useMoroccoHolidays(year);
 
   const { data: missionsData, isLoading: missionsLoading } = useConsultantMissions({
     limit: 500,
@@ -52,26 +81,100 @@ export default function CreateCraForm() {
 
   const selectedMonthStr = `${year}-${String(month + 1).padStart(2, '0')}`;
 
-  function goToPrevMonth() {
-    if (month === 0) {
-      setYear(year - 1);
-      setMonth(11);
-    } else {
-      setMonth(month - 1);
+  const touchedDays = useMemo(
+    () => new Set(touchedByMonth[selectedMonthStr] ?? []),
+    [touchedByMonth, selectedMonthStr],
+  );
+
+  const entries = useMemo(
+    () => entriesByMonth[selectedMonthStr] ?? generateDefaultEntries(year, month, holidays),
+    [entriesByMonth, selectedMonthStr, year, month, holidays],
+  );
+
+  const totalHours = useMemo(
+    () => Object.values(entries).reduce((s, h) => s + h, 0),
+    [entries],
+  );
+
+  const handleEntryChange = useCallback((dayKey: string, hours: number) => {
+    setEntriesByMonth((prev) => {
+      const existing = prev[selectedMonthStr];
+      if (existing) {
+        return { ...prev, [selectedMonthStr]: { ...existing, [dayKey]: hours } };
+      }
+      return { ...prev, [selectedMonthStr]: { ...generateDefaultEntries(year, month, holidays), [dayKey]: hours } };
+    });
+    setTouchedByMonth((prev) => {
+      const current = prev[selectedMonthStr] ?? [];
+      if (current.includes(dayKey)) return prev;
+      return { ...prev, [selectedMonthStr]: [...current, dayKey] };
+    });
+  }, [selectedMonthStr, year, month, holidays]);
+
+  function handleClearMonth() {
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const cleared: Record<string, number> = {};
+    const touched: string[] = [];
+    for (let day = 1; day <= daysInMonth; day++) {
+      const key = `day-${day}`;
+      cleared[key] = 0;
+      touched.push(key);
     }
-    setEntries({});
-    
+    setEntriesByMonth((prev) => ({ ...prev, [selectedMonthStr]: cleared }));
+    setTouchedByMonth((prev) => ({ ...prev, [selectedMonthStr]: touched }));
   }
 
-  function goToNextMonth() {
-    if (month === 11) {
-      setYear(year + 1);
-      setMonth(0);
-    } else {
-      setMonth(month + 1);
+  function hasWeekendOrHolidayHours(entries: Record<string, number>): string[] {
+    const holidayDates = new Map(holidays.map((h) => [h.date, h.name]));
+    const result: string[] = [];
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    for (let day = 1; day <= daysInMonth; day++) {
+      const key = `day-${day}`;
+      const hours = entries[key];
+      if (hours > 0) {
+        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        if (isWeekend(day, year, month)) {
+          result.push(`${day} ${monthNames[month]} (week-end)`);
+        } else if (holidayDates.has(dateStr)) {
+          result.push(`${day} ${monthNames[month]} (${holidayDates.get(dateStr)})`);
+        }
+      }
     }
-    setEntries({});
-    
+    return result;
+  }
+
+  function handleSaveDraftClick() {
+    if (!selectedMissionId) return;
+    const badDays = hasWeekendOrHolidayHours(entries);
+    if (badDays.length > 0) {
+      setWeekendDayLabels(badDays);
+      setPendingWeekendAction('save');
+      setShowWeekendWarning(true);
+    } else {
+      handleSaveDraft();
+    }
+  }
+
+  function handleSubmitClick() {
+    if (!selectedMissionId) return;
+    const badDays = hasWeekendOrHolidayHours(entries);
+    if (badDays.length > 0) {
+      setWeekendDayLabels(badDays);
+      setPendingWeekendAction('submit');
+      setShowWeekendWarning(true);
+    } else {
+      setShowSubmitConfirm(true);
+    }
+  }
+
+  function handleWeekendWarningConfirm() {
+    setShowWeekendWarning(false);
+    if (pendingWeekendAction === 'save') {
+      handleSaveDraft();
+    } else if (pendingWeekendAction === 'submit') {
+      setShowSubmitConfirm(true);
+    }
+    setPendingWeekendAction(null);
   }
 
   const validateAndAddFiles = useCallback((incoming: FileList | File[]) => {
@@ -138,7 +241,16 @@ export default function CreateCraForm() {
       }
 
       toast.success('Brouillon enregistré avec succès.');
-      setEntries({});
+      setEntriesByMonth((prev) => {
+        const next = { ...prev };
+        delete next[selectedMonthStr];
+        return next;
+      });
+      setTouchedByMonth((prev) => {
+        const next = { ...prev };
+        delete next[selectedMonthStr];
+        return next;
+      });
       setFiles([]);
       setSelectedMissionId(null);
     } catch (err: unknown) {
@@ -169,7 +281,16 @@ export default function CreateCraForm() {
       await submitTimesheet.mutateAsync(timesheet.id);
 
       toast.success('Relevé mensuel soumis avec succès.');
-      setEntries({});
+      setEntriesByMonth((prev) => {
+        const next = { ...prev };
+        delete next[selectedMonthStr];
+        return next;
+      });
+      setTouchedByMonth((prev) => {
+        const next = { ...prev };
+        delete next[selectedMonthStr];
+        return next;
+      });
       setFiles([]);
       setSelectedMissionId(null);
     } catch (err: unknown) {
@@ -212,35 +333,28 @@ export default function CreateCraForm() {
         </div>
 
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={goToPrevMonth}
-            disabled={isOrchestrating}
-            className="cursor-pointer rounded-[8px] border border-[#e5e7eb] bg-[#ffffff] px-3 py-2 text-sm text-[#111111] hover:bg-[#f3f4f6] disabled:opacity-50 transition-colors"
-          >
-            &larr;
-          </button>
-          <span className="text-sm font-semibold text-[#111111] min-w-[140px] text-center">
+          <div className="h-10 rounded-[8px] border border-[#e5e7eb] bg-[#ffffff] px-3 text-sm text-[#111111] flex items-center min-w-[140px]">
             {monthNames[month]} {year}
-          </span>
-          <button
-            type="button"
-            onClick={goToNextMonth}
-            disabled={isOrchestrating}
-            className="cursor-pointer rounded-[8px] border border-[#e5e7eb] bg-[#ffffff] px-3 py-2 text-sm text-[#111111] hover:bg-[#f3f4f6] disabled:opacity-50 transition-colors"
-          >
-            &rarr;
-          </button>
+          </div>
         </div>
+
+        <button
+          type="button"
+          onClick={handleClearMonth}
+          className="cursor-pointer rounded-[8px] border border-[#ef4444] bg-[#ffffff] px-4 py-2 text-sm font-medium text-[#ef4444] hover:bg-[#fef2f2] disabled:opacity-50 transition-colors ml-auto"
+        >
+          Effacer
+        </button>
       </div>
 
       <CalendarGrid
         year={year}
         month={month}
         entries={entries}
-        onChange={(dayKey, hours) =>
-          setEntries((prev) => ({ ...prev, [dayKey]: hours }))
-        }
+        holidays={holidays}
+        touchedDays={touchedDays}
+        totalHours={totalHours}
+        onChange={handleEntryChange}
       />
 
       <div className="space-y-2">
@@ -303,7 +417,7 @@ export default function CreateCraForm() {
       <div className="flex items-center justify-end gap-3 pt-2">
         <button
           type="button"
-          onClick={handleSaveDraft}
+          onClick={handleSaveDraftClick}
           disabled={!selectedMissionId || isOrchestrating}
           className="cursor-pointer rounded-[8px] border border-[#e5e7eb] bg-[#ffffff] px-5 py-2.5 text-sm font-semibold text-[#111111] hover:bg-[#f3f4f6] disabled:opacity-50 transition-colors"
         >
@@ -311,13 +425,46 @@ export default function CreateCraForm() {
         </button>
         <button
           type="button"
-          onClick={() => setShowSubmitConfirm(true)}
+          onClick={handleSubmitClick}
           disabled={!selectedMissionId || files.length === 0 || isOrchestrating}
           className="cursor-pointer rounded-[8px] bg-green-600 px-5 py-2.5 text-sm font-semibold text-[#ffffff] hover:bg-green-700 disabled:bg-[#e5e7eb] disabled:text-[#6b7280] disabled:cursor-not-allowed transition-colors"
         >
           {submitTimesheet.isPending ? 'Soumission...' : 'Soumettre'}
         </button>
       </div>
+
+      {showWeekendWarning && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => { setShowWeekendWarning(false); setPendingWeekendAction(null); }}>
+          <div className="rounded-[12px] bg-[#ffffff] p-6 shadow-lg w-110" onClick={(e) => e.stopPropagation()}>
+            <p className="text-xl font-semibold text-[#111111] mb-2">Heures saisies sur jours non ouvrables</p>
+            <p className="text-sm text-[#6b7280] mb-4">
+              Les jours suivants contiennent des heures alors qu'ils sont week-end ou jours fériés&nbsp;:
+            </p>
+            <ul className="space-y-1 mb-4">
+              {weekendDayLabels.map((label, i) => (
+                <li key={i} className="text-sm text-[#ef4444]">• {label}</li>
+              ))}
+            </ul>
+            <p className="text-sm text-[#6b7280] mb-6">Voulez-vous continuer ?</p>
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => { setShowWeekendWarning(false); setPendingWeekendAction(null); }}
+                className="cursor-pointer rounded-[8px] border border-[#e5e7eb] bg-[#ffffff] px-4 py-2 text-xs font-semibold text-[#111111] hover:bg-[#f3f4f6] transition-colors"
+              >
+                Annuler
+              </button>
+              <button
+                type="button"
+                onClick={handleWeekendWarningConfirm}
+                className="cursor-pointer rounded-[8px] bg-green-600 px-4 py-2 text-xs font-semibold text-[#ffffff] hover:bg-green-700 transition-colors"
+              >
+                Continuer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showSubmitConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowSubmitConfirm(false)}>
