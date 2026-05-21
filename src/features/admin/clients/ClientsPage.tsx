@@ -122,7 +122,7 @@ export default function ClientsPage() {
         isOpen={modalOpen}
         onClose={closeModal}
         title={editingClient ? 'Modifier le client' : 'Créer un client'}
-        size="md"
+        size="lg"
       >
         <ClientForm
           client={editingClient ?? undefined}
