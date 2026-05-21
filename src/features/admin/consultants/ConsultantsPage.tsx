@@ -18,6 +18,7 @@ export default function ConsultantsPage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [modalOpen, setModalOpen] = useState(false);
+  const [confirmToggle, setConfirmToggle] = useState<{ id: number; isActive: boolean } | null>(null);
 
   const { data, isLoading } = useGetConsultants(page, pageSize);
   const toggleStatus = useToggleConsultantStatus();
@@ -29,11 +30,17 @@ export default function ConsultantsPage() {
   }, []);
 
   const handleToggle = (id: number, current: boolean) => {
+    setConfirmToggle({ id, isActive: !current });
+  };
+
+  const handleConfirmToggle = () => {
+    if (!confirmToggle) return;
     toggleStatus.mutate(
-      { id, isActive: !current },
+      confirmToggle,
       {
         onSuccess: () => {
-          toast.success(`Consultant ${!current ? 'activé' : 'désactivé'} avec succès`);
+          toast.success(`Consultant ${confirmToggle.isActive ? 'activé' : 'désactivé'} avec succès`);
+          setConfirmToggle(null);
         },
         onError: () => {
           toast.error('Erreur lors du changement de statut');
@@ -119,10 +126,43 @@ export default function ConsultantsPage() {
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
         title="Créer un consultant"
-        size="md"
+        size="lg"
       >
         <ConsultantForm onSuccess={() => setModalOpen(false)} />
       </Modal>
+
+      {confirmToggle && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+          onClick={(e) => { if (e.target === e.currentTarget) setConfirmToggle(null); }}
+        >
+          <div className="w-full max-w-sm rounded-[12px] bg-[#ffffff] p-6 shadow-xl">
+            <h2 className="mb-2 text-lg font-semibold text-[#111111]">
+              {confirmToggle.isActive ? 'Activer' : 'Désactiver'} le consultant
+            </h2>
+            <p className="mb-6 text-sm text-[#6b7280]">
+              Êtes-vous sûr de vouloir {confirmToggle.isActive ? 'activer' : 'désactiver'} ce consultant&nbsp;?
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setConfirmToggle(null)}
+                className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-4 py-2 text-sm text-[#111111] transition-colors hover:bg-[#f3f4f6]"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={handleConfirmToggle}
+                disabled={toggleStatus.isPending}
+                className={`cursor-pointer rounded-[8px] px-4 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-90 disabled:opacity-50 ${
+                  confirmToggle.isActive ? 'bg-green-600' : 'bg-red-600'
+                }`}
+              >
+                {toggleStatus.isPending ? 'Confirmation...' : 'Confirmer'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
