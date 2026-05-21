@@ -56,8 +56,7 @@ export interface ManagerTimesheet {
 
 export interface ManagerTimesheetDetail extends ManagerTimesheet {
   dailyEntries: { day: number; hours: number }[];
-  attachments: { id: number; filename: string; url: string; type: string; createdAt: string }[];
-  contractDocuments: { id: number; filename: string; url: string; type: string }[];
+  attachments: { id: number; filename: string; url: string; type: string; uploadedAt: string }[];
 }
 
 export interface ReviewPayload {
