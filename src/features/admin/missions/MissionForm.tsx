@@ -22,6 +22,7 @@ export default function MissionForm({ onSuccess }: MissionFormProps) {
 
   const { data: contractsData } = useGetContracts(1, 200);
   const { data: consultantsData } = useGetConsultants(1, 200);
+  const activeConsultants = (consultantsData?.data ?? []).filter((c) => c.isActive);
   const mutation = useMutateMission();
 
   const handleChange = (key: string, value: string) => {
@@ -64,7 +65,7 @@ export default function MissionForm({ onSuccess }: MissionFormProps) {
 
   const FIELDS: { key: string; label: string; required: boolean; type?: string; options?: { id: number; ref?: string; name?: string }[] }[] = [
     { key: 'contractId', label: 'Contrat', required: true, type: 'select', options: (contractsData?.data ?? []).map((c) => ({ id: c.id, ref: c.ref })) },
-    { key: 'consultantId', label: 'Consultant', required: true, type: 'select', options: (consultantsData?.data ?? []).map((c) => ({ id: c.id, name: c.name })) },
+    { key: 'consultantId', label: 'Consultant', required: true, type: 'select', options: activeConsultants.map((c) => ({ id: c.id, name: c.name })) },
     { key: 'title', label: 'Titre', required: true },
     { key: 'startDate', label: 'Date de début', required: true, type: 'date' },
     { key: 'endDate', label: 'Date de fin', required: false, type: 'date' },
