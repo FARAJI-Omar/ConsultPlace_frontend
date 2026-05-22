@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useRef } from 'react';
 import { formatDate } from '../../../lib/utils';
 import { DataTable } from '../../../components/common/DataTable';
 import { useGlobalTracking, exportTrackingCSV } from '../../../hooks/manager/useAdvancedTracking';
@@ -93,6 +93,8 @@ export default function GlobalTrackingPage() {
     [periodeFilter, customStart, customEnd],
   );
 
+  const allClientsRef = useRef<Set<string>>(new Set());
+
   const { data, isLoading } = useGlobalTracking(page, limit, {
     status: statusFilter || undefined,
     client: clientFilter || undefined,
@@ -101,11 +103,11 @@ export default function GlobalTrackingPage() {
     sort,
   });
 
-  const clientOptions = useMemo(() => {
-    if (!data?.data) return [];
-    const names = new Set(data.data.map((r) => r.client));
-    return Array.from(names).sort((a, b) => a.localeCompare(b, 'fr'));
-  }, [data?.data]);
+  if (data?.data) {
+    data.data.forEach((r) => allClientsRef.current.add(r.client));
+  }
+
+  const clientOptions = Array.from(allClientsRef.current).sort((a, b) => a.localeCompare(b, 'fr'));
 
   const handlePageChange = useCallback((p: number) => setPage(p), []);
   const handlePageSizeChange = useCallback((s: number) => { setLimit(s); setPage(1); }, []);
