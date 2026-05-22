@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo } from 'react';
+import { formatDate } from '../../../lib/utils';
 import { DataTable } from '../../../components/common/DataTable';
 import { useGlobalTracking, exportTrackingCSV } from '../../../hooks/manager/useAdvancedTracking';
 import { toast } from 'sonner';
@@ -147,10 +148,16 @@ export default function GlobalTrackingPage() {
 
   const columns: Column<TrackingRow>[] = [
     { key: 'month', label: 'Mois', render: (r) => r.timesheet?.month ?? '—' },
+    { key: 'ref', label: 'Référence', render: (r) => r.ref ?? '—' },
+    { key: 'client', label: 'Client', render: (r) => r.client ?? '—' },
+    { key: 'consultant', label: 'Consultant', render: (r) => r.consultant ?? '—' },
     { key: 'mission', label: 'Mission', render: (r) => r.timesheet?.mission ?? '—' },
     { key: 'days', label: 'Jours', render: (r) => String(r.days ?? '—') },
     { key: 'dailyRate', label: 'TJM', render: (r) => `${(r.dailyRate ?? 0).toLocaleString()} DH` },
     { key: 'invoiceRef', label: 'Facture', render: (r) => r.invoiceRef ?? '—' },
+    { key: 'amount', label: 'Montant HT', render: (r) => `${(r.amount ?? 0).toLocaleString()} DH` },
+    { key: 'vat', label: 'TVA', render: (r) => `${(r.vat ?? 0).toLocaleString()} DH` },
+    { key: 'total', label: 'Total TTC', render: (r) => `${(r.total ?? 0).toLocaleString()} DH` },
     {
       key: 'consultantStatus',
       label: 'Statut Consultant',
@@ -167,7 +174,11 @@ export default function GlobalTrackingPage() {
         </span>
       ),
     },
-    { key: 'versed', label: 'Versé', render: (r) => `${(r.versed ?? 0).toLocaleString()} DH` },
+    { key: 'totalPaid', label: 'Versé', render: (r) => `${(r.totalPaid ?? 0).toLocaleString()} DH` },
+    { key: 'cabinet_margin', label: 'Marge cabinet', render: (r) => `${(r.cabinet_margin ?? 0).toLocaleString()} DH` },
+    { key: 'issueDate', label: 'Date émission', render: (r) => formatDate(r.issueDate) },
+    { key: 'dueDate', label: 'Date échéance', render: (r) => formatDate(r.dueDate) },
+    { key: 'paymentDate', label: 'Date paiement', render: (r) => formatDate(r.paymentDate) },
   ];
 
   return (

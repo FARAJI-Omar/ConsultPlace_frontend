@@ -160,7 +160,6 @@ export interface TrackingRow {
   invoiceRef: string;
   consultantStatus: string;
   clientStatus: string;
-  versed: number;
 }
 
 export interface TurnoverForecast {
