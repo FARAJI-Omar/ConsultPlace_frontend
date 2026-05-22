@@ -194,7 +194,7 @@ function DraftCard({
             disabled={isUploading}
             className="cursor-pointer rounded-[8px] border border-[#e5e7eb] bg-[#ffffff] px-4 py-2 text-xs font-semibold text-[#111111] hover:bg-[#e7e8eb] disabled:opacity-50 transition-colors"
           >
-            {isUploading ? 'Ajout en cours...' : '+ Ajouter des fichiers PDF'}
+            {isUploading ? 'Ajout en cours...' : '+ Ajouter des fichiers'}
           </button>
           {fileError && (
             <p className="text-xs font-medium text-[#ef4444]">{fileError}</p>
@@ -203,16 +203,20 @@ function DraftCard({
           <input
             ref={fileInputRef}
             type="file"
-            accept=".pdf,application/pdf"
-            multiple
-            onChange={(e) => {
-              setFileError(null);
-              const selected = e.target.files;
-              if (!selected || selected.length === 0) return;
+          accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+          multiple
+          onChange={(e) => {
+            setFileError(null);
+            const selected = e.target.files;
+            if (!selected || selected.length === 0) return;
 
-              const incoming = Array.from(selected);
-              const nonPdf = incoming.find((f) => f.type !== 'application/pdf' && !f.name.toLowerCase().endsWith('.pdf'));
-              if (nonPdf) { setFileError('Seuls les fichiers PDF sont acceptés.'); e.target.value = ''; return; }
+            const incoming = Array.from(selected);
+            const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png'];
+            const allowedExts = ['.pdf', '.jpg', '.jpeg', '.png'];
+            const invalid = incoming.find(
+              (f) => !allowedTypes.includes(f.type) && !allowedExts.some((ext) => f.name.toLowerCase().endsWith(ext)),
+            );
+            if (invalid) { setFileError('Seuls les fichiers PDF, JPG et PNG sont acceptés.'); e.target.value = ''; return; }
 
               const oversized = incoming.find((f) => f.size > MAX_FILE_SIZE);
               if (oversized) { setFileError('Chaque fichier ne doit pas dépasser 10 Mo.'); e.target.value = ''; return; }
@@ -246,7 +250,7 @@ function DraftCard({
                 >
                   <div className="flex items-center gap-3">
                     <span className="inline-block rounded-[9999px] bg-[#e5e7eb] px-2 py-0.5 text-xs text-[#6b7280]">
-                      PDF
+                      {att.filename.split('.').pop()?.toUpperCase() ?? 'FICHIER'}
                     </span>
                     <div className="flex flex-col">
                       <a href={att.url} target="_blank" rel="noopener noreferrer" className="text-sm text-[#111111] underline underline-offset-2 hover:text-[#6b7280] transition-colors">{att.filename}</a>

@@ -193,9 +193,13 @@ export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?:
       return;
     }
 
-    const nonPdf = newFiles.find((f) => f.type !== 'application/pdf' && !f.name.toLowerCase().endsWith('.pdf'));
-    if (nonPdf) {
-      setFileError('Seuls les fichiers PDF sont acceptés.');
+    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png'];
+    const allowedExts = ['.pdf', '.jpg', '.jpeg', '.png'];
+    const invalid = newFiles.find(
+      (f) => !allowedTypes.includes(f.type) && !allowedExts.some((ext) => f.name.toLowerCase().endsWith(ext)),
+    );
+    if (invalid) {
+      setFileError('Seuls les fichiers PDF, JPG et PNG sont acceptés.');
       return;
     }
 
@@ -359,7 +363,7 @@ export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?:
 
       <div className="space-y-2">
         <label className="text-xs font-medium uppercase tracking-wider text-[#6b7280]">
-          Pièces jointes (PDF)
+          Pièces jointes
         </label>
 
         <div
@@ -369,7 +373,7 @@ export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?:
           className="cursor-pointer rounded-[12px] border-2 border-dashed border-[#e5e7eb] bg-[#ffffff] px-6 py-8 text-center transition-colors hover:border-[#111111]"
         >
           <p className="text-sm text-[#6b7280]">
-            Glissez-déposez vos fichiers PDF ici ou cliquez pour parcourir
+            Glissez-déposez vos fichiers ici ou cliquez pour parcourir
           </p>
           <p className="text-xs text-[#6b7280] mt-1">
             Maximum {MAX_FILES} fichiers, 10 Mo chacun
@@ -377,7 +381,7 @@ export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?:
           <input
             ref={fileInputRef}
             type="file"
-            accept=".pdf,application/pdf"
+            accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
             multiple
             onChange={handleFileSelect}
             className="hidden"
@@ -393,7 +397,7 @@ export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?:
               >
                 <div className="flex items-center gap-3">
                   <span className="inline-block rounded-[9999px] bg-[#e5e7eb] px-2 py-0.5 text-xs text-[#6b7280]">
-                    PDF
+                    {file.name.split('.').pop()?.toUpperCase() ?? 'FICHIER'}
                   </span>
                   <span className="text-sm text-[#111111]">{file.name}</span>
                   <span className="text-xs text-[#6b7280]">

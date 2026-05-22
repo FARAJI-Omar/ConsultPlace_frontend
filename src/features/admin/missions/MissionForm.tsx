@@ -156,7 +156,7 @@ export default function MissionForm({ onSuccess }: MissionFormProps) {
 
       <div>
         <label className="mb-1 block text-sm font-medium text-[#111111]">
-          Documents (PDF, max 10 fichiers, 10 Mo chacun)
+          Documents (PDF, JPG, PNG, max 10 fichiers, 10 Mo chacun)
         </label>
         <div
           onClick={() => fileRef.current?.click()}
@@ -168,7 +168,7 @@ export default function MissionForm({ onSuccess }: MissionFormProps) {
         <input
           ref={fileRef}
           type="file"
-          accept=".pdf"
+          accept=".pdf,.jpg,.jpeg,.png"
           multiple
           onChange={handleFileSelect}
           className="hidden"
