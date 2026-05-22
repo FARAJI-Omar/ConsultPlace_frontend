@@ -156,14 +156,15 @@ export default function MissionForm({ onSuccess }: MissionFormProps) {
 
       <div>
         <label className="mb-1 block text-sm font-medium text-[#111111]">
-          Documents (PDF, JPG, PNG, max 10 fichiers, 10 Mo chacun)
+          Ordre de mission, Planning, Fiche de présence ... (Optionnel)
         </label>
         <div
           onClick={() => fileRef.current?.click()}
-          className="flex cursor-pointer items-center gap-2 rounded-[8px] border border-dashed border-[#e5e7eb] px-3 py-4 text-sm text-[#6b7280] transition-colors hover:border-primary-blue hover:text-primary-blue"
+          className="flex cursor-pointer items-center gap-2 rounded-[8px] border border-dashed border-[#e5e7eb] px-3 py-4 text-sm text-[#6b7280] transition-colors hover:border-primary-blue hover:text-primary-blue flex-nowrap"
         >
-          <Upload className="h-4 w-4" />
-          <span>Cliquez pour ajouter des fichiers</span>
+          <Upload className="h-4 w-4 shrink-0" />
+          <span className="shrink-0">Cliquez pour ajouter des fichiers</span>
+          <span className="text-xs text-[#6b7280] shrink-0">(PDF, JPG, PNG, max 10 fichiers, 10 Mo chacun)</span>
         </div>
         <input
           ref={fileRef}

@@ -363,7 +363,7 @@ export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?:
 
       <div className="space-y-2">
         <label className="text-xs font-medium uppercase tracking-wider text-[#6b7280]">
-          Pièces jointes
+          Relevé d'heures signé, Attestation de présence, Rapport d'activité, Facture ... (Optionnel)
         </label>
 
         <div
