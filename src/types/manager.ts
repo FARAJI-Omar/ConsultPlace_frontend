@@ -1,8 +1,8 @@
 export interface DashboardKPIs {
   pendingInvoices: number;
   totalPendingInvoices: number;
-  cabinet_margin: number;
-  Cashed_in: number;
+  totalRevenue: number;
+  totalReceived: number;
 }
 
 export interface MonthlySummary {

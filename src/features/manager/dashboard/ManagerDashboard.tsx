@@ -12,7 +12,7 @@ const BAR_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4
 
 export default function ManagerDashboard() {
   const { data: kpis, isLoading: kpisLoading } = useDashboardKPIs();
-  const { data: monthlySummary, isLoading: summaryLoading } = useMonthlySummary();
+  const { data: monthlySummary } = useMonthlySummary();
   const { data: alerts, isLoading: alertsLoading } = useAlerts();
 
   const criticalAlerts = alerts?.critical ?? [];
@@ -32,7 +32,7 @@ export default function ManagerDashboard() {
         Tableau de bord
       </h1>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {kpisLoading
           ? Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)
           : <>
@@ -41,25 +41,19 @@ export default function ManagerDashboard() {
                 <p className="mt-2 text-3xl font-semibold text-[#111111]">{kpis?.pendingInvoices ?? 0}</p>
               </div>
               <div className="rounded-[12px] bg-[#f5f5f5] p-6">
-                <p className="text-sm font-medium text-[#6b7280]">Total dû -en attente- (TTC)</p>
-                <p className="mt-2 text-3xl font-semibold text-[#111111]">{(kpis?.totalPendingInvoices ?? 0).toLocaleString()} DH</p>
-              </div>
-              <div className="rounded-[12px] bg-[#f5f5f5] p-6">
-                <p className="text-sm font-medium text-[#6b7280]">Marge cabinet</p>
-                <p className="mt-2 text-3xl font-semibold text-[#111111]">{(kpis?.cabinet_margin ?? 0).toLocaleString()} DH</p>
+                <p className="text-sm font-medium text-[#6b7280]">CA facturé (HT)</p>
+                <p className="mt-2 text-3xl font-semibold text-[#111111]">{(kpis?.totalRevenue ?? 0).toLocaleString()} DH</p>
               </div>
               <div className="rounded-[12px] bg-[#f5f5f5] p-6">
                 <p className="text-sm font-medium text-[#6b7280]">Encaissé (TTC)</p>
-                <p className="mt-2 text-3xl font-semibold text-[#111111]">{(kpis?.Cashed_in ?? 0).toLocaleString()} DH</p>
+                <p className="mt-2 text-3xl font-semibold text-[#111111]">{(kpis?.totalReceived ?? 0).toLocaleString()} DH</p>
+              </div>
+              <div className="rounded-[12px] bg-[#f5f5f5] p-6">
+                <p className="text-sm font-medium text-[#6b7280]">En attente (TTC)</p>
+                <p className="mt-2 text-3xl font-semibold text-[#111111]">{(kpis?.totalPendingInvoices ?? 0).toLocaleString()} DH</p>
               </div>
             </>
         }
-        {summaryLoading ? <SkeletonCard /> : (
-          <div className="rounded-[12px] bg-[#f5f5f5] p-6">
-            <p className="text-sm font-medium text-[#6b7280]">Total versé (mois)</p>
-            <p className="mt-2 text-3xl font-semibold text-[#111111]">{(monthlySummary?.grandTotal ?? 0).toLocaleString()} DH</p>
-          </div>
-        )}
       </div>
 
       <div className="rounded-[12px] bg-[#f5f5f5] p-6">
