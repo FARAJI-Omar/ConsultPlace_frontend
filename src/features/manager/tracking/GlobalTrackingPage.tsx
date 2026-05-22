@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useRef } from 'react';
+import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { formatDate } from '../../../lib/utils';
 import { DataTable } from '../../../components/common/DataTable';
 import { useGlobalTracking, exportTrackingCSV } from '../../../hooks/manager/useAdvancedTracking';
@@ -87,6 +87,16 @@ export default function GlobalTrackingPage() {
   const [customEnd, setCustomEnd] = useState('');
   const [sort, setSort] = useState<'asc' | 'desc'>('desc');
   const [exporting, setExporting] = useState(false);
+  const [detailRow, setDetailRow] = useState<TrackingRow | null>(null);
+
+  useEffect(() => {
+    if (detailRow) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [detailRow]);
 
   const dateRange = useMemo(
     () => computeDateRange(periodeFilter, customStart, customEnd),
@@ -134,6 +144,10 @@ export default function GlobalTrackingPage() {
     PAYE: 'Payé',
   };
 
+  const consultantStatusBadge: Record<string, string> = {
+    PAYE: 'bg-[#d1fae5] text-[#10b981]',
+  };
+
   const clientStatusLabels: Record<string, string> = {
     PENDING: 'En attente',
     PARTIAL_PAID: 'Partiellement payé',
@@ -150,37 +164,48 @@ export default function GlobalTrackingPage() {
 
   const columns: Column<TrackingRow>[] = [
     { key: 'month', label: 'Mois', render: (r) => r.timesheet?.month ?? '—' },
-    { key: 'ref', label: 'Référence', render: (r) => r.ref ?? '—' },
-    { key: 'client', label: 'Client', render: (r) => r.client ?? '—' },
-    { key: 'consultant', label: 'Consultant', render: (r) => r.consultant ?? '—' },
+    { key: 'client', label: 'Client', render: (r) => <span className="inline-block rounded-full px-2.5 py-0.5 text-xs font-medium bg-[#eff6ff] text-[#3b82f6]">{r.client ?? '—'}</span> },
+    { key: 'consultant', label: 'Consultant', render: (r) => <span className="inline-block rounded-full px-2.5 py-0.5 text-xs font-medium bg-[#f5f3ff] text-[#7c3aed]">{r.consultant ?? '—'}</span> },
     { key: 'mission', label: 'Mission', render: (r) => r.timesheet?.mission ?? '—' },
     { key: 'days', label: 'Jours', render: (r) => String(r.days ?? '—') },
-    { key: 'dailyRate', label: 'TJM', render: (r) => `${(r.dailyRate ?? 0).toLocaleString()} DH` },
     { key: 'invoiceRef', label: 'Facture', render: (r) => r.invoiceRef ?? '—' },
-    { key: 'amount', label: 'Montant HT', render: (r) => `${(r.amount ?? 0).toLocaleString()} DH` },
-    { key: 'vat', label: 'TVA', render: (r) => `${(r.vat ?? 0).toLocaleString()} DH` },
-    { key: 'total', label: 'Total TTC', render: (r) => `${(r.total ?? 0).toLocaleString()} DH` },
+    { key: 'total', label: 'TTC', render: (r) => `${(r.total ?? 0).toLocaleString()} DH` },
+    {
+      key: 'clientStatus',
+      label: 'Statut Client',
+      render: (r) => {
+        const isLate = r.clientStatus !== 'PAID' && r.clientStatus !== 'CANCELED' && r.dueDate && new Date(r.dueDate) < new Date();
+        if (isLate) {
+          return <span className="inline-block rounded-full px-2.5 py-0.5 text-xs font-medium bg-[#fef2f2] text-[#ef4444]">En retard</span>;
+        }
+        return (
+          <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${clientStatusBadge[r.clientStatus] || 'bg-[#e5e7eb] text-[#6b7280]'}`}>
+            {clientStatusLabels[r.clientStatus] ?? r.clientStatus}
+          </span>
+        );
+      },
+    },
     {
       key: 'consultantStatus',
       label: 'Statut Consultant',
       render: (r) => (
-        <span className="text-xs">{consultantStatusLabels[r.consultantStatus] ?? 'Pas encore'}</span>
-      ),
-    },
-    {
-      key: 'clientStatus',
-      label: 'Statut Client',
-      render: (r) => (
-        <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${clientStatusBadge[r.clientStatus] || 'bg-[#e5e7eb] text-[#6b7280]'}`}>
-          {clientStatusLabels[r.clientStatus] ?? r.clientStatus}
+        <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${consultantStatusBadge[r.consultantStatus] || 'bg-[#fef3c7] text-[#f59e0b]'}`}>
+          {consultantStatusLabels[r.consultantStatus] ?? 'Pas encore'}
         </span>
       ),
     },
-    { key: 'totalPaid', label: 'Versé', render: (r) => `${(r.totalPaid ?? 0).toLocaleString()} DH` },
-    { key: 'cabinet_margin', label: 'Marge cabinet', render: (r) => `${(r.cabinet_margin ?? 0).toLocaleString()} DH` },
-    { key: 'issueDate', label: 'Date émission', render: (r) => formatDate(r.issueDate) },
-    { key: 'dueDate', label: 'Date échéance', render: (r) => formatDate(r.dueDate) },
-    { key: 'paymentDate', label: 'Date paiement', render: (r) => formatDate(r.paymentDate) },
+    {
+      key: 'actions',
+      label: 'Actions',
+      render: (r) => (
+        <button
+          onClick={(e) => { e.stopPropagation(); setDetailRow(r); }}
+          className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-3 py-1.5 text-xs font-medium text-[#111111] transition-colors hover:bg-[#f3f4f6]"
+        >
+          Détail
+        </button>
+      ),
+    },
   ];
 
   return (
@@ -283,6 +308,143 @@ export default function GlobalTrackingPage() {
           onPageSizeChange={handlePageSizeChange}
         />
       </div>
+
+      {detailRow && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4" onClick={() => setDetailRow(null)}>
+          <div className="w-full max-w-2xl rounded-[16px] bg-[#ffffff] shadow-xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="sticky top-0 z-10 bg-[#ffffff] border-b border-[#e5e7eb] px-6 py-5 flex items-start justify-between rounded-t-[16px]">
+              <div className="text-center w-full">
+                <h2 className="text-lg font-semibold text-[#111111]">{detailRow.consultant} <span className="text-[#6b7280]">·</span> {detailRow.timesheet?.month}</h2>
+                <p className="text-sm text-[#6b7280] mt-0.5">{detailRow.client} <span className="text-[#d1d5db]">·</span> {detailRow.timesheet?.mission}</p>
+              </div>
+              <button onClick={() => setDetailRow(null)} className="cursor-pointer rounded-full p-1.5 text-[#6b7280] hover:bg-[#f3f4f6] transition-colors shrink-0">
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <div className="rounded-[12px] bg-[#f5f5f5] p-5">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-[#6b7280] mb-3 text-center">Activité</h3>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="text-[#6b7280] shrink-0">Jours</span>
+                    <span className="flex-1 border-b border-dashed border-[#d1d5db] min-w-[8px]" />
+                    <span className="text-[#111111] font-semibold shrink-0">{detailRow.days ?? '—'}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="text-[#6b7280] shrink-0">TJM</span>
+                    <span className="flex-1 border-b border-dashed border-[#d1d5db] min-w-[8px]" />
+                    <span className="text-[#111111] font-semibold shrink-0">{(detailRow.dailyRate ?? 0).toLocaleString()} DH</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="text-[#6b7280] shrink-0">Validation client</span>
+                    <span className="flex-1 border-b border-dashed border-[#d1d5db] min-w-[8px]" />
+                    <span className="text-[#10b981] font-semibold shrink-0">✓ Validé</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-[12px] bg-[#f5f5f5] p-5">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-[#6b7280] mb-3 text-center">Facturation</h3>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="text-[#6b7280] shrink-0">Facture</span>
+                    <span className="flex-1 border-b border-dashed border-[#d1d5db] min-w-[8px]" />
+                    <span className="text-[#111111] font-semibold shrink-0">{detailRow.invoiceRef ?? '—'}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="text-[#6b7280] shrink-0">Date émission</span>
+                    <span className="flex-1 border-b border-dashed border-[#d1d5db] min-w-[8px]" />
+                    <span className="text-[#111111] font-semibold shrink-0">{formatDate(detailRow.issueDate)}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="text-[#6b7280] shrink-0">HT</span>
+                    <span className="flex-1 border-b border-dashed border-[#d1d5db] min-w-[8px]" />
+                    <span className="text-[#111111] font-semibold shrink-0">{(detailRow.amount ?? 0).toLocaleString()} DH</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="text-[#6b7280] shrink-0">TVA</span>
+                    <span className="flex-1 border-b border-dashed border-[#d1d5db] min-w-[8px]" />
+                    <span className="text-[#111111] font-semibold shrink-0">{(detailRow.vat ?? 0).toLocaleString()} DH</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm border-t border-[#e5e7eb] pt-3">
+                    <span className="text-[#111111] font-bold shrink-0">TTC</span>
+                    <span className="flex-1 border-b border-dashed border-[#d1d5db] min-w-[8px]" />
+                    <span className="text-[#111111] font-bold shrink-0">{(detailRow.total ?? 0).toLocaleString()} DH</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="text-[#6b7280] shrink-0">Date échéance</span>
+                    <span className="flex-1 border-b border-dashed border-[#d1d5db] min-w-[8px]" />
+                    <span className="text-[#111111] font-semibold shrink-0">{formatDate(detailRow.dueDate)}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="text-[#6b7280] shrink-0">Statut Client</span>
+                    <span className="flex-1 border-b border-dashed border-[#d1d5db] min-w-[8px]" />
+                    {(() => {
+                      const isLate = detailRow.clientStatus !== 'PAID' && detailRow.clientStatus !== 'CANCELED' && detailRow.dueDate && new Date(detailRow.dueDate) < new Date();
+                      if (isLate) {
+                        return <span className="inline-block rounded-full px-2.5 py-0.5 text-xs font-medium bg-[#fef2f2] text-[#ef4444] shrink-0">En retard</span>;
+                      }
+                      return (
+                        <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium shrink-0 ${clientStatusBadge[detailRow.clientStatus] || 'bg-[#e5e7eb] text-[#6b7280]'}`}>
+                          {clientStatusLabels[detailRow.clientStatus] ?? detailRow.clientStatus}
+                        </span>
+                      );
+                    })()}
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="text-[#6b7280] shrink-0">Payée le</span>
+                    <span className="flex-1 border-b border-dashed border-[#d1d5db] min-w-[8px]" />
+                    <span className="text-[#111111] font-semibold shrink-0">{detailRow.paymentDate ? formatDate(detailRow.paymentDate) : '—'}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-[12px] bg-[#f5f5f5] p-5">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-[#6b7280] mb-3 text-center">Paiement consultant</h3>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="text-[#6b7280] shrink-0">Net</span>
+                    <span className="flex-1 border-b border-dashed border-[#d1d5db] min-w-[8px]" />
+                    <span className="text-[#111111] font-semibold shrink-0">{(detailRow.totalPaid ?? 0).toLocaleString()} DH</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="text-[#6b7280] shrink-0">Versé le</span>
+                    <span className="flex-1 border-b border-dashed border-[#d1d5db] min-w-[8px]" />
+                    <span className="text-[#111111] font-semibold shrink-0">{detailRow.consultantPaymentDate ? formatDate(detailRow.consultantPaymentDate) : '—'}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                className="rounded-[12px] p-5"
+                style={{
+                  backgroundColor: (detailRow.cabinet_margin ?? 0) > 0 ? '#f0fdf4' : '#fef2f2',
+                }}
+              >
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-[#6b7280] mb-3 text-center">Marge cabinet</h3>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="text-[#6b7280] shrink-0">Encaissé HT</span>
+                    <span className="flex-1 border-b border-dashed border-[#d1d5db] min-w-[8px]" />
+                    <span className="text-[#111111] font-semibold shrink-0">{(detailRow.amount ?? 0).toLocaleString()} DH</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="text-[#6b7280] shrink-0">Versé conseil.</span>
+                    <span className="flex-1 border-b border-dashed border-[#d1d5db] min-w-[8px]" />
+                    <span className="text-[#111111] font-semibold shrink-0">- {(detailRow.totalPaid ?? 0).toLocaleString()} DH</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm border-t border-[#e5e7eb] pt-3">
+                    <span className="text-[#6b7280] shrink-0">Marge</span>
+                    <span className="flex-1 border-b border-dashed border-[#d1d5db] min-w-[8px]" />
+                    <span className="text-[#111111] font-bold shrink-0">{(detailRow.cabinet_margin ?? 0).toLocaleString()} DH</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

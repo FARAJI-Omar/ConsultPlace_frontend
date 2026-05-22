@@ -160,6 +160,7 @@ export interface TrackingRow {
   invoiceRef: string;
   consultantStatus: string;
   clientStatus: string;
+  consultantPaymentDate: string | null;
 }
 
 export interface TurnoverForecast {
