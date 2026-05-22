@@ -70,7 +70,7 @@ export default function AlertCenterPage() {
             const config = severityConfig[severity];
 
             return (
-              <div key={severity} className="rounded-[12px] bg-[#f5f5f5] p-6">
+              <div key={severity} className={`rounded-[12px] p-6 ${config.bg}`}>
                 <h2 className={`text-lg font-semibold text-[#111111]`}>{config.label}</h2>
                 <div className="mt-4 space-y-3">
                   {items.map((alert) => (
