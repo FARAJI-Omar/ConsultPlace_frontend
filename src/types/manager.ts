@@ -155,6 +155,12 @@ export interface TrackingRow {
   totalPaid: number;
   cabinet_margin: number;
   timesheet: { month: string; mission: string };
+  days: number;
+  dailyRate: number;
+  invoiceRef: string;
+  consultantStatus: string;
+  clientStatus: string;
+  versed: number;
 }
 
 export interface TurnoverForecast {

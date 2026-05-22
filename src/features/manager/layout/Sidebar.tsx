@@ -34,7 +34,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Relevés ', path: '/manager/timesheets', icon: FileText },
   { label: 'Factures', path: '/manager/invoices', icon: Receipt },
   { label: 'Paiements consultants', path: '/manager/payouts', icon: Wallet },
-  { label: 'Tracking', path: '/manager/tracking', icon: Activity },
+  { label: 'Suivi Global', path: '/manager/tracking', icon: Activity },
   { label: 'Prévisions', path: '/manager/forecasts', icon: TrendingUp },
 ];
 

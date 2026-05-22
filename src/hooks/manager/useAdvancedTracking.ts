@@ -12,6 +12,7 @@ interface TrackingFilters {
   client?: string;
   startDate?: string;
   endDate?: string;
+  sort?: 'asc' | 'desc';
 }
 
 export function useGlobalTracking(
@@ -22,6 +23,7 @@ export function useGlobalTracking(
   const params = new URLSearchParams();
   params.set('page', String(page));
   params.set('limit', String(limit));
+  params.set('sort', filters.sort ?? 'desc');
   if (filters.status) params.set('status', filters.status);
   if (filters.client) params.set('client', filters.client);
   if (filters.startDate) params.set('startDate', filters.startDate);
@@ -60,6 +62,7 @@ export function useMarginForecast() {
 
 export function exportTrackingCSV(filters: TrackingFilters) {
   const params = new URLSearchParams();
+  params.set('sort', filters.sort ?? 'desc');
   if (filters.status) params.set('status', filters.status);
   if (filters.client) params.set('client', filters.client);
   if (filters.startDate) params.set('startDate', filters.startDate);

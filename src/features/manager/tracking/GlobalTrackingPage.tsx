@@ -1,5 +1,4 @@
 import { useState, useCallback, useMemo } from 'react';
-import { formatDate } from '../../../lib/utils';
 import { DataTable } from '../../../components/common/DataTable';
 import { useGlobalTracking, exportTrackingCSV } from '../../../hooks/manager/useAdvancedTracking';
 import { toast } from 'sonner';
@@ -13,20 +12,6 @@ const statusOptions = [
   { value: 'PAID', label: 'Payé' },
   { value: 'CANCELED', label: 'Annulé' },
 ];
-
-const statusBadge: Record<string, string> = {
-  PENDING: 'bg-[#fef3c7] text-[#f59e0b]',
-  PARTIAL_PAID: 'bg-[#ffedd5] text-[#f97316]',
-  PAID: 'bg-[#d1fae5] text-[#10b981]',
-  CANCELED: 'bg-[#e5e7eb] text-[#6b7280]',
-};
-
-const statusLabels: Record<string, string> = {
-  PENDING: 'En attente',
-  PARTIAL_PAID: 'Partiellement payé',
-  PAID: 'Payé',
-  CANCELED: 'Annulé',
-};
 
 const currentYear = new Date().getFullYear();
 
@@ -99,6 +84,7 @@ export default function GlobalTrackingPage() {
   const [periodeFilter, setPeriodeFilter] = useState('');
   const [customStart, setCustomStart] = useState('');
   const [customEnd, setCustomEnd] = useState('');
+  const [sort, setSort] = useState<'asc' | 'desc'>('desc');
   const [exporting, setExporting] = useState(false);
 
   const dateRange = useMemo(
@@ -111,6 +97,7 @@ export default function GlobalTrackingPage() {
     client: clientFilter || undefined,
     startDate: dateRange.startDate,
     endDate: dateRange.endDate,
+    sort,
   });
 
   const clientOptions = useMemo(() => {
@@ -125,12 +112,12 @@ export default function GlobalTrackingPage() {
   const handleExport = async () => {
     setExporting(true);
     try {
-      const range = computeDateRange(periodeFilter, customStart, customEnd);
       await exportTrackingCSV({
         status: statusFilter || undefined,
         client: clientFilter || undefined,
-        ...(range.startDate ? { startDate: range.startDate } : {}),
-        ...(range.endDate ? { endDate: range.endDate } : {}),
+        startDate: dateRange.startDate,
+        endDate: dateRange.endDate,
+        sort,
       });
       toast.success('Export CSV démarré');
     } catch {
@@ -140,42 +127,47 @@ export default function GlobalTrackingPage() {
     }
   };
 
+  const consultantStatusLabels: Record<string, string> = {
+    PAYE: 'Payé',
+  };
+
+  const clientStatusLabels: Record<string, string> = {
+    PENDING: 'En attente',
+    PARTIAL_PAID: 'Partiellement payé',
+    PAID: 'Payé',
+    CANCELED: 'Annulé',
+  };
+
+  const clientStatusBadge: Record<string, string> = {
+    PENDING: 'bg-[#fef3c7] text-[#f59e0b]',
+    PARTIAL_PAID: 'bg-[#ffedd5] text-[#f97316]',
+    PAID: 'bg-[#d1fae5] text-[#10b981]',
+    CANCELED: 'bg-[#e5e7eb] text-[#6b7280]',
+  };
+
   const columns: Column<TrackingRow>[] = [
     { key: 'month', label: 'Mois', render: (r) => r.timesheet?.month ?? '—' },
-    { key: 'client', label: 'Client' },
+    { key: 'mission', label: 'Mission', render: (r) => r.timesheet?.mission ?? '—' },
+    { key: 'days', label: 'Jours', render: (r) => String(r.days ?? '—') },
+    { key: 'dailyRate', label: 'TJM', render: (r) => `${(r.dailyRate ?? 0).toLocaleString()} DH` },
+    { key: 'invoiceRef', label: 'Facture', render: (r) => r.invoiceRef ?? '—' },
     {
-      key: 'consultant',
-      label: 'Consultant',
-      render: (r) => {
-        const parts = r.consultant.trim().split(/\s+/);
-        const initials = parts.slice(0, 2).map((p) => p[0]?.toUpperCase()).join('');
-        return (
-          <div className="flex items-center gap-2">
-            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#3b82f6] text-xs font-semibold text-[#ffffff]">
-              {initials}
-            </span>
-            <span>{r.consultant}</span>
-          </div>
-        );
-      },
-    },
-    { key: 'amount', label: 'Montant HT', render: (r) => `${(r.amount ?? 0).toLocaleString()} DH` },
-    { key: 'vat', label: 'TVA', render: (r) => `${(r.vat ?? 0).toLocaleString()} DH` },
-    { key: 'total', label: 'Total TTC', render: (r) => `${(r.total ?? 0).toLocaleString()} DH` },
-    {
-      key: 'status',
-      label: 'Statut',
+      key: 'consultantStatus',
+      label: 'Statut Consultant',
       render: (r) => (
-        <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${statusBadge[r.status] || 'bg-[#e5e7eb] text-[#6b7280]'}`}>
-          {statusLabels[r.status] || r.status}
+        <span className="text-xs">{consultantStatusLabels[r.consultantStatus] ?? 'Pas encore'}</span>
+      ),
+    },
+    {
+      key: 'clientStatus',
+      label: 'Statut Client',
+      render: (r) => (
+        <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${clientStatusBadge[r.clientStatus] || 'bg-[#e5e7eb] text-[#6b7280]'}`}>
+          {clientStatusLabels[r.clientStatus] ?? r.clientStatus}
         </span>
       ),
     },
-    { key: 'issueDate', label: 'Date émission', render: (r) => formatDate(r.issueDate) },
-    { key: 'dueDate', label: 'Date échéance', render: (r) => formatDate(r.dueDate) },
-    { key: 'paymentDate', label: 'Date paiement', render: (r) => formatDate(r.paymentDate) },
-    { key: 'totalPaid', label: 'Total payé', render: (r) => `${(r.totalPaid ?? 0).toLocaleString()} DH` },
-    { key: 'cabinet_margin', label: 'Marge cabinet', render: (r) => `${(r.cabinet_margin ?? 0).toLocaleString()} DH` },
+    { key: 'versed', label: 'Versé', render: (r) => `${(r.versed ?? 0).toLocaleString()} DH` },
   ];
 
   return (
@@ -253,6 +245,17 @@ export default function GlobalTrackingPage() {
             </div>
           </>
         )}
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-medium text-[#6b7280]">Tri</label>
+          <select
+            value={sort}
+            onChange={(e) => { setSort(e.target.value as 'asc' | 'desc'); setPage(1); }}
+            className="rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111]"
+          >
+            <option value="desc">↓ Mois (récent)</option>
+            <option value="asc">↑ Mois (ancien)</option>
+          </select>
+        </div>
       </div>
 
       <div className="[&_table]:text-xs [&_th]:!text-xs [&_td]:!text-xs">
