@@ -36,7 +36,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Factures', path: '/manager/invoices', icon: Receipt },
   { label: 'Paiements consultants', path: '/manager/payouts', icon: Wallet },
   { label: 'Suivi Global', path: '/manager/tracking', icon: Activity },
-  { label: 'Prévisions', path: '/manager/forecasts', icon: TrendingUp },
+  { label: 'Prévisions et Rentabilité ', path: '/manager/forecasts', icon: TrendingUp },
 ];
 
 export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }: SidebarProps) {

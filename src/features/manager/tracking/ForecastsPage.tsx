@@ -13,7 +13,7 @@ export default function ForecastsPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold text-[#111111]">Prévisions</h1>
+      <h1 className="text-2xl font-semibold text-[#111111]">Prévisions et Rentabilité</h1>
 
       <div className="flex gap-2 border-b border-[#e5e7eb]">
         <button
@@ -83,7 +83,7 @@ export default function ForecastsPage() {
               </div>
 
               <div className="rounded-[12px] bg-[#f5f5f5] p-6">
-                <h2 className="mb-4 text-lg font-semibold text-[#111111]">Détail par mission</h2>
+                <h2 className="mb-4 text-lg font-semibold text-[#111111]">Détail par mission active</h2>
                 {turnover.missions.length === 0 ? (
                   <p className="text-sm text-[#6b7280]">Aucune mission active</p>
                 ) : (
