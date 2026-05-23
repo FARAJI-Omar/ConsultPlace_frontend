@@ -133,6 +133,7 @@ export interface PayoutHistoryEntry {
   amount: number;
   date: string;
   status: string;
+  consultant: string;
 }
 
 export interface PayoutHistory {

@@ -5,22 +5,14 @@ import { Skeleton, SkeletonCard, SkeletonTable } from '../../../components/ui/sk
 import { toast } from 'sonner';
 import { formatDate } from '../../../lib/utils';
 
-const statusBadge: Record<string, string> = {
-  COMPLETED: 'bg-[#d1fae5] text-[#10b981]',
-  PENDING: 'bg-[#fef3c7] text-[#f59e0b]',
-};
-
-const statusLabels: Record<string, string> = {
-  COMPLETED: 'Payé',
-  PENDING: 'En attente',
-};
-
 export default function PayoutTrackingPage() {
   const { data, isLoading } = usePayoutsHistory();
   const paidInvoicesQuery = useInvoices(1, 1000, 'PAID');
   const payoutMutation = useTriggerPayout();
   const [payoutModal, setPayoutModal] = useState<{ id: number; ref: string } | null>(null);
   const [payoutPercentage, setPayoutPercentage] = useState('80');
+  const [selectedHistoriqueId, setSelectedHistoriqueId] = useState<number | null>(null);
+  const [selectedUnpaidId, setSelectedUnpaidId] = useState<number | null>(null);
 
   const unpaidConsultants = (paidInvoicesQuery.data?.data ?? []).filter(
     (inv) => inv.timesheet?.status !== 'PAYE',
@@ -96,7 +88,11 @@ export default function PayoutTrackingPage() {
               </thead>
               <tbody>
                 {unpaidConsultants.map((inv) => (
-                  <tr key={inv.id} className="border-b border-[#e5e7eb]">
+                  <tr
+                    key={inv.id}
+                    onClick={() => setSelectedUnpaidId(selectedUnpaidId === inv.id ? null : inv.id)}
+                    className={`border-b border-[#e5e7eb] cursor-pointer transition-colors ${selectedUnpaidId === inv.id ? 'bg-yellow-100/50' : 'hover:bg-yellow-50'}`}
+                  >
                     <td className="px-3 py-2 font-medium text-[#111111]">{inv.ref}</td>
                     <td className="px-3 py-2 text-[#6b7280]">{inv.timesheet?.month ?? '-'}</td>
                     <td className="px-3 py-2 text-[#111111]">{inv.consultant?.name ?? '-'}</td>
@@ -128,22 +124,22 @@ export default function PayoutTrackingPage() {
               <thead>
                 <tr className="border-b border-[#e5e7eb]">
                   <th className="px-3 py-2 text-left text-xs font-medium text-[#6b7280]">Facture</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-[#6b7280]">Montant</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-[#6b7280]">Montant Versé</th>
                   <th className="px-3 py-2 text-left text-xs font-medium text-[#6b7280]">Date</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-[#6b7280]">Statut</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-[#6b7280]">Consultant</th>
                 </tr>
               </thead>
               <tbody>
                 {history.map((entry) => (
-                  <tr key={entry.id} className="border-b border-[#e5e7eb]">
+                  <tr
+                    key={entry.id}
+                    onClick={() => setSelectedHistoriqueId(selectedHistoriqueId === entry.id ? null : entry.id)}
+                    className={`border-b border-[#e5e7eb] cursor-pointer transition-colors ${selectedHistoriqueId === entry.id ? 'bg-yellow-100/50' : 'hover:bg-yellow-50'}`}
+                  >
                     <td className="px-3 py-2 font-medium text-[#111111]">{entry.invoiceRef}</td>
                     <td className="px-3 py-2 text-[#111111]">{entry.amount.toLocaleString()} DH</td>
                     <td className="px-3 py-2 text-[#6b7280]">{formatDate(entry.date)}</td>
-                    <td className="px-3 py-2">
-                      <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${statusBadge[entry.status] || 'bg-[#e5e7eb] text-[#6b7280]'}`}>
-                        {statusLabels[entry.status] || entry.status}
-                      </span>
-                    </td>
+                    <td className="px-3 py-2"><span className="inline-block rounded-full px-2.5 py-0.5 text-xs font-medium bg-[#f5f3ff] text-[#7c3aed]">{entry.consultant}</span></td>
                   </tr>
                 ))}
               </tbody>
