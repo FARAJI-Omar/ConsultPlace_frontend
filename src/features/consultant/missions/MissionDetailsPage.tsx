@@ -248,10 +248,13 @@ export default function MissionDetailsPage() {
                       Mois
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[#6b7280]">
-                      Montant
+                      Ref Paiement
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[#6b7280]">
-                      Statut
+                      Montant versé
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[#6b7280]">
+                      Ref Facture
                     </th>
                   </tr>
                 </thead>
@@ -265,24 +268,13 @@ export default function MissionDetailsPage() {
                         {entry.month}
                       </td>
                       <td className="px-4 py-3 text-[#111111]">
-                        {entry.invoices
-                          .reduce((sum, inv) => sum + inv.amount, 0)
-                          .toLocaleString()}{' '}
-                        DH
+                        {entry.paymentRef}
                       </td>
-                      <td className="px-4 py-3">
-                        {entry.invoices.map((inv) => (
-                          <span
-                            key={inv.invoiceId}
-                            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium mr-1 ${
-                              inv.status === 'PAID'
-                                ? 'bg-[#d1fae5] text-[#065f46]'
-                                : 'bg-[#fef3c7] text-[#92400e]'
-                            }`}
-                          >
-                            {inv.status === 'PAID' ? 'Payé' : 'En attente'}
-                          </span>
-                        ))}
+                      <td className="px-4 py-3 text-[#111111]">
+                        {(entry.paymentAmount ?? 0).toLocaleString()} DH
+                      </td>
+                      <td className="px-4 py-3 text-[#111111]">
+                        {entry.invoices.map((inv) => inv.ref).join(', ') || '-'}
                       </td>
                     </tr>
                   ))}

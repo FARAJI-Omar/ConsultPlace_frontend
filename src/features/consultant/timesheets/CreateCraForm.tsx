@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useMemo } from 'react';
+import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import { toast } from 'sonner';
 import { useConsultantMissions } from '../../../hooks/consultant/useConsultantMissions';
 import { useCreateTimesheet } from '../../../hooks/consultant/useCreateTimesheet';
@@ -305,7 +305,13 @@ export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?:
     }
   }
 
-  const missions = missionsData?.data ?? [];
+  const missions = (missionsData?.data ?? []).filter((m) => m.canCreateTimesheet);
+
+  useEffect(() => {
+    if (selectedMissionId !== null && !missions.find((m) => m.id === selectedMissionId)) {
+      setSelectedMissionId(null);
+    }
+  }, [missions, selectedMissionId]);
 
   return (
     <div className="space-y-6">

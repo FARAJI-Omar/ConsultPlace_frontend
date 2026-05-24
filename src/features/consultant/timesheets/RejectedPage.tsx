@@ -8,6 +8,7 @@ import {
 } from '../../../hooks/consultant/useAttachments';
 import { useSubmitTimesheet } from '../../../hooks/consultant/useTimesheets';
 import { formatDate } from '../../../lib/utils';
+import EditCraModal from './EditCraModal';
 import type { Timesheet } from '../../../types/models';
 
 const monthNames = [
@@ -28,6 +29,7 @@ export default function RejectedPage() {
   const submitMutation = useSubmitTimesheet();
   const deleteAttachment = useDeleteAttachment();
   const uploadAttachments = useUploadAttachments();
+  const [editTimesheetId, setEditTimesheetId] = useState<number | null>(null);
 
   const rejected: Timesheet[] = (timesheets ?? []).filter(
     (t) => t.status === 'REJETE',
@@ -97,9 +99,16 @@ export default function RejectedPage() {
               }
             }}
             isUploading={uploadAttachments.isPending && uploadAttachments.variables?.timesheetId === String(item.id)}
+            onEdit={() => setEditTimesheetId(item.id)}
           />
         ))}
       </div>
+
+      <EditCraModal
+        timesheetId={editTimesheetId!}
+        open={editTimesheetId !== null}
+        onClose={() => setEditTimesheetId(null)}
+      />
     </div>
   );
 }
@@ -111,6 +120,7 @@ interface RejectedCardProps {
   onDeleteAttachment: (attachmentId: number) => Promise<void>;
   onUploadFiles: (files: File[]) => Promise<void>;
   isUploading: boolean;
+  onEdit: () => void;
 }
 
 function RejectedCard({
@@ -120,6 +130,7 @@ function RejectedCard({
   onDeleteAttachment,
   onUploadFiles,
   isUploading,
+  onEdit,
 }: RejectedCardProps) {
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
@@ -156,14 +167,23 @@ function RejectedCard({
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={() => setShowSubmitConfirm(true)}
-          disabled={isSubmitting}
-          className="cursor-pointer rounded-[8px] bg-green-600 px-3 py-2 text-xs font-semibold text-[#ffffff] hover:bg-green-700 transition-colors disabled:bg-[#e5e7eb] disabled:text-[#6b7280] disabled:cursor-not-allowed"
-        >
-          {isSubmitting ? 'Soumission...' : 'Soumettre'}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={onEdit}
+            className="cursor-pointer rounded-[8px] border border-[#e5e7eb] bg-[#ffffff] px-3 py-2 text-xs font-semibold text-[#111111] hover:bg-[#f3f4f6] transition-colors"
+          >
+            Modifier les heures
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowSubmitConfirm(true)}
+            disabled={isSubmitting}
+            className="cursor-pointer rounded-[8px] bg-green-600 px-3 py-2 text-xs font-semibold text-[#ffffff] hover:bg-green-700 transition-colors disabled:bg-[#e5e7eb] disabled:text-[#6b7280] disabled:cursor-not-allowed"
+          >
+            {isSubmitting ? 'Soumission...' : 'Soumettre'}
+          </button>
+        </div>
       </div>
 
       {item.rejectionReason && (

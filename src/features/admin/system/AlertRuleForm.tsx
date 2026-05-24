@@ -151,8 +151,8 @@ export default function AlertRuleForm({ rule, onSuccess }: AlertRuleFormProps) {
       event: form.event,
       threshold: form.threshold,
       isActive: form.isActive,
-      titleTemplate: form.titleTemplate || null,
-      messageTemplate: form.messageTemplate || null,
+      titleTemplate: form.titleTemplate || '',
+      messageTemplate: form.messageTemplate || '',
     };
 
     if (rule) {

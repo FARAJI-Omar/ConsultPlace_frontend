@@ -8,6 +8,7 @@ import {
 } from '../../../hooks/consultant/useAttachments';
 import { useSubmitTimesheet } from '../../../hooks/consultant/useTimesheets';
 import { formatDate } from '../../../lib/utils';
+import EditCraModal from './EditCraModal';
 import type { Timesheet } from '../../../types/models';
 
 const monthNames = [
@@ -29,6 +30,7 @@ export default function DraftsPage() {
   const deleteAttachment = useDeleteAttachment();
   const uploadAttachments = useUploadAttachments();
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [editTimesheetId, setEditTimesheetId] = useState<number | null>(null);
 
   const drafts: Timesheet[] = (timesheets ?? []).filter(
     (t) => t.status === 'BROUILLON',
@@ -102,9 +104,16 @@ export default function DraftsPage() {
               }
             }}
             isUploading={uploadAttachments.isPending && uploadAttachments.variables?.timesheetId === String(draft.id)}
+            onEdit={() => setEditTimesheetId(draft.id)}
           />
         ))}
       </div>
+
+      <EditCraModal
+        timesheetId={editTimesheetId!}
+        open={editTimesheetId !== null}
+        onClose={() => setEditTimesheetId(null)}
+      />
     </div>
   );
 }
@@ -118,6 +127,7 @@ interface DraftCardProps {
   onDeleteAttachment: (attachmentId: number) => Promise<void>;
   onUploadFiles: (files: File[]) => Promise<void>;
   isUploading: boolean;
+  onEdit: () => void;
 }
 
 function DraftCard({
@@ -129,6 +139,7 @@ function DraftCard({
   onDeleteAttachment,
   onUploadFiles,
   isUploading,
+  onEdit,
 }: DraftCardProps) {
   const isExpanded = expandedId === draft.id;
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
@@ -168,6 +179,13 @@ function DraftCard({
         </div>
 
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={onEdit}
+            className="cursor-pointer rounded-[8px] border border-[#e5e7eb] bg-[#ffffff] px-3 py-2 text-xs font-semibold text-[#111111] hover:bg-[#f3f4f6] transition-colors"
+          >
+            Modifier les heures
+          </button>
           <button
             type="button"
             onClick={onToggleExpand}

@@ -76,12 +76,21 @@ export default function MissionsPage() {
           >
             Voir détails
           </button>
-          <button
-            onClick={(e) => { e.stopPropagation(); navigate(`/consultant/timesheets/new?missionId=${mission.id}`); }}
-            className="cursor-pointer rounded-[8px] bg-[#3b82f6] px-3 py-1.5 text-xs font-medium text-[#ffffff] transition-colors hover:bg-[#2563eb]"
-          >
-            + Créer relevé
-          </button>
+          {mission.canCreateTimesheet ? (
+            <button
+              onClick={(e) => { e.stopPropagation(); navigate(`/consultant/timesheets/new?missionId=${mission.id}`); }}
+              className="cursor-pointer rounded-[8px] bg-[#3b82f6] px-3 py-1.5 text-xs font-medium text-[#ffffff] transition-colors hover:bg-[#2563eb]"
+            >
+              + Créer relevé
+            </button>
+          ) : (
+            <span className="inline-flex items-center gap-1 rounded-[8px] border border-[#e5e7eb] bg-[#f9fafb] px-3 py-1.5 text-xs text-[#6b7280]">
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+              ✓ À jour
+            </span>
+          )}
         </div>
       ),
     },

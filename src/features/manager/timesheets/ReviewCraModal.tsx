@@ -102,6 +102,13 @@ export default function ReviewCraModal({ timesheetId, open, onClose }: ReviewCra
                 </div>
               </div>
 
+              {timesheet.rejectionReason && (
+                <div className="rounded-[8px] bg-[#fef2f2] border border-[#fecaca] p-4">
+                  <p className="text-xs font-semibold text-[#dc2626] mb-1">Motif du rejet précédent</p>
+                  <p className="text-sm text-[#991b1b]">{timesheet.rejectionReason}</p>
+                </div>
+              )}
+
               <div>
                 <h3 className="mb-2 text-sm font-medium text-[#111111]">Saisie journalière</h3>
                 <div className="overflow-x-auto">

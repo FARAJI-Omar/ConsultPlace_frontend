@@ -16,6 +16,7 @@ export interface ConsultantMission extends Mission {
       raison_sociale: string;
     };
   };
+  canCreateTimesheet: boolean;
 }
 
 export interface TimesheetDetail extends Timesheet {
@@ -40,10 +41,11 @@ export interface TrackingEntry {
   month: string;
   missionTitle: string;
   timesheetStatus: string;
+  paymentRef: string;
+  paymentAmount: number;
   invoices: {
     invoiceId: number;
-    amount: number;
-    status: string;
+    ref: string;
   }[];
 }
 

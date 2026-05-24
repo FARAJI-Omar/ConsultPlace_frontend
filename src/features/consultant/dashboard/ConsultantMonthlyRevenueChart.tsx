@@ -25,10 +25,8 @@ interface MonthlyRevenue {
 function aggregateByMonth(entries: TrackingEntry[]): MonthlyRevenue[] {
   const map = new Map<string, number>();
   for (const entry of entries) {
-    for (const inv of entry.invoices) {
-      const current = map.get(entry.month) ?? 0;
-      map.set(entry.month, current + inv.amount);
-    }
+    const current = map.get(entry.month) ?? 0;
+    map.set(entry.month, current + (entry.paymentAmount ?? 0));
   }
   return Array.from(map.entries())
     .map(([monthKey, totalRevenue]) => ({

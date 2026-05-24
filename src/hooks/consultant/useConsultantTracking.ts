@@ -3,8 +3,7 @@ import apiClient from '../../lib/apiClient';
 
 interface TrackingInvoice {
   invoiceId: number;
-  amount: number;
-  status: 'PENDING' | 'PARTIAL_PAID' | 'PAID' | 'CANCELED';
+  ref: string;
 }
 
 interface TrackingEntry {
@@ -12,6 +11,8 @@ interface TrackingEntry {
   month: string;
   missionTitle: string;
   timesheetStatus: string;
+  paymentRef: string;
+  paymentAmount: number;
   invoices: TrackingInvoice[];
 }
 
