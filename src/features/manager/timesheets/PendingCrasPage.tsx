@@ -1,9 +1,10 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { DataTable } from '../../../components/common/DataTable';
 import { useManagerTimesheets } from '../../../hooks/manager/useManagerTimesheets';
 import { formatDate } from '../../../lib/utils';
 import ReviewCraModal from './ReviewCraModal';
+import GenerateInvoiceModal from './GenerateInvoiceModal';
 import type { Column } from '../../../components/common/DataTable';
 import type { ManagerTimesheet } from '../../../types/manager';
 
@@ -36,6 +37,19 @@ export default function PendingCrasPage() {
   const [limit, setLimit] = useState(10);
   const [statusFilter, setStatusFilter] = useState('SOUMIS');
   const [selectedTimesheetId, setSelectedTimesheetId] = useState<number | null>(null);
+  const [invoiceTimesheet, setInvoiceTimesheet] = useState<ManagerTimesheet | null>(null);
+  const [showHint, setShowHint] = useState(false);
+  const hintRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (hintRef.current && !hintRef.current.contains(e.target as Node)) {
+        setShowHint(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const { data, isLoading } = useManagerTimesheets(page, limit, statusFilter || undefined);
 
@@ -83,6 +97,14 @@ export default function PendingCrasPage() {
               Examiner
             </button>
           )}
+          {ts.status === 'VALIDE' && (
+            <button
+              onClick={() => setInvoiceTimesheet(ts)}
+              className="cursor-pointer rounded-[8px] bg-[#10b981] px-3 py-1.5 text-xs font-medium text-[#ffffff] transition-colors hover:bg-[#059669]"
+            >
+              + Générer facture
+            </button>
+          )}
           <Link
             to={`/manager/timesheets/${ts.id}`}
             className="inline-block rounded-[8px] border border-[#e5e7eb] px-3 py-1.5 text-xs font-medium text-[#111111] transition-colors hover:bg-[#f3f4f6]"
@@ -97,7 +119,22 @@ export default function PendingCrasPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-[#111111]">Relevés des consultants</h1>
+        <div className="flex items-center gap-2 relative">
+          <h1 className="text-2xl font-semibold text-[#111111]">Relevés des consultants</h1>
+          <button
+            type="button"
+            onClick={() => setShowHint((p) => !p)}
+            className="w-5 h-5 rounded-full border border-[#ff0000] text-[#ff0000] text-[10px] flex items-center justify-center hover:bg-[#f3f4f6] transition-colors flex-shrink-0 cursor-pointer"
+          >
+            !
+          </button>
+          {showHint && (
+            <div ref={hintRef} className="absolute left-0 top-full mt-2 bg-white border border-[#e5e7eb] rounded-lg shadow-lg p-6 text-sm text-[#6b7280] z-10 max-w-xl">
+              -Cliquez sur <strong>Examiner</strong> pour valider ou rejeter un relevé.<br />
+              -Validez un relevé afin de générer une facture.
+            </div>
+          )}
+        </div>
         <div className="mt-4 flex items-center gap-2">
           <label className="text-sm font-medium text-[#111111]">Filtrer par statut:</label>
           <select
@@ -128,6 +165,15 @@ export default function PendingCrasPage() {
           timesheetId={selectedTimesheetId}
           open={selectedTimesheetId !== null}
           onClose={() => setSelectedTimesheetId(null)}
+        />
+      )}
+
+      {invoiceTimesheet !== null && (
+        <GenerateInvoiceModal
+          validTimesheets={[invoiceTimesheet]}
+          prefilledTimesheetId={invoiceTimesheet.id}
+          open={invoiceTimesheet !== null}
+          onClose={() => setInvoiceTimesheet(null)}
         />
       )}
     </div>

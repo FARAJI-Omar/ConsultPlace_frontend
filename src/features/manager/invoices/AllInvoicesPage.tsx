@@ -498,6 +498,7 @@ export default function AllInvoicesPage() {
           </div>
         </div>
       )}
+
     </div>
   );
 }

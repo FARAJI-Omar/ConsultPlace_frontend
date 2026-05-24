@@ -1,8 +1,11 @@
+import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { FileText, Download } from 'lucide-react';
-import { useManagerTimesheetDetail } from '../../../hooks/manager/useManagerTimesheets';
+import { useManagerTimesheetDetail, useReviewTimesheet } from '../../../hooks/manager/useManagerTimesheets';
 import { formatDate } from '../../../lib/utils';
 import { Skeleton } from '../../../components/ui/skeleton';
+import { toast } from 'sonner';
+import GenerateInvoiceModal from './GenerateInvoiceModal';
 
 function formatMonth(month: string) {
   const [y, m] = month.split('-');
@@ -42,6 +45,14 @@ export default function TimesheetDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const { data, isLoading } = useManagerTimesheetDetail(id ? Number(id) : null);
   const ts = data?.data;
+  const reviewMutation = useReviewTimesheet();
+  const [showApproveConfirm, setShowApproveConfirm] = useState(false);
+  const [showReject, setShowReject] = useState(false);
+  const [rejectReason, setRejectReason] = useState('');
+
+  const canReview = ts?.status === 'SOUMIS';
+  const canGenerateInvoice = ts?.status === 'VALIDE';
+  const [showGenerate, setShowGenerate] = useState(false);
 
   if (isLoading) {
     return (
@@ -116,6 +127,34 @@ export default function TimesheetDetailsPage() {
           Retour
         </Link>
         <h1 className="text-2xl font-semibold text-[#111111]">Détail du relevé</h1>
+        {canReview && (
+          <div className="ml-auto flex gap-3">
+            <button
+              onClick={() => setShowReject(true)}
+              disabled={reviewMutation.isPending}
+              className="cursor-pointer rounded-[8px] bg-[#ef4444] px-4 py-2 text-sm font-medium text-[#ffffff] transition-colors hover:bg-[#dc2626] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Rejeter
+            </button>
+            <button
+              onClick={() => setShowApproveConfirm(true)}
+              disabled={reviewMutation.isPending}
+              className="cursor-pointer rounded-[8px] bg-[#3b82f6] px-4 py-2 text-sm font-medium text-[#ffffff] transition-colors hover:bg-[#2563eb] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Approuver
+            </button>
+          </div>
+        )}
+        {canGenerateInvoice && (
+          <div className="ml-auto">
+            <button
+              onClick={() => setShowGenerate(true)}
+              className="cursor-pointer rounded-[8px] bg-[#10b981] px-4 py-2 text-sm font-medium text-[#ffffff] transition-colors hover:bg-[#059669]"
+            >
+              + Générer facture
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="rounded-[12px] bg-[#f5f5f5] p-6">
@@ -216,6 +255,102 @@ export default function TimesheetDetailsPage() {
             ))}
           </div>
         </div>
+      )}
+
+      {showApproveConfirm && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+          onClick={(e) => { if (e.target === e.currentTarget) setShowApproveConfirm(false); }}
+        >
+          <div className="w-full max-w-lg rounded-[12px] bg-[#ffffff] p-6 shadow-xl">
+            <h2 className="mb-2 text-lg font-semibold text-[#111111]">Approuver le Relevé</h2>
+            <p className="mb-6 text-sm text-[#6b7280]">
+              Êtes-vous sûr de vouloir approuver ce relevé&nbsp;? Cette action ne peut pas être annulée.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowApproveConfirm(false)}
+                className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-4 py-2 text-sm text-[#111111] transition-colors hover:bg-[#f3f4f6]"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={() => {
+                  reviewMutation.mutate(
+                    { id: Number(id), payload: { status: 'VALIDE' } },
+                    {
+                      onSuccess: () => {
+                        toast.success('Relevé approuvé avec succès');
+                        setShowApproveConfirm(false);
+                      },
+                      onError: () => { toast.error("Erreur lors de l'approbation"); },
+                    },
+                  );
+                }}
+                disabled={reviewMutation.isPending}
+                className="cursor-pointer rounded-[8px] bg-[#3b82f6] px-4 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-90 disabled:opacity-50"
+              >
+                {reviewMutation.isPending ? 'Approbation...' : 'Confirmer'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showReject && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+          onClick={(e) => { if (e.target === e.currentTarget) { setShowReject(false); setRejectReason(''); } }}
+        >
+          <div className="w-full max-w-xl rounded-[12px] bg-[#ffffff] p-6 shadow-xl">
+            <h2 className="mb-2 text-lg font-semibold text-[#111111]">Rejeter le Relevé</h2>
+            <p className="mb-4 text-sm text-[#6b7280]">Veuillez indiquer le motif du rejet.</p>
+            <textarea
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              rows={3}
+              className="w-full rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111]"
+              placeholder="Motif du rejet"
+            />
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={() => { setShowReject(false); setRejectReason(''); }}
+                className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-4 py-2 text-sm text-[#111111] transition-colors hover:bg-[#f3f4f6]"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={() => {
+                  if (!rejectReason.trim()) return;
+                  reviewMutation.mutate(
+                    { id: Number(id), payload: { status: 'REJETE', reason: rejectReason.trim() } },
+                    {
+                      onSuccess: () => {
+                        toast.success('Relevé rejeté');
+                        setShowReject(false);
+                        setRejectReason('');
+                      },
+                      onError: () => { toast.error('Erreur lors du rejet'); },
+                    },
+                  );
+                }}
+                disabled={reviewMutation.isPending || !rejectReason.trim()}
+                className="cursor-pointer rounded-[8px] bg-[#ef4444] px-4 py-2 text-sm font-medium text-[#ffffff] transition-colors hover:bg-[#dc2626] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Confirmer le rejet
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showGenerate && ts && (
+        <GenerateInvoiceModal
+          validTimesheets={[{ id: ts.id, month: ts.month, mission: { title: ts.mission.title }, consultant: { name: ts.consultant.name }, totalHours: ts.totalHours }]}
+          prefilledTimesheetId={ts.id}
+          open={showGenerate}
+          onClose={() => setShowGenerate(false)}
+        />
       )}
 
     </div>
