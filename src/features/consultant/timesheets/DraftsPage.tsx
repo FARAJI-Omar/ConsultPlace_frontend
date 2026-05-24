@@ -33,7 +33,7 @@ export default function DraftsPage() {
   const [editTimesheetId, setEditTimesheetId] = useState<number | null>(null);
 
   const drafts: Timesheet[] = (timesheets ?? []).filter(
-    (t) => t.status === 'BROUILLON',
+    (t) => t.status === 'BROUILLON' && t.mission?.status !== 'CLOSED',
   );
 
   const handleSubmit = async (id: number) => {
