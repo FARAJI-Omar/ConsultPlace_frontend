@@ -16,7 +16,6 @@ function formatMonth(month: string) {
 }
 
 const statusStyles: Record<string, string> = {
-  BROUILLON: 'bg-[#6b7280]/10 text-[#6b7280]',
   SOUMIS: 'bg-[#f59e0b]/10 text-[#f59e0b]',
   VALIDE: 'bg-[#10b981]/10 text-[#10b981]',
   FACTURE: 'bg-[#fb923c]/10 text-[#fb923c]',
@@ -25,7 +24,6 @@ const statusStyles: Record<string, string> = {
 };
 
 const statusLabels: Record<string, string> = {
-  BROUILLON: 'Brouillon',
   SOUMIS: 'Soumis',
   VALIDE: 'Validé',
   FACTURE: 'Facturé',
@@ -51,7 +49,6 @@ const columns: Column<Timesheet>[] = [
 
 const statusOptions: { value: TimesheetStatus | ''; label: string }[] = [
   { value: '', label: 'Tous les statuts' },
-  { value: 'BROUILLON', label: 'Brouillon' },
   { value: 'SOUMIS', label: 'Soumis' },
   { value: 'VALIDE', label: 'Validé' },
   { value: 'REJETE', label: 'Rejeté' },
@@ -64,7 +61,7 @@ export default function TimesheetsPage() {
   const [statusFilter, setStatusFilter] = useState<TimesheetStatus | ''>('');
 
   const filtered = timesheets?.filter(
-    (t) => !statusFilter || t.status === statusFilter,
+    (t) => t.status !== 'BROUILLON' && (!statusFilter || t.status === statusFilter),
   ) ?? [];
 
   return (
