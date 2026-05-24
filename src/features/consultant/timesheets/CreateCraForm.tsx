@@ -368,8 +368,8 @@ export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?:
       />
 
       <div className="space-y-2">
-        <label className="text-xs font-medium uppercase tracking-wider text-[#6b7280]">
-          Relevé d'heures signé, Attestation de présence, Rapport d'activité, Facture ... (Optionnel)
+        <label className="text-sm font-medium tracking-wider text-[#494d56]">
+          Relevé d'heures signé, Attestation de présence, Rapport d'activité, Facture ...<span className="text-xs text-[#ff0909]"> (*)</span>
         </label>
 
         <div
@@ -429,7 +429,7 @@ export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?:
           type="button"
           onClick={handleSaveDraftClick}
           disabled={!selectedMissionId || isOrchestrating}
-          className="cursor-pointer rounded-[8px] border border-[#e5e7eb] bg-[#ffffff] px-5 py-2.5 text-sm font-semibold text-[#111111] hover:bg-[#f3f4f6] disabled:opacity-50 transition-colors"
+          className="cursor-pointer rounded-[8px] border border-[#afb1b3] bg-[#ffffff] px-5 py-2.5 text-sm font-semibold text-[#111111] hover:bg-[#8f9194] disabled:opacity-50 transition-colors"
         >
           {createTimesheet.isPending ? 'Enregistrement...' : 'Enregistrer comme brouillon'}
         </button>
