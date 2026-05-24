@@ -28,9 +28,12 @@ export default function ManagerDashboard() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold text-[#111111]">
-        Tableau de bord
-      </h1>
+      <div>
+        <h1 className="text-2xl font-semibold text-[#111111]">
+          Tableau de bord
+        </h1>
+        <p className="text-sm text-[#6b7280] mt-1 italic">Année: {new Date().getFullYear()}</p>
+      </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {kpisLoading

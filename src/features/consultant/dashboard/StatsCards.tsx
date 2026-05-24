@@ -21,7 +21,7 @@ export default function StatsCards({
       value: String(activeMissions),
     },
     {
-      label: 'Gains totaux',
+      label: `Gains totaux ${new Date().getFullYear()}`,
       value: `${totalEarnings.toLocaleString()} DH`,
     },
     {

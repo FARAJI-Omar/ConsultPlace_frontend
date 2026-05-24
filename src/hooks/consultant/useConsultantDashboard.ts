@@ -43,12 +43,13 @@ export function useConsultantTimesheets() {
   });
 }
 
-export function useConsultantTracking() {
+export function useConsultantTracking(year?: number) {
+  const currentYear = year ?? new Date().getFullYear();
   return useQuery({
-    queryKey: ['consultant-tracking'],
+    queryKey: ['consultant-tracking', currentYear],
     queryFn: async () => {
       const { data } = await apiClient.get<ApiResponse<TrackingEntry[]>>(
-        '/consultant/tracking',
+        `/consultant/tracking?year=${currentYear}`,
       );
       return data.data;
     },

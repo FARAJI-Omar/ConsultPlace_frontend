@@ -265,7 +265,7 @@ export default function MissionDetailsPage() {
                       className="border-b border-[#e5e7eb] hover:bg-[#f9fafb]"
                     >
                       <td className="px-4 py-3 text-[#111111]">
-                        {entry.month}
+                        {entry.date.slice(0, 10)}
                       </td>
                       <td className="px-4 py-3 text-[#111111]">
                         {entry.paymentRef}
