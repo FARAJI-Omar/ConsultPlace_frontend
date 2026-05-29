@@ -38,7 +38,7 @@ export default function PendingCrasPage() {
   const [statusFilter, setStatusFilter] = useState('SOUMIS');
   const [selectedTimesheetId, setSelectedTimesheetId] = useState<number | null>(null);
   const [invoiceTimesheet, setInvoiceTimesheet] = useState<ManagerTimesheet | null>(null);
-  const [showHint, setShowHint] = useState(false);
+  const [showHint, setShowHint] = useState(true);
   const hintRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

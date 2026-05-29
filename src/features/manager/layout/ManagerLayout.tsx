@@ -41,7 +41,7 @@ export default function ManagerLayout() {
 
           <div className="flex items-center gap-4">
             <span className="text-sm text-[#6b7280]">
-              {user?.email}
+              {user?.email?.split('@')[0]}
             </span>
             <button
               onClick={handleLogout}

@@ -1,8 +1,12 @@
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
+import { useQuery } from '@tanstack/react-query';
 import { clearCredentials } from '../../store/authSlice';
+import apiClient from '../../lib/apiClient';
 import type { RootState } from '../../store';
+import type { ApiResponse } from '../../types/api';
+import type { ConsultantProfileData } from '../../types/consultant';
 
 interface HeaderProps {
   onToggleSidebar: () => void;
@@ -12,6 +16,20 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const user = useSelector((state: RootState) => state.auth.user);
+
+  const { data: profileData } = useQuery({
+    queryKey: ['consultant-profile'],
+    queryFn: async () => {
+      const { data } = await apiClient.get<ApiResponse<ConsultantProfileData>>('/consultants/me');
+      return data.data;
+    },
+    enabled: user?.role === 'CONSULTANT',
+  });
+
+  const displayName =
+    user?.role === 'CONSULTANT'
+      ? profileData?.profile.name ?? user?.email?.split('@')[0]
+      : user?.email?.split('@')[0];
 
   const handleLogout = () => {
     dispatch(clearCredentials());
@@ -34,7 +52,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
 
       <div className="flex items-center gap-4">
         <span className="text-sm text-[#6b7280]">
-          {user?.email}
+          {displayName}
         </span>
         <button
           onClick={handleLogout}

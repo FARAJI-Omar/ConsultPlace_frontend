@@ -134,9 +134,9 @@ export default function AlertCenterPage() {
     items?.filter((a) => a.status === 'ACTIVE') ?? [];
 
   const severityConfig = {
-    CRITICAL: { label: 'Critiques', count: activeAlerts(alerts?.critical).length, border: 'border-[#ef4444]', bg: 'bg-[#fef2f2]', dot: 'bg-[#ef4444]' },
-    WARNING: { label: 'Avertissements', count: activeAlerts(alerts?.warning).length, border: 'border-[#f59e0b]', bg: 'bg-[#fffbeb]', dot: 'bg-[#f59e0b]' },
-    INFO: { label: 'Informations', count: activeAlerts(alerts?.info).length, border: 'border-[#3b82f6]', bg: 'bg-[#eff6ff]', dot: 'bg-[#3b82f6]' },
+    CRITICAL: { label: 'CRITIQUE', count: activeAlerts(alerts?.critical).length, border: 'border-[#ef4444]', bg: 'bg-[#fef2f2]', dot: 'bg-[#ef4444]' },
+    WARNING: { label: 'AVERTISSEMENT', count: activeAlerts(alerts?.warning).length, border: 'border-[#f59e0b]', bg: 'bg-[#fffbeb]', dot: 'bg-[#f59e0b]' },
+    INFO: { label: 'INFO', count: activeAlerts(alerts?.info).length, border: 'border-[#3b82f6]', bg: 'bg-[#eff6ff]', dot: 'bg-[#3b82f6]' },
   };
 
   const isLoadingOverlay = updateStatus.isPending || payoutMutation.isPending;

@@ -70,9 +70,9 @@ export function useUpdateAlertRule() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: AlertRuleFormData }) =>
+    mutationFn: ({ id, data }: { id: number; data: Partial<AlertRuleFormData> }) =>
       apiClient
-        .put<{ success: true; data: AlertRule }>(`/alert-rules/${id}`, data)
+        .patch<{ success: true; data: AlertRule }>(`/alert-rules/${id}`, data)
         .then((res) => res.data.data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['alert-rules'] });

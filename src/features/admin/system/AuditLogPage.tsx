@@ -1,15 +1,10 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, type ReactNode } from 'react';
+
 import { DataTable, type Column } from '../../../components/common/DataTable';
 import DatePicker from '../../../components/common/DatePicker';
+import Modal from '../../../components/common/Modal';
 import { useGetAuditLogs, type AuditLogEntry } from '../../../hooks/useAuditLog';
-import { formatDate } from '../../../lib/utils';
-
-function renderDetails(details: Record<string, unknown> | null): string {
-  if (!details || Object.keys(details).length === 0) return '—';
-  return Object.entries(details)
-    .map(([key, val]) => `${key}: ${String(val)}`)
-    .join(' · ');
-}
+import { format } from 'date-fns';
 
 const ROLE_OPTIONS = ['', 'ADMIN', 'CONSULTANT', 'GESTIONNAIRE'] as const;
 const ROLE_LABELS: Record<string, string> = {
@@ -32,6 +27,8 @@ export default function AuditLogPage() {
   const [userFilter, setUserFilter] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [selectedEntry, setSelectedEntry] = useState<AuditLogEntry | null>(null);
+  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
 
   const [debouncedRole, setDebouncedRole] = useState('');
   const [debouncedUser, setDebouncedUser] = useState('');
@@ -117,7 +114,8 @@ export default function AuditLogPage() {
     { key: 'action', label: 'Action' },
     {
       key: 'userEmail',
-      label: 'Email',
+      label: 'Utilisateur',
+      render: (item) => item.userEmail.split('@')[0],
     },
     {
       key: 'userRole',
@@ -140,16 +138,23 @@ export default function AuditLogPage() {
     },
     {
       key: 'createdAt',
-      label: 'Date',
-      render: (item) => formatDate(item.createdAt),
+      label: "Date d'action",
+      render: (item) => format(new Date(item.createdAt), 'dd/MM/yyyy HH:mm'),
     },
     {
-      key: 'details',
-      label: 'Détails',
+      key: 'actions',
+      label: '',
       render: (item) => (
-        <span className="max-w-[220px] truncate block text-xs text-[#6b7280]" title={renderDetails(item.details)}>
-          {renderDetails(item.details)}
-        </span>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setSelectedEntry(item);
+            setDetailsModalOpen(true);
+          }}
+          className="cursor-pointer rounded-[8px] border border-[#e5e7eb] bg-[#ffffff] px-3 py-1.5 text-xs font-medium text-[#111111] transition-colors hover:bg-[#f3f4f6]"
+        >
+          Détails
+        </button>
       ),
     },
   ];
@@ -176,7 +181,7 @@ export default function AuditLogPage() {
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-[#6b7280]">Email</label>
+            <label className="text-xs font-medium text-[#6b7280]">Utilisateur</label>
             <input
               type="text"
               value={userFilter}
@@ -187,7 +192,7 @@ export default function AuditLogPage() {
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-[#6b7280]">Du</label>
+            <label className="text-xs font-medium text-[#6b7280]">De</label>
             <DatePicker value={startDate} onChange={handleStartDateChange} placeholder="Date début" />
           </div>
 
@@ -222,6 +227,82 @@ export default function AuditLogPage() {
         onPageChange={handlePageChange}
         onPageSizeChange={handlePageSizeChange}
       />
+
+      <Modal
+        isOpen={detailsModalOpen}
+        onClose={() => { setDetailsModalOpen(false); setSelectedEntry(null); }}
+        title="Détails de l'entrée"
+        size="lg"
+      >
+        {selectedEntry && (
+          <div className="space-y-5">
+            <div className="grid grid-cols-2 gap-4">
+              <InfoItem label="Utilisateur" value={selectedEntry.userEmail} />
+              <InfoItem
+                label="Rôle"
+                value={
+                  <span
+                    className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
+                      ROLE_BADGE_COLORS[selectedEntry.userRole] ?? 'bg-gray-100 text-gray-700'
+                    }`}
+                  >
+                    {ROLE_LABELS[selectedEntry.userRole] ?? selectedEntry.userRole}
+                  </span>
+                }
+              />
+              <InfoItem label="Action" value={selectedEntry.action} />
+              <InfoItem label="Type d'entité" value={selectedEntry.entityType} />
+              <InfoItem label="ID entité" value={String(selectedEntry.entityId)} />
+              <InfoItem
+                label="Date d'action"
+                value={format(new Date(selectedEntry.createdAt), 'dd/MM/yyyy HH:mm')}
+              />
+            </div>
+
+            {selectedEntry.details && Object.keys(selectedEntry.details).length > 0 && (
+              <div>
+                <h4 className="mb-2 text-sm font-semibold text-[#111111]">Détails</h4>
+                <div className="rounded-[8px] border border-[#e5e7eb] bg-[#f9fafb] p-4">
+                  <table className="w-full text-sm">
+                    <tbody>
+                      {Object.entries(selectedEntry.details)
+                        .filter(([key]) => key !== 'action')
+                        .map(([key, val]) => (
+                          <tr key={key} className="border-b border-[#e5e7eb] last:border-0">
+                            <td className="w-1/2 py-2 pr-4 font-medium text-[#6b7280]">{key}</td>
+                            <td className="w-1/2 py-2 text-[#111111]">
+                              {isChangeValue(val) ? (
+                                <span className="flex flex-col gap-1">
+                                  <span className="text-[#ef4444] line-through text-xs">{String(val['Ancienne valeur'])}</span>
+                                  <span className="text-[#10b981] text-xs">{String(val['Nouvelle valeur'])}</span>
+                                </span>
+                              ) : (
+                                String(val)
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </Modal>
+    </div>
+  );
+}
+
+function isChangeValue(val: unknown): val is Record<string, unknown> {
+  return typeof val === 'object' && val !== null && 'Ancienne valeur' in val && 'Nouvelle valeur' in val;
+}
+
+function InfoItem({ label, value }: { label: string; value: ReactNode }) {
+  return (
+    <div>
+      <p className="text-xs font-medium text-[#6b7280]">{label}</p>
+      <p className="mt-0.5 text-sm text-[#111111]">{value}</p>
     </div>
   );
 }

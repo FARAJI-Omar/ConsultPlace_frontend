@@ -11,7 +11,11 @@ interface AlertRuleFormProps {
   onSuccess: () => void;
 }
 
-const TYPES: AlertType[] = ['CRITICAL', 'WARNING', 'INFO'];
+const TYPE_OPTIONS: { value: AlertType; label: string }[] = [
+  { value: 'CRITICAL', label: 'Critique' },
+  { value: 'WARNING', label: 'Avertissement' },
+  { value: 'INFO', label: 'Information' },
+];
 
 const EVENT_OPTIONS: { value: AlertEvent; label: string }[] = [
   { value: 'LATE_INVOICE', label: 'Facture en retard' },
@@ -157,9 +161,17 @@ export default function AlertRuleForm({ rule, onSuccess }: AlertRuleFormProps) {
     };
 
     if (rule) {
-      const { event: _event, ...updateData } = data;
+      const patchData: Record<string, unknown> = {};
+      if (form.type !== rule.type) patchData.type = form.type;
+      if (form.threshold !== rule.threshold) patchData.threshold = form.threshold;
+      if (form.isActive !== rule.isActive) patchData.isActive = form.isActive;
+      const newTitle = form.titleTemplate || '';
+      if (newTitle !== (rule.titleTemplate ?? '')) patchData.titleTemplate = newTitle;
+      const newMessage = form.messageTemplate || '';
+      if (newMessage !== (rule.messageTemplate ?? '')) patchData.messageTemplate = newMessage;
+
       updateMutation.mutate(
-        { id: rule.id, data: updateData },
+        { id: rule.id, data: patchData },
         {
           onSuccess: () => {
             toast.success('Règle modifiée avec succès');
@@ -216,8 +228,8 @@ export default function AlertRuleForm({ rule, onSuccess }: AlertRuleFormProps) {
             errors.type ? 'border-red-500' : 'border-[#e5e7eb]'
           }`}
         >
-          {TYPES.map((t) => (
-            <option key={t} value={t}>{t}</option>
+          {TYPE_OPTIONS.map((t) => (
+            <option key={t.value} value={t.value}>{t.label}</option>
           ))}
         </select>
         {errors.type && <p className="mt-1 text-xs text-red-500">{errors.type}</p>}

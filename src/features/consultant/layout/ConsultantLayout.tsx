@@ -1,8 +1,12 @@
 import { useState } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
+import { useQuery } from '@tanstack/react-query';
 import { clearCredentials } from '../../../store/authSlice';
+import apiClient from '../../../lib/apiClient';
 import type { RootState } from '../../../store';
+import type { ApiResponse } from '../../../types/api';
+import type { ConsultantProfileData } from '../../../types/consultant';
 import Sidebar from './Sidebar';
 
 export default function ConsultantLayout() {
@@ -11,6 +15,16 @@ export default function ConsultantLayout() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const user = useSelector((state: RootState) => state.auth.user);
+
+  const { data: profileData } = useQuery({
+    queryKey: ['consultant-profile'],
+    queryFn: async () => {
+      const { data } = await apiClient.get<ApiResponse<ConsultantProfileData>>('/consultants/me');
+      return data.data;
+    },
+  });
+
+  const displayName = profileData?.profile.name ?? user?.email?.split('@')[0];
 
   const handleLogout = () => {
     dispatch(clearCredentials());
@@ -41,7 +55,7 @@ export default function ConsultantLayout() {
 
           <div className="flex items-center gap-4">
             <span className="text-sm text-[#6b7280]">
-              {user?.email}
+              {displayName}
             </span>
             <button
               onClick={handleLogout}
