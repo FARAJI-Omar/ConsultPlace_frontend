@@ -4,7 +4,7 @@ import type { ReminderPayload, ReminderResponse } from '../../types/manager';
 
 interface SendReminderResponse {
   success: boolean;
-  data: { success: boolean; sentTo: string; invoiceRef: string };
+  data: { jobId: number; status: string; sentTo: string; invoiceRef: string };
 }
 
 export function useSendReminder() {

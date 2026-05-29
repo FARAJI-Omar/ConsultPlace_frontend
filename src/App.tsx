@@ -7,6 +7,7 @@ import ConsultantRoute from './components/common/Guards/ConsultantRoute';
 import AdminLayout from './components/layout/AdminLayout';
 import DashboardPage from './features/admin/dashboard/DashboardPage';
 import ClientsPage from './features/admin/clients/ClientsPage';
+import ClientDetailPage from './features/admin/clients/ClientDetailPage';
 import ConsultantsPage from './features/admin/consultants/ConsultantsPage';
 import ContractsPage from './features/admin/contracts/ContractsPage';
 import ContractDetailsPage from './features/admin/contracts/ContractDetailsPage';
@@ -17,6 +18,7 @@ import AlertRulesPage from './features/admin/system/AlertRulesPage';
 import AuditLogPage from './features/admin/system/AuditLogPage';
 import ManagerDashboard from './features/manager/dashboard/ManagerDashboard';
 import AlertCenterPage from './features/manager/dashboard/AlertCenterPage';
+import ManagerAlertRulesPage from './features/manager/alertRules/AlertRulesPage';
 import PendingCrasPage from './features/manager/timesheets/PendingCrasPage';
 import TimesheetDetailsPage from './features/manager/timesheets/TimesheetDetailsPage';
 import InvoicesLayout from './features/manager/invoices/InvoicesLayout';
@@ -33,6 +35,7 @@ import ProfilePage from './features/consultant/profile/ProfilePage';
 import ConsultantMissionsPage from './features/consultant/missions/MissionsPage';
 import ConsultantMissionDetailsPage from './features/consultant/missions/MissionDetailsPage';
 import TimesheetsPage from './features/consultant/timesheets/TimesheetsPage';
+import TimesheetDetailPage from './features/consultant/timesheets/TimesheetDetailPage';
 import DraftsPage from './features/consultant/timesheets/DraftsPage';
 import RejectedPage from './features/consultant/timesheets/RejectedPage';
 import CreateCraPage from './features/consultant/timesheets/CreateCraPage';
@@ -58,6 +61,7 @@ const router = createBrowserRouter([
         children: [
           { index: true, element: <DashboardPage /> },
           { path: 'clients', element: <ClientsPage /> },
+          { path: 'clients/:id', element: <ClientDetailPage /> },
           { path: 'consultants', element: <ConsultantsPage /> },
           { path: 'contracts', element: <ContractsPage /> },
           { path: 'contracts/:id', element: <ContractDetailsPage /> },
@@ -79,6 +83,7 @@ const router = createBrowserRouter([
         children: [
           { index: true, element: <ManagerDashboard /> },
           { path: 'alerts', element: <AlertCenterPage /> },
+          { path: 'alertrules', element: <ManagerAlertRulesPage /> },
           { path: 'timesheets', element: <PendingCrasPage /> },
           { path: 'timesheets/:id', element: <TimesheetDetailsPage /> },
           {
@@ -109,6 +114,7 @@ const router = createBrowserRouter([
           { path: 'missions', element: <ConsultantMissionsPage /> },
           { path: 'missions/:id', element: <ConsultantMissionDetailsPage /> },
           { path: 'timesheets', element: <TimesheetsPage /> },
+          { path: 'timesheets/:id', element: <TimesheetDetailPage /> },
           { path: 'timesheets/drafts', element: <DraftsPage /> },
           { path: 'timesheets/rejected', element: <RejectedPage /> },
           { path: 'timesheets/new', element: <CreateCraPage /> },

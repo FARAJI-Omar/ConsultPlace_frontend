@@ -50,12 +50,17 @@ export function useTurnoverForecast(months: number = 6) {
   });
 }
 
-export function useMarginForecast() {
+export function useMarginForecast(startDate?: string, endDate?: string) {
+  const params = new URLSearchParams();
+  if (startDate) params.set('startDate', startDate);
+  if (endDate) params.set('endDate', endDate);
+  const query = params.toString();
+
   return useQuery({
-    queryKey: ['tracking-forecasts-margin'],
+    queryKey: ['tracking-forecasts-margin', { startDate, endDate }],
     queryFn: () =>
       apiClient
-        .get<ApiResponse<MarginForecast>>('/tracking/forecasts/margin')
+        .get<ApiResponse<MarginForecast>>(`/tracking/forecasts/margin${query ? `?${query}` : ''}`)
         .then((res) => res.data),
   });
 }

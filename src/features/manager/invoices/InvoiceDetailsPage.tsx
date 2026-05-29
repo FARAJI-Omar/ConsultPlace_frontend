@@ -2,11 +2,16 @@ import { useParams, Link } from 'react-router-dom';
 import { useInvoiceDetail, useMarkPaid, useDownloadPdf, useEmailInvoice, useCancelInvoice } from '../../../hooks/manager/useInvoices';
 import { useTriggerPayout } from '../../../hooks/manager/usePayouts';
 import { useSendReminder, useSetAutoReminder, useStopAutoReminder } from '../../../hooks/manager/useReminders';
+import { useJobStatus } from '../../../hooks/manager/useJobStatus';
 import { toast } from 'sonner';
 import { FileText, Download, Mail, XCircle } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { formatDate } from '../../../lib/utils';
 import { Skeleton } from '../../../components/ui/skeleton';
+import LoadingOverlay from '../../../components/common/LoadingOverlay';
+import { validateInvoiceEmail, storeJob, clearJob } from '../../../utils/email';
+import type { StoredJob } from '../../../utils/email';
 
 const statusBadge: Record<string, string> = {
   PENDING: 'bg-[#fef3c7] text-[#f59e0b]',
@@ -29,10 +34,13 @@ export default function InvoiceDetailsPage() {
   const [cancelConfirm, setCancelConfirm] = useState(false);
   const [confirmMarkPaid, setConfirmMarkPaid] = useState(false);
   const [markPaidDate, setMarkPaidDate] = useState(new Date().toISOString().split('T')[0]);
+  const [markPaidComment, setMarkPaidComment] = useState('');
+  const [confirmEmail, setConfirmEmail] = useState(false);
   const [confirmSendReminder, setConfirmSendReminder] = useState(false);
   const [confirmStopReminder, setConfirmStopReminder] = useState(false);
   const [showPayoutModal, setShowPayoutModal] = useState(false);
   const [payoutPercentage, setPayoutPercentage] = useState('80');
+  const [payoutComment, setPayoutComment] = useState('');
   const [showReminderModal, setShowReminderModal] = useState(false);
   const [reminderFrequency, setReminderFrequency] = useState<'7' | '15' | '30'>('15');
   const invoice = data?.data;
@@ -45,6 +53,50 @@ export default function InvoiceDetailsPage() {
   const sendReminderMutation = useSendReminder();
   const setAutoReminderMutation = useSetAutoReminder();
   const stopAutoReminderMutation = useStopAutoReminder();
+
+  const queryClient = useQueryClient();
+  const [pendingJob, setPendingJob] = useState<StoredJob | null>(null);
+  const jobStatusQuery = useJobStatus(pendingJob?.jobId ?? null);
+
+  useEffect(() => {
+    if (!jobStatusQuery.data || !pendingJob) return;
+    const d = jobStatusQuery.data.data;
+    if (d.status === 'COMPLETED') {
+      toast.success('Email envoyé avec succès');
+      clearJob(pendingJob.jobId);
+      setPendingJob(null);
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+    } else if (d.status === 'FAILED') {
+      toast.error(`Échec d'envoi : ${d.lastError ?? 'Erreur inconnue'}`, {
+        action: {
+          label: 'Réessayer',
+          onClick: () => {
+            if (pendingJob.type === 'email') {
+              emailMutation.mutate(pendingJob.invoiceId, {
+                onSuccess: (res) => {
+                  const j: StoredJob = { ...pendingJob, jobId: res.data.jobId };
+                  storeJob(j);
+                  setPendingJob(j);
+                  toast("Email mis en file d'attente...");
+                },
+              });
+            } else {
+              sendReminderMutation.mutate(pendingJob.invoiceId, {
+                onSuccess: (res) => {
+                  const j: StoredJob = { ...pendingJob, jobId: res.data.jobId };
+                  storeJob(j);
+                  setPendingJob(j);
+                  toast("Relance mise en file d'attente...");
+                },
+              });
+            }
+          },
+        },
+      });
+      clearJob(pendingJob.jobId);
+      setPendingJob(null);
+    }
+  }, [jobStatusQuery.data, pendingJob, queryClient, emailMutation, sendReminderMutation]);
 
   if (isLoading) {
     return (
@@ -81,14 +133,22 @@ export default function InvoiceDetailsPage() {
   if (!invoice) return <p className="text-sm text-[#6b7280]">Facture introuvable</p>;
 
   const handleMarkPaid = () => {
+    if (invoice && markPaidDate < invoice.issueDate.split('T')[0]) {
+      toast.error(`La date de paiement ne peut pas être antérieure à la date d'émission de la facture (${invoice.issueDate.split('T')[0]})`);
+      return;
+    }
     markPaidMutation.mutate(
-      { invoiceId: invoice.id, paymentDate: markPaidDate },
+      { invoiceId: invoice.id, paymentDate: markPaidDate, comment: markPaidComment || undefined },
       {
         onSuccess: () => {
           toast.success(`Facture ${invoice.ref} marquée comme payée`);
           setConfirmMarkPaid(false);
+          setMarkPaidComment('');
+          if (invoice.reminderFrequency) {
+            stopAutoReminderMutation.mutate(invoice.id);
+          }
         },
-        onError: () => toast.error("Erreur lors du marquage"),
+        onError: (err) => toast.error((err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error?.message ?? "Erreur lors du marquage"),
       },
     );
   };
@@ -101,9 +161,36 @@ export default function InvoiceDetailsPage() {
   };
 
   const handleEmail = () => {
+    const error = validateInvoiceEmail(invoice.client?.email);
+    if (error) { toast.error(error); setConfirmEmail(false); return; }
+    setConfirmEmail(false);
+    toast("Email mis en file d'attente...");
     emailMutation.mutate(invoice.id, {
-      onSuccess: (res) => toast.success(`Email envoyé à ${res.data.sentTo}`),
-      onError: () => toast.error("Erreur lors de l'envoi"),
+      onSuccess: (res) => {
+        const job: StoredJob = { jobId: res.data.jobId, invoiceId: invoice.id, type: 'email', invoiceRef: invoice.ref };
+        storeJob(job);
+        setPendingJob(job);
+      },
+      onError: (err) => {
+        toast.error((err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error?.message ?? "Erreur lors de l'envoi");
+      },
+    });
+  };
+
+  const handleSendReminder = () => {
+    const error = validateInvoiceEmail(invoice.client?.email);
+    if (error) { toast.error(error); return; }
+    toast("Relance mise en file d'attente...");
+    sendReminderMutation.mutate(invoice.id, {
+      onSuccess: (res) => {
+        const job: StoredJob = { jobId: res.data.jobId, invoiceId: invoice.id, type: 'reminder', invoiceRef: invoice.ref };
+        storeJob(job);
+        setPendingJob(job);
+        setConfirmSendReminder(false);
+      },
+      onError: (err) => {
+        toast.error((err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error?.message ?? "Erreur lors de l'envoi");
+      },
     });
   };
 
@@ -119,29 +206,22 @@ export default function InvoiceDetailsPage() {
 
   const handlePayout = () => {
     payoutMutation.mutate(
-      { invoiceId: invoice.id, payoutPercentage: parseFloat(payoutPercentage) || 80 },
+      { invoiceId: invoice.id, payoutPercentage: parseFloat(payoutPercentage) || 80, comment: payoutComment || undefined },
       {
         onSuccess: () => {
           toast.success('Paiement déclenché');
           setShowPayoutModal(false);
           setPayoutPercentage('80');
+          setPayoutComment('');
         },
         onError: () => toast.error('Erreur lors du paiement'),
       },
     );
   };
 
-  const handleSendReminder = () => {
-    sendReminderMutation.mutate(invoice.id, {
-      onSuccess: (res) => {
-        toast.success(`Relance envoyée à ${res.data.sentTo}`);
-        setConfirmSendReminder(false);
-      },
-      onError: () => toast.error("Erreur lors de l'envoi"),
-    });
-  };
-
   const handleSetAutoReminder = () => {
+    const error = validateInvoiceEmail(invoice.client?.email);
+    if (error) { toast.error(error); return; }
     setAutoReminderMutation.mutate(
       { invoiceId: invoice.id, payload: { frequency: parseInt(reminderFrequency, 10) as 7 | 15 | 30 } },
       {
@@ -149,7 +229,7 @@ export default function InvoiceDetailsPage() {
           toast.success(`Relance automatique configurée (${reminderFrequency} jours)`);
           setShowReminderModal(false);
         },
-        onError: () => toast.error('Erreur lors de la configuration'),
+        onError: (err) => toast.error((err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error?.message ?? "Erreur lors de la configuration"),
       },
     );
   };
@@ -168,6 +248,7 @@ export default function InvoiceDetailsPage() {
   const remaining = invoice.rest ?? (invoice.total ?? 0) - totalPaid;
 
   return (
+    <LoadingOverlay isLoading={markPaidMutation.isPending || payoutMutation.isPending || downloadPdfMutation.isPending || cancelMutation.isPending || setAutoReminderMutation.isPending || stopAutoReminderMutation.isPending}>
     <div className="space-y-6">
       <div className="flex items-center gap-4">
         <Link
@@ -180,9 +261,18 @@ export default function InvoiceDetailsPage() {
           Retour
         </Link>
         <h1 className="text-2xl font-semibold text-[#111111]">Facture {invoice.ref}</h1>
-        <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${statusBadge[invoice.status] || ''}`}>
-          {statusLabels[invoice.status] || invoice.status}
-        </span>
+        <div className="flex items-center gap-1.5">
+          <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${statusBadge[invoice.status] || ''}`}>
+            {statusLabels[invoice.status] || invoice.status}
+          </span>
+          {invoice.daysLate != null && invoice.daysLate >= 15 && (
+            invoice.status === 'PAID' ? (
+              <span className="text-xs font-medium text-[#10b981]">+{invoice.daysLate} j</span>
+            ) : invoice.status === 'PENDING' || invoice.status === 'PARTIAL_PAID' ? (
+              <span className="text-xs font-medium text-[#ef4444]">en retard {invoice.daysLate} j</span>
+            ) : null
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -278,7 +368,7 @@ export default function InvoiceDetailsPage() {
                   <FileText className="h-5 w-5 text-[#3b82f6]" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-[#111111]">Document {i + 1}</p>
+                  <p className="truncate text-sm font-medium text-[#111111]">{url.split('/').pop() || `Document ${i + 1}`}</p>
                 </div>
                 <Download className="h-4 w-4 shrink-0 text-[#6b7280]" />
               </a>
@@ -323,12 +413,13 @@ export default function InvoiceDetailsPage() {
           Télécharger PDF
         </button>
         <button
-          onClick={handleEmail}
+          onClick={() => setConfirmEmail(true)}
           disabled={emailMutation.isPending}
-          className="inline-flex items-center gap-2 cursor-pointer rounded-[8px] border border-[#e5e7eb] px-4 py-2 text-sm font-medium text-[#111111] transition-colors hover:bg-[#f3f4f6]"
+          className={`group inline-flex items-center gap-2 cursor-pointer rounded-[8px] border border-[#e5e7eb] px-4 py-2 text-sm font-medium transition-colors hover:bg-[#f3f4f6] ${invoice.isSent ? 'text-green-500' : 'text-[#111111]'}`}
         >
           <Mail className="h-4 w-4" />
-          Envoyer par email
+          <span className="group-hover:hidden">{invoice.isSent ? 'Envoyé' : 'Envoyer par email'}</span>
+          <span className="hidden group-hover:inline">{invoice.isSent ? 'Renvoyer' : 'Envoyer par email'}</span>
         </button>
         {(invoice.status === 'PENDING' || invoice.status === 'PARTIAL_PAID') && (
           <>
@@ -402,6 +493,15 @@ export default function InvoiceDetailsPage() {
                 className="w-full rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111]"
               />
             </div>
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-[#111111] mb-1">Commentaire (optionnel)</label>
+              <textarea
+                value={payoutComment}
+                onChange={(e) => setPayoutComment(e.target.value)}
+                rows={2}
+                className="w-full rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111] resize-none"
+              />
+            </div>
             <div className="mt-6 flex justify-end gap-3">
               <button onClick={() => setShowPayoutModal(false)} className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-4 py-2 text-sm text-[#111111] transition-colors hover:bg-[#f3f4f6]">Annuler</button>
               <button onClick={handlePayout} disabled={payoutMutation.isPending} className="cursor-pointer rounded-[8px] bg-[#10b981] px-4 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-90 disabled:opacity-50">
@@ -456,13 +556,39 @@ export default function InvoiceDetailsPage() {
                 className="w-full rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111]"
               />
             </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-[#111111] mb-1">Commentaire (optionnel)</label>
+              <textarea
+                value={markPaidComment}
+                onChange={(e) => setMarkPaidComment(e.target.value)}
+                rows={2}
+                placeholder="Ajouter un commentaire..."
+                className="w-full rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111]"
+              />
+            </div>
             <div className="flex justify-end gap-3">
               <button onClick={() => {
                 setConfirmMarkPaid(false);
                 setMarkPaidDate(new Date().toISOString().split('T')[0]);
+                setMarkPaidComment('');
               }} className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-4 py-2 text-sm text-[#111111] transition-colors hover:bg-[#f3f4f6]">Annuler</button>
               <button onClick={handleMarkPaid} disabled={markPaidMutation.isPending} className="cursor-pointer rounded-[8px] bg-[#10b981] px-4 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-90 disabled:opacity-50">
                 {markPaidMutation.isPending ? 'Traitement...' : 'Confirmer'}
+              </button>
+        </div>
+      </div>
+    </div>
+  )}
+
+      {confirmEmail && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4" onClick={() => setConfirmEmail(false)}>
+          <div className="w-full max-w-sm rounded-[12px] bg-[#ffffff] p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <h2 className="mb-2 text-lg font-semibold text-[#111111]">{invoice.isSent ? 'Renvoyer par email' : 'Envoyer par email'}</h2>
+            <p className="mb-6 text-sm text-[#6b7280]">Envoyer {invoice.ref} à {invoice.client?.email ?? 'aucun email'}&nbsp;?</p>
+            <div className="flex justify-end gap-3">
+              <button onClick={() => setConfirmEmail(false)} className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-4 py-2 text-sm text-[#111111] transition-colors hover:bg-[#f3f4f6]">Annuler</button>
+              <button onClick={handleEmail} disabled={emailMutation.isPending} className="cursor-pointer rounded-[8px] bg-[#3b82f6] px-4 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-90 disabled:opacity-50">
+                {emailMutation.isPending ? 'Envoi...' : 'Confirmer'}
               </button>
             </div>
           </div>
@@ -499,5 +625,6 @@ export default function InvoiceDetailsPage() {
         </div>
       )}
     </div>
+    </LoadingOverlay>
   );
 }

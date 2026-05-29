@@ -7,7 +7,7 @@ export interface User {
 export interface Client {
   id: number;
   raison_sociale: string;
-  rc: string;
+  rc?: string;
   identifiant_commun: string;
   identifiant_fiscal: string | null;
   contact: string;
@@ -15,8 +15,23 @@ export interface Client {
   address: string;
   phone_n?: string;
   total_contracts: number;
+  isArchived: boolean;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface ClientHistoryEntry {
+  id: number;
+  clientId: number;
+  userId: number;
+  userRole: string;
+  changes: { field: string; oldValue: string; newValue: string }[];
+  timestamp: string;
+}
+
+export interface ClientDetail extends Client {
+  contracts: (Contract & { attachments: DocumentFile[] })[];
+  history: ClientHistoryEntry[];
 }
 
 export interface Consultant {
@@ -38,6 +53,7 @@ export interface Contract {
   endDate: string;
   profile: string;
   dailyRate: number;
+  isArchived: boolean;
   createdAt: string;
   updatedAt: string;
   documents?: DocumentFile[];
@@ -99,7 +115,17 @@ export interface Timesheet {
   mission?: Partial<Mission>;
   consultant?: Partial<Consultant>;
   attachments?: DocumentFile[];
-  contractDocuments?: DocumentFile[];
+  history?: TimesheetHistoryEntry[];
+}
+
+export interface TimesheetHistoryEntry {
+  id: number;
+  timesheetId: number;
+  oldStatus: string;
+  newStatus: string;
+  changedBy?: string | null;
+  reason?: string | null;
+  timestamp: string;
 }
 
 export type InvoiceStatus =
@@ -224,9 +250,11 @@ export interface PayoutHistoryTotals {
 export interface PayoutHistoryEntry {
   id: number;
   invoiceRef: string;
+  consultant: string;
   amount: number;
   date: string;
   status: PayoutStatus;
+  comment?: string | null;
 }
 
 export interface PayoutHistory {

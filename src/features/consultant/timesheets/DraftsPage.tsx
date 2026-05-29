@@ -104,6 +104,7 @@ export default function DraftsPage() {
               }
             }}
             isUploading={uploadAttachments.isPending && uploadAttachments.variables?.timesheetId === String(draft.id)}
+            isDeleting={deleteAttachment.isPending}
             onEdit={() => setEditTimesheetId(draft.id)}
           />
         ))}
@@ -127,6 +128,7 @@ interface DraftCardProps {
   onDeleteAttachment: (attachmentId: number) => Promise<void>;
   onUploadFiles: (files: File[]) => Promise<void>;
   isUploading: boolean;
+  isDeleting: boolean;
   onEdit: () => void;
 }
 
@@ -139,6 +141,7 @@ function DraftCard({
   onDeleteAttachment,
   onUploadFiles,
   isUploading,
+  isDeleting,
   onEdit,
 }: DraftCardProps) {
   const isExpanded = expandedId === draft.id;
@@ -161,7 +164,7 @@ function DraftCard({
   );
 
   return (
-    <div className="rounded-[12px] bg-[#ffffff] border border-[#e5e7eb] overflow-hidden">
+    <div className={`rounded-[12px] bg-[#ffffff] border border-[#e5e7eb] overflow-hidden ${(isSubmitting || isUploading || isDeleting) ? 'pointer-events-none opacity-60' : ''}`}>
       <div className="flex items-center justify-between px-6 py-4">
         <div className="flex items-center gap-6">
           <div>
@@ -308,9 +311,10 @@ function DraftCard({
                       onDeleteAttachment(confirmDeleteId);
                       setConfirmDeleteId(null);
                     }}
-                    className="cursor-pointer rounded-[8px] bg-[#ef4444] px-4 py-2 text-xs font-semibold text-[#ffffff] hover:bg-[#dc2626] transition-colors"
+                    disabled={isDeleting}
+                    className="cursor-pointer rounded-[8px] bg-[#ef4444] px-4 py-2 text-xs font-semibold text-[#ffffff] hover:bg-[#dc2626] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Supprimer
+                    {isDeleting ? 'Suppression...' : 'Supprimer'}
                   </button>
                 </div>
               </div>

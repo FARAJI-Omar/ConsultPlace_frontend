@@ -1,4 +1,13 @@
-import { useDashboardKPIs, useMonthlySummary, useAlerts } from '../../../hooks/manager/useTracking';
+import { useState, useEffect } from 'react';
+import { DollarSign, Bell, X } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
+import { useDashboardKPIs, useMonthlySummary, useAlerts, useUpdateAlertStatus } from '../../../hooks/manager/useTracking';
+import { useTriggerPayout } from '../../../hooks/manager/usePayouts';
+import { useSendReminder } from '../../../hooks/manager/useReminders';
+import { useJobStatus } from '../../../hooks/manager/useJobStatus';
+import { useInvoiceDetail } from '../../../hooks/manager/useInvoices';
+import { validateInvoiceEmail, storeJob, clearJob } from '../../../utils/email';
+import type { StoredJob } from '../../../utils/email';
 import {
   ChartContainer,
   ChartTooltip,
@@ -6,16 +15,133 @@ import {
   type ChartConfig,
 } from '../../../components/ui/chart';
 import { Bar, BarChart, XAxis, YAxis, Cell } from 'recharts';
-import { Skeleton, SkeletonCard } from '../../../components/ui/skeleton';
+import { SkeletonCard } from '../../../components/ui/skeleton';
+import { toast } from 'sonner';
+import { formatDate } from '../../../lib/utils';
+import LoadingOverlay from '../../../components/common/LoadingOverlay';
+import type { AlertItem } from '../../../types/manager';
 
 const BAR_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
 
 export default function ManagerDashboard() {
   const { data: kpis, isLoading: kpisLoading } = useDashboardKPIs();
   const { data: monthlySummary } = useMonthlySummary();
-  const { data: alerts, isLoading: alertsLoading } = useAlerts();
+  const { data: alerts } = useAlerts();
+  const updateStatus = useUpdateAlertStatus();
+  const payoutMutation = useTriggerPayout();
+  const sendReminderMutation = useSendReminder();
 
-  const criticalAlerts = alerts?.critical ?? [];
+  const [payoutAlert, setPayoutAlert] = useState<AlertItem | null>(null);
+  const [payoutPercentage, setPayoutPercentage] = useState('80');
+  const [payoutComment, setPayoutComment] = useState('');
+  const [reminderAlert, setReminderAlert] = useState<AlertItem | null>(null);
+
+  const reminderInvoiceId = reminderAlert?.payload.entityType === 'INVOICE' ? reminderAlert.payload.entityId : null;
+  const { data: invoiceDetail } = useInvoiceDetail(reminderInvoiceId);
+
+  const queryClient = useQueryClient();
+  const [pendingJob, setPendingJob] = useState<StoredJob | null>(null);
+  const jobStatusQuery = useJobStatus(pendingJob?.jobId ?? null);
+
+  useEffect(() => {
+    if (!jobStatusQuery.data || !pendingJob) return;
+    const d = jobStatusQuery.data.data;
+    if (d.status === 'COMPLETED') {
+      toast.success('Relance envoyée avec succès');
+      clearJob(pendingJob.jobId);
+      setPendingJob(null);
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+    } else if (d.status === 'FAILED') {
+      toast.error(`Échec d'envoi : ${d.lastError ?? 'Erreur inconnue'}`, {
+        action: {
+          label: 'Réessayer',
+          onClick: () => {
+            sendReminderMutation.mutate(pendingJob.invoiceId, {
+              onSuccess: (res) => {
+                const j: StoredJob = { ...pendingJob, jobId: res.data.jobId };
+                storeJob(j);
+                setPendingJob(j);
+                toast("Relance mise en file d'attente...");
+              },
+            });
+          },
+        },
+      });
+      clearJob(pendingJob.jobId);
+      setPendingJob(null);
+    }
+  }, [jobStatusQuery.data, pendingJob, queryClient, sendReminderMutation]);
+
+  const handleResolve = (id: number) => {
+    updateStatus.mutate(
+      { id, status: 'RESOLVED' },
+      {
+        onSuccess: () => toast.success('Alerte résolue'),
+        onError: () => toast.error("Erreur lors de la résolution de l'alerte"),
+      },
+    );
+  };
+
+  const handlePayout = () => {
+    if (!payoutAlert) return;
+    if (payoutAlert.payload.entityType !== 'INVOICE') {
+      toast.error("Impossible de déterminer la facture associée");
+      return;
+    }
+    const invoiceId = payoutAlert.payload.entityId;
+    const pct = Number(payoutPercentage);
+    if (isNaN(pct) || pct < 0 || pct > 100) {
+      toast.error('Le pourcentage doit être entre 0 et 100');
+      return;
+    }
+    payoutMutation.mutate(
+      { invoiceId, payoutPercentage: pct, comment: payoutComment || undefined },
+      {
+        onSuccess: () => {
+          toast.success('Paiement déclenché');
+          setPayoutAlert(null);
+          setPayoutPercentage('80');
+          setPayoutComment('');
+          handleResolve(payoutAlert.id);
+        },
+        onError: (err) => {
+          const msg =
+            (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error?.message ??
+            "Erreur lors du paiement";
+          toast.error(msg);
+        },
+      },
+    );
+  };
+
+  const handleSendReminder = () => {
+    if (!reminderAlert) return;
+    if (!reminderInvoiceId) {
+      toast.error("Impossible de déterminer la facture associée");
+      return;
+    }
+    const email = invoiceDetail?.data?.client?.email;
+    const error = validateInvoiceEmail(email);
+    if (error) { toast.error(error); return; }
+    toast("Relance mise en file d'attente...");
+    sendReminderMutation.mutate(reminderInvoiceId, {
+      onSuccess: (res) => {
+        const job: StoredJob = { jobId: res.data.jobId, invoiceId: reminderInvoiceId, type: 'reminder', invoiceRef: `#${reminderInvoiceId}` };
+        storeJob(job);
+        setPendingJob(job);
+        setReminderAlert(null);
+        handleResolve(reminderAlert.id);
+      },
+      onError: (err) => {
+        toast.error(
+          (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error?.message ??
+          "Erreur lors de l'envoi de la relance",
+        );
+      },
+    });
+  };
+
+  const criticalAlerts = alerts?.critical?.filter((a) => a.status === 'ACTIVE') ?? [];
 
   const monthNames = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
   const summary = monthlySummary;
@@ -26,7 +152,10 @@ export default function ManagerDashboard() {
     chartConfig[c.clientName] = { label: c.clientName };
   }
 
+  const isLoadingOverlay = updateStatus.isPending || payoutMutation.isPending;
+
   return (
+    <LoadingOverlay isLoading={isLoadingOverlay}>
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold text-[#111111]">
@@ -59,39 +188,65 @@ export default function ManagerDashboard() {
         }
       </div>
 
-      <div className="rounded-[12px] bg-[#f5f5f5] p-6">
+      <div className="rounded-[12px] bg-[#fef2f2] p-6">
         <h2 className="text-lg font-semibold text-[#111111]">Alertes critiques</h2>
-        {alertsLoading ? (
-          <div className="mt-4 space-y-3">
-            {Array.from({ length: 2 }).map((_, i) => (
-              <div key={i} className="flex items-center justify-between rounded-[8px] border border-[#e5e7eb] px-4 py-3">
-                <div className="flex-1 space-y-2">
-                  <Skeleton className="h-4 w-1/3" />
-                  <Skeleton className="h-3 w-2/3" />
-                </div>
-                <Skeleton className="h-8 w-28 shrink-0" />
-              </div>
-            ))}
-          </div>
-        ) : criticalAlerts.length === 0 ? (
+        {criticalAlerts.length === 0 ? (
           <p className="mt-4 text-sm text-[#6b7280]">Aucune alerte critique</p>
         ) : (
           <div className="mt-4 space-y-3">
             {criticalAlerts.map((alert) => (
               <div
                 key={alert.id}
-                className="flex items-center justify-between rounded-[8px] border border-[#ef4444] bg-red-100 px-4 py-3"
+                className="flex items-center justify-between rounded-[8px] border border-[#e5e7eb] bg-[#ffffff] px-4 py-3"
               >
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-[#111111]">{alert.title}</p>
-                  <p className="text-xs text-[#6b7280]">{alert.message}</p>
+                <div className="flex items-start gap-3 flex-1">
+                  <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-[#ef4444]" />
+                  <div>
+                    <p className="text-sm font-medium text-[#111111]">{alert.title}</p>
+                    <p className="text-xs text-[#6b7280]">{alert.message}</p>
+                    <p className="mt-1 text-xs text-[#898989]">
+                      {formatDate(alert.createdAt)}
+                    </p>
+                  </div>
                 </div>
-                <button
-                  disabled
-                  className="cursor-not-allowed rounded-[8px] bg-[#e5e7eb] px-3 py-1.5 text-xs font-medium text-[#6b7280]"
-                >
-                  Bientôt disponible
-                </button>
+                <div className="flex items-center gap-2">
+                  {alert.payload.entityType === 'INVOICE' && (
+                    <>
+                      {alert.event === 'LATE_PAYOUT' && (
+                        <button
+                          onClick={() => {
+                            setPayoutAlert(alert);
+                            setPayoutPercentage('80');
+                            setPayoutComment('');
+                          }}
+                          disabled={payoutMutation.isPending}
+                          className="inline-flex items-center gap-1 cursor-pointer rounded-[8px] bg-[#ff0000] px-3 py-1.5 text-sm font-semibold text-[#ffffff] transition-opacity hover:opacity-40 disabled:opacity-50"
+                        >
+                          <DollarSign className="h-3.5 w-3.5" />
+                          Payer le consultant
+                        </button>
+                      )}
+                      {alert.event === 'LATE_INVOICE' && (
+                        <button
+                          onClick={() => setReminderAlert(alert)}
+                          disabled={sendReminderMutation.isPending}
+                          className="inline-flex items-center gap-1 cursor-pointer rounded-[8px] bg-[#ff0000] px-3 py-1.5 text-sm font-semibold text-[#ffffff] transition-opacity hover:opacity-40 disabled:opacity-50"
+                        >
+                          <Bell className="h-3.5 w-3.5" />
+                          Envoyer une relance
+                        </button>
+                      )}
+                    </>
+                  )}
+                  <button
+                    onClick={() => handleResolve(alert.id)}
+                    disabled={updateStatus.isPending}
+                    className="cursor-pointer rounded-full border border-[#ef4444] p-1 text-[#ef4444] transition-colors hover:bg-[#fef2f2] disabled:opacity-40"
+                    title="Résoudre"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
               </div>
             ))}
           </div>
@@ -119,6 +274,60 @@ export default function ManagerDashboard() {
           </ChartContainer>
         </div>
       )}
+
+      {payoutAlert && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4" onClick={() => setPayoutAlert(null)}>
+          <div className="w-full max-w-sm rounded-[12px] bg-[#ffffff] p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <h2 className="mb-2 text-lg font-semibold text-[#111111]">Payer le consultant</h2>
+            <p className="mb-4 text-sm text-[#6b7280]">Facture #{payoutAlert.payload.entityId}</p>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-[#111111] mb-1">Pourcentage du consultant (0–100)</label>
+              <input
+                type="number"
+                min={0}
+                max={100}
+                value={payoutPercentage}
+                onChange={(e) => setPayoutPercentage(e.target.value)}
+                className="w-full rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111]"
+              />
+            </div>
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-[#111111] mb-1">Commentaire (optionnel)</label>
+              <textarea
+                value={payoutComment}
+                onChange={(e) => setPayoutComment(e.target.value)}
+                rows={2}
+                placeholder="Ajouter un commentaire..."
+                className="w-full rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111]"
+              />
+            </div>
+            <div className="flex justify-end gap-3">
+              <button onClick={() => setPayoutAlert(null)} className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-4 py-2 text-sm text-[#111111] transition-colors hover:bg-[#f3f4f6]">Annuler</button>
+              <button onClick={handlePayout} disabled={payoutMutation.isPending} className="cursor-pointer rounded-[8px] bg-[#3b82f6] px-4 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-70 disabled:opacity-50">
+                {payoutMutation.isPending ? 'Traitement...' : 'Confirmer le paiement'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {reminderAlert && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4" onClick={() => setReminderAlert(null)}>
+          <div className="w-full max-w-sm rounded-[12px] bg-[#ffffff] p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <h2 className="mb-2 text-lg font-semibold text-[#111111]">Envoyer une relance</h2>
+            <p className="mb-6 text-sm text-[#6b7280]">
+              Envoyer une relance pour la facture #{reminderInvoiceId} à {invoiceDetail?.data?.client?.email ?? '...'}&nbsp;?
+            </p>
+            <div className="flex justify-end gap-3">
+              <button onClick={() => setReminderAlert(null)} className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-4 py-2 text-sm text-[#111111] transition-colors hover:bg-[#f3f4f6]">Annuler</button>
+              <button onClick={handleSendReminder} disabled={sendReminderMutation.isPending} className="cursor-pointer rounded-[8px] bg-[#3b82f6] px-4 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-70 disabled:opacity-50">
+                {sendReminderMutation.isPending ? 'Envoi...' : 'Confirmer'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
+    </LoadingOverlay>
   );
 }

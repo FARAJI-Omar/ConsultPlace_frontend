@@ -1,12 +1,11 @@
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
-import { Eye } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { DataTable, type Column } from '../../../components/common/DataTable';
 import Modal from '../../../components/common/Modal';
 import MissionForm from './MissionForm';
 import { useGetMissions, useCloseMission, type Mission } from '../../../hooks/useMissions';
-import { formatDate } from '../../../lib/utils';
+import { cn, formatDate } from '../../../lib/utils';
 
 export default function MissionsPage() {
   const [page, setPage] = useState(1);
@@ -86,28 +85,28 @@ export default function MissionsPage() {
       key: 'actions',
       label: 'Actions',
       render: (item) => (
-        <div className="flex items-center gap-1">
+        <div className="flex items-center justify-left gap-2">
           <Link
             to={`/admin/missions/${item.id}`}
-            className="inline-flex cursor-pointer rounded p-1.5 text-[#6b7280] transition-colors hover:bg-light-blue hover:text-primary-blue"
+            className="cursor-pointer rounded-[6px] bg-[#EFF6FF] px-2.5 py-1 text-xs font-medium text-primary-blue transition-colors hover:bg-blue-100"
           >
-            <Eye className="h-4 w-4" />
+            Détails
           </Link>
           {item.status === 'ACTIVE' && (
             <button
               onClick={() => setConfirmClose(item)}
-              className="cursor-pointer rounded-[8px] border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 transition-colors hover:bg-red-50"
+              className="cursor-pointer rounded-[6px] bg-red-50 px-2.5 py-1 text-xs font-medium text-red-600 transition-colors hover:bg-red-100"
             >
               Clôturer
             </button>
-          )}
+          )}               
         </div>
       ),
     },
   ];
 
   return (
-    <div className="space-y-6">
+    <div className={cn("space-y-6", closeMutation.isPending && "pointer-events-none opacity-50")}>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-[#111111]">Missions</h1>
         <button

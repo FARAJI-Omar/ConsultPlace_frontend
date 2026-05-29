@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { parseApiError } from '../../../utils/errorParser';
 import { useCreateGestionnaire } from '../../../hooks/useGestionnaires';
+import LoadingOverlay from '../../../components/common/LoadingOverlay';
 
 interface GestionnaireFormProps {
   onSuccess: () => void;
@@ -61,6 +62,7 @@ export default function GestionnaireForm({ onSuccess }: GestionnaireFormProps) {
   ];
 
   return (
+    <LoadingOverlay isLoading={mutation.isPending}>
     <form onSubmit={handleSubmit} className="space-y-4">
       <p className="text-xs text-red-500">(*) Champ obligatoire</p>
       {FIELDS.map(({ key, label, required, type }) => (
@@ -93,5 +95,6 @@ export default function GestionnaireForm({ onSuccess }: GestionnaireFormProps) {
         </button>
       </div>
     </form>
+    </LoadingOverlay>
   );
 }

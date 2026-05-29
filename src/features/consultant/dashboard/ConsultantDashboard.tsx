@@ -29,7 +29,9 @@ export default function ConsultantDashboard() {
   const averageByMission =
     totalMissions > 0 ? Math.round(totalEarnings / totalMissions) : 0;
 
-  const draftCount = timesheets.filter((ts) => ts.status === 'BROUILLON').length;
+  const draftCount = timesheets.filter(
+    (ts) => ts.status === 'BROUILLON' && ts.mission?.status !== 'CLOSED',
+  ).length;
   const rejectedCount = timesheets.filter((ts) => ts.status === 'REJETE').length;
 
   return (

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { parseApiError } from '../../../utils/errorParser';
 import { useMutateConsultant } from '../../../hooks/useConsultants';
+import LoadingOverlay from '../../../components/common/LoadingOverlay';
 
 interface ConsultantFormProps {
   onSuccess: () => void;
@@ -87,6 +88,7 @@ export default function ConsultantForm({ onSuccess }: ConsultantFormProps) {
   };
 
   return (
+    <LoadingOverlay isLoading={mutation.isPending}>
     <form onSubmit={handleSubmit} className="space-y-4">
       <p className="text-xs text-red-500">(*) Champ obligatoire</p>
       {FIELDS.map(({ key, label, required, type }) => (
@@ -119,5 +121,6 @@ export default function ConsultantForm({ onSuccess }: ConsultantFormProps) {
         </button>
       </div>
     </form>
+    </LoadingOverlay>
   );
 }

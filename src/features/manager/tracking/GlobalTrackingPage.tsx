@@ -215,7 +215,7 @@ export default function GlobalTrackingPage() {
         <button
           onClick={handleExport}
           disabled={exporting}
-          className="cursor-pointer rounded-[8px] bg-[#003ea8] px-4 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-90 disabled:opacity-50"
+          className="cursor-pointer rounded-[8px] bg-red-400 px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50 hover:bg-red-500 disabled:hover:bg-red-400"
         >
           {exporting ? 'Exportation...' : 'Exporter CSV'}
         </button>

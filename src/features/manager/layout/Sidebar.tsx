@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import smallLogo from '../../../assets/small_logo.png';
 import collapsedLogo from '../../../assets/collapsed_logo.png';
@@ -9,6 +10,7 @@ import {
   Bell,
   Activity,
   TrendingUp,
+  ChevronDown,
   PanelLeftClose,
   PanelLeftOpen,
   type LucideIcon,
@@ -27,11 +29,29 @@ interface NavLeaf {
   icon: LucideIcon;
 }
 
-type NavItem = NavLeaf;
+interface NavChild {
+  label: string;
+  path: string;
+}
+
+interface NavGroup {
+  label: string;
+  icon: LucideIcon;
+  children: NavChild[];
+}
+
+type NavItem = NavLeaf | NavGroup;
 
 const NAV_ITEMS: NavItem[] = [
   { label: 'Tableau de bord', path: '/manager', icon: LayoutDashboard },
-  { label: 'Alertes', path: '/manager/alerts', icon: Bell },
+  {
+    label: 'Alertes',
+    icon: Bell,
+    children: [
+      { label: 'Alertes', path: '/manager/alerts' },
+      { label: "Règles d'alerte", path: '/manager/alertrules' },
+    ],
+  },
   { label: 'Relevés ', path: '/manager/timesheets', icon: FileText },
   { label: 'Factures', path: '/manager/invoices', icon: Receipt },
   { label: 'Paiements consultants', path: '/manager/payouts', icon: Wallet },
@@ -40,12 +60,29 @@ const NAV_ITEMS: NavItem[] = [
 ];
 
 export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }: SidebarProps) {
+  const [expandedGroups, setExpandedGroups] = useState<string[]>(['Alertes']);
+
+  const toggleGroup = (label: string) => {
+    setExpandedGroups((prev) =>
+      prev.includes(label) ? prev.filter((g) => g !== label) : [...prev, label],
+    );
+  };
+
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     `flex items-center gap-3 rounded-[8px] px-3 py-2 text-sm transition-colors whitespace-nowrap cursor-pointer ${
       isActive
         ? 'bg-primary-blue text-[#ffffff]'
         : 'text-[#6b7280] hover:bg-light-blue hover:text-[#111111]'
     }`;
+
+  const childLinkClass = ({ isActive }: { isActive: boolean }) =>
+    `block rounded-[8px] px-3 py-1.5 text-sm transition-colors cursor-pointer ${
+      isActive
+        ? 'bg-primary-blue text-[#ffffff]'
+        : 'text-[#6b7280] hover:bg-light-blue hover:text-[#111111]'
+    }`;
+
+  const isGroup = (item: NavItem): item is NavGroup => 'children' in item;
 
   return (
     <>
@@ -77,21 +114,65 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
         </div>
 
         <nav className="flex-1 space-y-1 overflow-y-auto p-3">
-          {NAV_ITEMS.map((item) => (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              end={item.path === '/manager'}
-              className={linkClass}
-              onClick={onClose}
-              title={collapsed ? item.label : undefined}
-            >
-              <div className={collapsed ? 'mx-auto' : ''}>
-                <item.icon className="h-5 w-5 shrink-0" />
-              </div>
-              {!collapsed && item.label}
-            </NavLink>
-          ))}
+          {NAV_ITEMS.map((item) => {
+            if (isGroup(item)) {
+              const isExpanded = expandedGroups.includes(item.label);
+              return (
+                <div key={item.label}>
+                  <button
+                    onClick={() => { if (!collapsed) toggleGroup(item.label); }}
+                    className="flex w-full items-center gap-3 rounded-[8px] px-3 py-2 text-sm text-[#6b7280] transition-colors hover:bg-light-blue hover:text-[#111111] cursor-pointer"
+                    title={collapsed ? item.label : undefined}
+                  >
+                    <div className={collapsed ? 'mx-auto' : ''}>
+                      <item.icon className="h-5 w-5 shrink-0" />
+                    </div>
+                    {!collapsed && (
+                      <>
+                        <span className="flex-1 text-left">{item.label}</span>
+                        <ChevronDown
+                          className={`h-4 w-4 transition-transform duration-200 ${
+                            isExpanded ? 'rotate-0' : '-rotate-90'
+                          }`}
+                        />
+                      </>
+                    )}
+                  </button>
+                  {!collapsed && isExpanded && (
+                    <div className="ml-6 mt-1 space-y-1">
+                      {item.children.map((child) => (
+                        <NavLink
+                          key={child.path}
+                          to={child.path}
+                          end
+                          className={childLinkClass}
+                          onClick={onClose}
+                        >
+                          {child.label}
+                        </NavLink>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            }
+
+            return (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                end={item.path === '/manager'}
+                className={linkClass}
+                onClick={onClose}
+                title={collapsed ? item.label : undefined}
+              >
+                <div className={collapsed ? 'mx-auto' : ''}>
+                  <item.icon className="h-5 w-5 shrink-0" />
+                </div>
+                {!collapsed && item.label}
+              </NavLink>
+            );
+          })}
         </nav>
 
         <div className={`shrink-0 border-t border-[#e5e7eb] p-3 ${collapsed ? 'flex justify-center' : ''}`}>

@@ -1,9 +1,28 @@
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, FileText, Download } from 'lucide-react';
 import { useGetMissionById } from '../../../hooks/useMissions';
 import { formatDate } from '../../../lib/utils';
 
+const statusBadge: Record<string, string> = {
+  BROUILLON: 'bg-[#e5e7eb] text-[#6b7280]',
+  SOUMIS: 'bg-[#fef3c7] text-[#f59e0b]',
+  VALIDE: 'bg-[#d1fae5] text-[#10b981]',
+  REJETE: 'bg-[#fee2e2] text-[#ef4444]',
+  FACTURE: 'bg-[#ffedd5] text-[#f97316]',
+  PAYE: 'bg-[#d1fae5] text-[#10b981]',
+};
+
+const statusLabels: Record<string, string> = {
+  BROUILLON: 'Brouillon',
+  SOUMIS: 'Soumis',
+  VALIDE: 'Validé',
+  REJETE: 'Rejeté',
+  FACTURE: 'Facturé',
+  PAYE: 'Payé',
+};
+
 export default function MissionDetailsPage() {
+  const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const missionId = Number(id);
   const { data: mission, isLoading } = useGetMissionById(missionId);
@@ -53,6 +72,18 @@ export default function MissionDetailsPage() {
               <dt className="text-[#6b7280]">Contrat</dt>
               <dd className="font-medium text-[#111111]">
                 {mission.contract?.ref ?? '—'}
+              </dd>
+            </div>
+            <div className="flex justify-between">
+              <dt className="text-[#6b7280]">Profil</dt>
+              <dd className="font-medium text-[#111111]">
+                {mission.contract?.profile ?? '—'}
+              </dd>
+            </div>
+            <div className="flex justify-between">
+              <dt className="text-[#6b7280]">Taux journalier</dt>
+              <dd className="font-medium text-[#111111]">
+                {mission.contract?.dailyRate ? `${mission.contract.dailyRate} DH` : '—'}
               </dd>
             </div>
             <div className="flex justify-between">
@@ -114,6 +145,53 @@ export default function MissionDetailsPage() {
           </div>
         </div>
       )}
+
+      <div className="rounded-[12px] border border-[#e5e7eb] p-6">
+        <h2 className="mb-4 text-lg font-semibold text-[#111111]">
+          Relevés associés ({(mission.timesheets ?? []).length})
+        </h2>
+        {mission.timesheets && mission.timesheets.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm border-collapse">
+              <thead>
+                <tr className="border-b border-[#e5e7eb]">
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[#6b7280]">Mois</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[#6b7280]">Jours</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[#6b7280]">Heures</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[#6b7280]">Statut</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[#6b7280]">Soumis le</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[#6b7280]"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {mission.timesheets.map((ts) => (
+                  <tr key={ts.id} className="border-b border-[#e5e7eb] transition-colors hover:bg-[#f9fafb]">
+                    <td className="px-4 py-3 text-[#111111]">{ts.month}</td>
+                    <td className="px-4 py-3 text-[#111111]">{ts.days}</td>
+                    <td className="px-4 py-3 text-[#111111]">{ts.totalHours}h</td>
+                    <td className="px-4 py-3">
+                      <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${statusBadge[ts.status] ?? ''}`}>
+                        {statusLabels[ts.status] ?? ts.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-[#111111]">{formatDate(ts.submittedAt)}</td>
+                    <td className="px-4 py-3">
+                      <button
+                        onClick={() => navigate(`/manager/timesheets/${ts.id}`)}
+                        className="cursor-pointer rounded-[6px] bg-[#EFF6FF] px-2 py-0.5 text-xs font-medium text-primary-blue transition-colors hover:bg-blue-100"
+                      >
+                        Voir
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p className="text-sm text-[#6b7280]">Aucun relevé pour cette mission</p>
+        )}
+      </div>
     </div>
   );
 }

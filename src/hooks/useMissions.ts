@@ -11,8 +11,22 @@ export interface Mission {
   endDate: string | null;
   status: 'ACTIVE' | 'CLOSED';
   attachments?: { id: number; filename: string; url: string; type: string; createdAt: string }[];
-  contract?: { id: number; ref: string };
+  contract?: { id: number; ref: string; startDate?: string; endDate?: string; profile?: string; dailyRate?: number };
   consultant?: { id: number; name: string };
+  timesheets?: {
+    id: number;
+    consultantId: number;
+    missionId: number;
+    month: string;
+    days: number;
+    totalHours: number;
+    status: string;
+    clientValidation: boolean;
+    submittedAt?: string;
+    rejectionReason?: string | null;
+    createdAt: string;
+    updatedAt: string;
+  }[];
   createdAt: string;
   updatedAt: string;
 }

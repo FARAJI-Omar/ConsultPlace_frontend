@@ -4,7 +4,9 @@ import { FileText, Download } from 'lucide-react';
 import { useManagerTimesheetDetail, useReviewTimesheet } from '../../../hooks/manager/useManagerTimesheets';
 import { formatDate } from '../../../lib/utils';
 import { Skeleton } from '../../../components/ui/skeleton';
+import HorizontalStepper from '../../../components/common/HorizontalStepper';
 import { toast } from 'sonner';
+import LoadingOverlay from '../../../components/common/LoadingOverlay';
 import GenerateInvoiceModal from './GenerateInvoiceModal';
 
 function formatMonth(month: string) {
@@ -115,6 +117,7 @@ export default function TimesheetDetailsPage() {
   }
 
   return (
+    <LoadingOverlay isLoading={reviewMutation.isPending}>
     <div className="space-y-6">
       <div className="flex items-center gap-4">
         <Link
@@ -155,6 +158,18 @@ export default function TimesheetDetailsPage() {
             </button>
           </div>
         )}
+      </div>
+
+      <div className="rounded-[12px] bg-[#f5f5f5] p-6">
+        <h2 className="mb-6 text-lg font-semibold text-[#111111]">Suivi du statut</h2>
+        <HorizontalStepper
+          steps={(ts.history ?? []).map((e) => ({
+            status: e.newStatus,
+            label: statusLabels[e.newStatus] ?? e.newStatus,
+            timestamp: e.timestamp,
+          }))}
+          currentStatus={ts.status}
+        />
       </div>
 
       <div className="rounded-[12px] bg-[#f5f5f5] p-6">
@@ -257,6 +272,8 @@ export default function TimesheetDetailsPage() {
         </div>
       )}
 
+
+
       {showApproveConfirm && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
@@ -354,5 +371,6 @@ export default function TimesheetDetailsPage() {
       )}
 
     </div>
+    </LoadingOverlay>
   );
 }

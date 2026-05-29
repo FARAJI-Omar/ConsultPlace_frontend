@@ -1,14 +1,17 @@
 import { useState, useCallback } from 'react';
-import { Pencil } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+
+import { toast } from 'sonner';
 import { DataTable, type Column } from '../../../components/common/DataTable';
 import Modal from '../../../components/common/Modal';
 import ClientForm from './ClientForm';
-import { useGetClients } from '../../../hooks/useClients';
+import { cn } from '../../../lib/utils';
+import { useGetClients, useToggleClientArchive } from '../../../hooks/useClients';
 
 interface ClientRow {
   id: number;
   raison_sociale: string;
-  rc: string;
+  rc?: string;
   identifiant_commun: string;
   identifiant_fiscal: string | null;
   contact: string;
@@ -16,15 +19,18 @@ interface ClientRow {
   address: string;
   phone_n: string | null;
   total_contracts: number;
+  isArchived: boolean;
 }
 
 export default function ClientsPage() {
+  const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<ClientRow | null>(null);
 
   const { data, isLoading } = useGetClients(page, pageSize);
+  const toggleArchive = useToggleClientArchive();
 
   const handlePageChange = useCallback((p: number) => setPage(p), []);
   const handlePageSizeChange = useCallback((size: number) => {
@@ -47,11 +53,29 @@ export default function ClientsPage() {
     setEditingClient(null);
   };
 
+  const handleToggleArchive = (client: ClientRow) => {
+    const newState = !client.isArchived;
+    toggleArchive.mutate(
+      { id: client.id, isArchived: newState },
+      {
+        onSuccess: () => {
+          toast.success(newState ? 'Client archivé avec succès' : 'Client restauré avec succès');
+        },
+        onError: () => {
+          toast.error("Une erreur est survenue");
+        },
+      },
+    );
+  };
+
   const columns: Column<ClientRow>[] = [
     { key: 'raison_sociale', label: 'Raison sociale', render: (item) => (
-      <span className="inline-block rounded-[6px] bg-[#EFF6FF] px-2.5 py-1 text-sm font-medium text-[#111111]">{item.raison_sociale}</span>
+      <div className="flex items-center gap-2">
+        <span className={`inline-block rounded-[6px] px-2.5 py-1 text-sm font-medium text-[#111111] ${item.isArchived ? 'bg-gray-100 text-gray-500' : 'bg-[#EFF6FF]'}`}>{item.raison_sociale}</span>
+        {item.isArchived && <span className="inline-block rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">Archivé</span>}
+      </div>
     ) },
-    { key: 'rc', label: 'Registre de Commerce' },
+    { key: 'rc', label: 'Registre de Commerce', render: (item) => item.rc ?? '—' },
     {
       key: 'identifiant_commun',
       label: 'ICE',
@@ -79,19 +103,34 @@ export default function ClientsPage() {
       key: 'actions',
       label: 'Actions',
       render: (item) => (
-        <button
-          onClick={() => openEdit(item)}
-          className="cursor-pointer rounded p-1.5 text-[#6b7280] transition-colors hover:bg-light-blue hover:text-primary-blue"
-          aria-label="Modifier"
-        >
-          <Pencil className="h-4 w-4 text-blue-600" />
-        </button>
+        <div className="flex items-center justify-center gap-2">
+          <button
+            onClick={() => navigate(`/admin/clients/${item.id}`)}
+            className="cursor-pointer rounded-[6px] bg-[#EFF6FF] px-2.5 py-1 text-xs font-medium text-primary-blue transition-colors hover:bg-blue-100"
+          >
+            Détails
+          </button>
+          <button
+            onClick={() => openEdit(item)}
+            className="cursor-pointer rounded-[6px] bg-[#f3f4f6] px-2.5 py-1 text-xs font-medium text-[#111111] transition-colors hover:bg-gray-200"
+          >
+            Modifier
+          </button>
+          <button
+            onClick={() => handleToggleArchive(item)}
+            disabled={toggleArchive.isPending}
+            className="cursor-pointer rounded-[6px] px-2.5 py-1 text-xs font-medium transition-colors disabled:opacity-50"
+            style={{ backgroundColor: item.isArchived ? '#d1fae5' : '#fef3c7', color: item.isArchived ? '#065f46' : '#92400e' }}
+          >
+            {item.isArchived ? 'Restaurer' : 'Archiver'}
+          </button>
+        </div>
       ),
     },
   ];
 
   return (
-    <div className="space-y-6">
+    <div className={cn("space-y-6", toggleArchive.isPending && "pointer-events-none opacity-50")}>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-[#111111]">Clients</h1>
         <button

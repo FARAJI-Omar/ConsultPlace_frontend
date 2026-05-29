@@ -55,3 +55,34 @@ export interface MissionDetailData {
   timesheets: Timesheet[];
   payoutHistory: TrackingEntry[];
 }
+
+export interface ConsultantProfileData {
+  profile: {
+    id: number;
+    name: string;
+    email: string;
+    profile: string;
+    dailyRate: number;
+    isActive: boolean;
+    createdAt: string;
+  };
+  activeMissions: {
+    id: number;
+    title: string;
+    startDate: string;
+    endDate: string | null;
+  }[];
+  missionCounts: {
+    active: number;
+    closed: number;
+  };
+  timesheetSummary: {
+    counts: Record<string, number>;
+    totalHours: number;
+    totalDays: number;
+  };
+  financialSnapshot: {
+    yearToDateEarnings: number;
+    unpaidInvoicesTotal: number;
+  };
+}

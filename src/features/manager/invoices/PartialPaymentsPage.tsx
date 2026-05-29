@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { DataTable } from '../../../components/common/DataTable';
 import { useInvoices, useRegisterPayment, useMarkPaid } from '../../../hooks/manager/useInvoices';
 import { toast } from 'sonner';
+import LoadingOverlay from '../../../components/common/LoadingOverlay';
 import type { Column } from '../../../components/common/DataTable';
 import type { Invoice } from '../../../types/manager';
 
@@ -13,6 +14,7 @@ export default function PartialPaymentsPage() {
   const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0]);
   const [confirmPayAll, setConfirmPayAll] = useState<Invoice | null>(null);
   const [payAllDate, setPayAllDate] = useState(new Date().toISOString().split('T')[0]);
+  const [payAllComment, setPayAllComment] = useState('');
 
   const { data, isLoading } = useInvoices(page, limit);
   const registerPaymentMutation = useRegisterPayment();
@@ -38,6 +40,10 @@ export default function PartialPaymentsPage() {
 
   const handleRegisterPayment = () => {
     if (!paymentModal) return;
+    if (paymentDate < paymentModal.issueDate.split('T')[0]) {
+      toast.error(`La date de paiement ne peut pas être antérieure à la date d'émission de la facture (${paymentModal.issueDate.split('T')[0]})`);
+      return;
+    }
     const amount = parseInt(paymentAmount, 10);
     if (isNaN(amount) || amount <= 0) return;
     registerPaymentMutation.mutate(
@@ -54,12 +60,17 @@ export default function PartialPaymentsPage() {
   };
 
   const handlePayAll = (inv: Invoice) => {
+    if (payAllDate < inv.issueDate.split('T')[0]) {
+      toast.error(`La date de paiement ne peut pas être antérieure à la date d'émission de la facture (${inv.issueDate.split('T')[0]})`);
+      return;
+    }
     markPaidMutation.mutate(
-      { invoiceId: inv.id, paymentDate: payAllDate },
+      { invoiceId: inv.id, paymentDate: payAllDate, comment: payAllComment || undefined },
       {
         onSuccess: () => {
           toast.success(`Facture ${inv.ref} marquée comme payée`);
           setConfirmPayAll(null);
+          setPayAllComment('');
         },
         onError: () => toast.error("Erreur lors du paiement"),
       },
@@ -96,6 +107,7 @@ export default function PartialPaymentsPage() {
   ];
 
   return (
+    <LoadingOverlay isLoading={registerPaymentMutation.isPending || markPaidMutation.isPending}>
     <div className="space-y-4">
       <DataTable
         columns={columns}
@@ -161,6 +173,7 @@ export default function PartialPaymentsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4" onClick={() => {
           setConfirmPayAll(null);
           setPayAllDate(new Date().toISOString().split('T')[0]);
+          setPayAllComment('');
         }}>
           <div className="w-full max-w-sm rounded-[12px] bg-[#ffffff] p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
             <h2 className="mb-2 text-lg font-semibold text-[#111111]">Tout payer</h2>
@@ -174,10 +187,21 @@ export default function PartialPaymentsPage() {
                 className="w-full rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111]"
               />
             </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-[#111111] mb-1">Commentaire (optionnel)</label>
+              <textarea
+                value={payAllComment}
+                onChange={(e) => setPayAllComment(e.target.value)}
+                rows={2}
+                placeholder="Ajouter un commentaire..."
+                className="w-full rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111]"
+              />
+            </div>
             <div className="flex justify-end gap-3">
               <button onClick={() => {
                 setConfirmPayAll(null);
                 setPayAllDate(new Date().toISOString().split('T')[0]);
+                setPayAllComment('');
               }} className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-4 py-2 text-sm text-[#111111] transition-colors hover:bg-[#f3f4f6]">Annuler</button>
               <button onClick={() => handlePayAll(confirmPayAll)} disabled={markPaidMutation.isPending} className="cursor-pointer rounded-[8px] bg-[#10b981] px-4 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-90 disabled:opacity-50">
                 {markPaidMutation.isPending ? 'Traitement...' : 'Confirmer'}
@@ -187,5 +211,6 @@ export default function PartialPaymentsPage() {
         </div>
       )}
     </div>
+    </LoadingOverlay>
   );
 }

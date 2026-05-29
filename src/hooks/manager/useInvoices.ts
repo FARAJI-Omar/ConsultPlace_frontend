@@ -41,7 +41,7 @@ interface PaymentResponse {
 
 interface EmailResponse {
   success: boolean;
-  data: { success: boolean; sentTo: string; invoiceRef: string };
+  data: { jobId: number; status: string; sentTo: string; invoiceRef: string };
 }
 
 export function useInvoices(page: number, limit: number, status?: string) {
@@ -140,10 +140,14 @@ export function useDownloadPdf() {
 }
 
 export function useEmailInvoice() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: number) =>
       apiClient
         .post<EmailResponse>(`/invoice-pdf/${id}/email`)
         .then((res) => res.data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+    },
   });
 }

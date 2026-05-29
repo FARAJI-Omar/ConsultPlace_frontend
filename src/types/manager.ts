@@ -54,9 +54,20 @@ export interface ManagerTimesheet {
   consultant: { id: number; name: string; email: string; profile: string };
 }
 
+export interface TimesheetHistoryEntry {
+  id: number;
+  timesheetId: number;
+  oldStatus: string;
+  newStatus: string;
+  changedBy?: string | null;
+  reason?: string | null;
+  timestamp: string;
+}
+
 export interface ManagerTimesheetDetail extends ManagerTimesheet {
   dailyEntries: { day: number; hours: number }[];
   attachments: { id: number; filename: string; url: string; type: string; uploadedAt: string }[];
+  history: TimesheetHistoryEntry[];
 }
 
 export interface ReviewPayload {
@@ -78,6 +89,8 @@ export interface Invoice {
   issueDate: string;
   dueDate: string;
   paymentDate: string | null;
+  daysLate: number | null;
+  isSent: boolean;
   reminderFrequency: number | null;
   lastReminderSentAt: string | null;
   createdAt: string;
@@ -110,6 +123,7 @@ export interface PaymentPayload {
 export interface MarkPaidPayload {
   invoiceId: number;
   paymentDate: string;
+  comment?: string;
 }
 
 export interface GenerateInvoicePayload {
@@ -120,6 +134,7 @@ export interface GenerateInvoicePayload {
 export interface PayoutPayload {
   invoiceId: number;
   payoutPercentage?: number;
+  comment?: string;
 }
 
 export interface PayoutHistoryTotals {
@@ -130,10 +145,12 @@ export interface PayoutHistoryTotals {
 export interface PayoutHistoryEntry {
   id: number;
   invoiceRef: string;
+  invoiceId: number;
   amount: number;
   date: string;
   status: string;
   consultant: string;
+  comment?: string | null;
 }
 
 export interface PayoutHistory {
@@ -180,20 +197,48 @@ export interface TurnoverForecast {
     monthsRemaining: number;
     totalEstimatedRevenue: number;
     startDate: string;
-    endDate: string;
+    endDate: string | null;
+  }[];
+  monthlyBreakdown: {
+    month: string;
+    totalRevenue: number;
+    missions: { missionId: number; revenue: number }[];
   }[];
 }
 
 export interface MarginForecast {
-  period: number;
+  period: { startDate: string; endDate: string };
   summary: {
     totalRevenue: number;
     totalPayouts: number;
-    cabinet_margin: number;
+    cabinetMargin: number;
     marginPercentage: number;
   };
-  byClient: { clientId: number; clientName: string; totalRevenue: number; invoiceCount: number }[];
-  byConsultant: { consultantId: number; consultantName: string; totalPayout: number }[];
+  byClient: {
+    clientId: number;
+    clientName: string;
+    totalRevenue: number;
+    totalPayout: number;
+    invoiceCount: number;
+    margin: number;
+    marginPercentage: number;
+  }[];
+  byConsultant: {
+    consultantId: number;
+    consultantName: string;
+    totalRevenue: number;
+    totalPayout: number;
+    margin: number;
+    marginPercentage: number;
+  }[];
+  monthlyTrend: {
+    month: string;
+    label: string;
+    totalRevenue: number;
+    totalPayouts: number;
+    margin: number;
+    marginPercentage: number;
+  }[];
 }
 
 export interface ReminderPayload {
@@ -204,4 +249,15 @@ export interface ReminderResponse {
   invoiceId: number;
   frequency: number;
   status: string;
+}
+
+export type JobStatusEnum = 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
+
+export interface JobStatusResponse {
+  success: boolean;
+  data: {
+    jobId: number;
+    status: JobStatusEnum;
+    lastError?: string;
+  };
 }

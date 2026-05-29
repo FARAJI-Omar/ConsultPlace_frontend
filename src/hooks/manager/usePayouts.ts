@@ -29,6 +29,22 @@ export function usePayoutsHistory() {
   });
 }
 
+export function useExportPayoutsPdf() {
+  return useMutation({
+    mutationFn: (month: string) =>
+      apiClient
+        .get(`/payouts/history/pdf?month=${month}`, { responseType: 'blob' })
+        .then((res) => {
+          const url = window.URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `paiements-${month}.pdf`;
+          link.click();
+          window.URL.revokeObjectURL(url);
+        }),
+  });
+}
+
 export function useTriggerPayout() {
   const queryClient = useQueryClient();
   return useMutation({

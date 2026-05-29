@@ -4,6 +4,7 @@ import { ChevronDown, ChevronRight } from 'lucide-react';
 import { parseApiError } from '../../../utils/errorParser';
 import { useCreateAlertRule, useUpdateAlertRule, useGetAlertRuleById, ALLOWED_VARIABLES } from '../../../hooks/useAlertRules';
 import type { AlertRule, AlertType, AlertEvent } from '../../../hooks/useAlertRules';
+import LoadingOverlay from '../../../components/common/LoadingOverlay';
 
 interface AlertRuleFormProps {
   rule?: AlertRule;
@@ -201,6 +202,7 @@ export default function AlertRuleForm({ rule, onSuccess }: AlertRuleFormProps) {
   const activeEvent = rule ? (resolvedRule?.event ?? form.event) : form.event;
 
   return (
+    <LoadingOverlay isLoading={isPending}>
     <form onSubmit={handleSubmit} className="space-y-4">
       <p className="text-xs text-red-500">(*) Champ obligatoire</p>
       <div>
@@ -375,5 +377,6 @@ export default function AlertRuleForm({ rule, onSuccess }: AlertRuleFormProps) {
         </button>
       </div>
     </form>
+    </LoadingOverlay>
   );
 }

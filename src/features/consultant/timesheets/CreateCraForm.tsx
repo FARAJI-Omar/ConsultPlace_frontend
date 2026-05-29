@@ -6,6 +6,7 @@ import { useUploadAttachments } from '../../../hooks/consultant/useAttachments';
 import { useSubmitTimesheet } from '../../../hooks/consultant/useSubmitTimesheet';
 import { useMoroccoHolidays } from '../../../hooks/consultant/useMoroccoHolidays';
 import CalendarGrid from './CalendarGrid';
+import LoadingOverlay from '../../../components/common/LoadingOverlay';
 import type { DailyEntry } from '../../../types/models';
 
 const monthNames = [
@@ -51,8 +52,16 @@ export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?:
   const currentYear = now.getFullYear();
   const currentMonth = now.getMonth();
 
-  const year = currentYear;
-  const month = currentMonth;
+  const [selectedMonth, setSelectedMonth] = useState(currentMonth);
+  const [selectedYear, setSelectedYear] = useState(currentYear);
+
+  const monthOptions = useMemo(() => {
+    const prev = new Date(currentYear, currentMonth - 1, 1);
+    return [
+      { label: `${monthNames[currentMonth]} ${currentYear}`, year: currentYear, month: currentMonth },
+      { label: `${monthNames[prev.getMonth()]} ${prev.getFullYear()}`, year: prev.getFullYear(), month: prev.getMonth() },
+    ];
+  }, []);
 
   const [selectedMissionId, setSelectedMissionId] = useState<number | null>(defaultMissionId ?? null);
   const [entriesByMonth, setEntriesByMonth] = useState<Record<string, Record<string, number>>>({});
@@ -65,7 +74,7 @@ export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?:
   const [pendingWeekendAction, setPendingWeekendAction] = useState<'save' | 'submit' | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const holidays = useMoroccoHolidays(year);
+  const holidays = useMoroccoHolidays(selectedYear);
 
   const { data: missionsData, isLoading: missionsLoading } = useConsultantMissions({
     limit: 500,
@@ -79,7 +88,7 @@ export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?:
   const isOrchestrating =
     createTimesheet.isPending || uploadMutation.isPending || submitTimesheet.isPending;
 
-  const selectedMonthStr = `${year}-${String(month + 1).padStart(2, '0')}`;
+  const selectedMonthStr = `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}`;
 
   const touchedDays = useMemo(
     () => new Set(touchedByMonth[selectedMonthStr] ?? []),
@@ -87,8 +96,8 @@ export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?:
   );
 
   const entries = useMemo(
-    () => entriesByMonth[selectedMonthStr] ?? generateDefaultEntries(year, month, holidays),
-    [entriesByMonth, selectedMonthStr, year, month, holidays],
+    () => entriesByMonth[selectedMonthStr] ?? generateDefaultEntries(selectedYear, selectedMonth, holidays),
+    [entriesByMonth, selectedMonthStr, selectedYear, selectedMonth, holidays],
   );
 
   const totalHours = useMemo(
@@ -102,17 +111,17 @@ export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?:
       if (existing) {
         return { ...prev, [selectedMonthStr]: { ...existing, [dayKey]: hours } };
       }
-      return { ...prev, [selectedMonthStr]: { ...generateDefaultEntries(year, month, holidays), [dayKey]: hours } };
+      return { ...prev, [selectedMonthStr]: { ...generateDefaultEntries(selectedYear, selectedMonth, holidays), [dayKey]: hours } };
     });
     setTouchedByMonth((prev) => {
       const current = prev[selectedMonthStr] ?? [];
       if (current.includes(dayKey)) return prev;
       return { ...prev, [selectedMonthStr]: [...current, dayKey] };
     });
-  }, [selectedMonthStr, year, month, holidays]);
+  }, [selectedMonthStr, selectedYear, selectedMonth, holidays]);
 
   function handleClearMonth() {
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
     const cleared: Record<string, number> = {};
     const touched: string[] = [];
     for (let day = 1; day <= daysInMonth; day++) {
@@ -127,16 +136,16 @@ export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?:
   function hasWeekendOrHolidayHours(entries: Record<string, number>): string[] {
     const holidayDates = new Map(holidays.map((h) => [h.date, h.name]));
     const result: string[] = [];
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
     for (let day = 1; day <= daysInMonth; day++) {
       const key = `day-${day}`;
       const hours = entries[key];
       if (hours > 0) {
-        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-        if (isWeekend(day, year, month)) {
-          result.push(`${day} ${monthNames[month]} (week-end)`);
+        const dateStr = `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        if (isWeekend(day, selectedYear, selectedMonth)) {
+          result.push(`${day} ${monthNames[selectedMonth]} (week-end)`);
         } else if (holidayDates.has(dateStr)) {
-          result.push(`${day} ${monthNames[month]} (${holidayDates.get(dateStr)})`);
+          result.push(`${day} ${monthNames[selectedMonth]} (${holidayDates.get(dateStr)})`);
         }
       }
     }
@@ -308,13 +317,14 @@ export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?:
   const missions = (missionsData?.data ?? []).filter((m) => m.canCreateTimesheet);
 
   useEffect(() => {
-    if (selectedMissionId !== null && !missions.find((m) => m.id === selectedMissionId)) {
+    if (!missionsLoading && selectedMissionId !== null && !missions.find((m) => m.id === selectedMissionId)) {
       setSelectedMissionId(null);
     }
-  }, [missions, selectedMissionId]);
+  }, [missions, selectedMissionId, missionsLoading]);
 
   return (
-    <div className="space-y-6">
+    <LoadingOverlay isLoading={isOrchestrating}>
+      <div className="space-y-6">
       {fileError && (
         <div className="rounded-[8px] bg-[#ef4444]/10 border border-[#ef4444] px-4 py-3 text-sm font-medium text-[#ef4444]">
           {fileError}
@@ -342,10 +352,28 @@ export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?:
           </select>
         </div>
 
-        <div className="flex items-center gap-2">
-          <div className="h-10 rounded-[8px] border border-[#e5e7eb] bg-[#ffffff] px-3 text-sm text-[#111111] flex items-center min-w-[140px]">
-            {monthNames[month]} {year}
-          </div>
+        <div className="flex flex-col gap-1.5">
+          <label className="text-xs font-medium uppercase tracking-wider text-[#6b7280]">
+            Mois
+          </label>
+          <select
+            value={selectedMonthStr}
+            onChange={(e) => {
+              const option = monthOptions.find((o) => `${o.year}-${String(o.month + 1).padStart(2, '0')}` === e.target.value);
+              if (option) {
+                setSelectedMonth(option.month);
+                setSelectedYear(option.year);
+              }
+            }}
+            className="h-10 rounded-[8px] border border-[#e5e7eb] bg-[#ffffff] px-3 text-sm text-[#111111] focus:border-[#111111] focus:outline-none min-w-[180px]"
+            disabled={isOrchestrating}
+          >
+            {monthOptions.map((opt) => (
+              <option key={`${opt.year}-${opt.month}`} value={`${opt.year}-${String(opt.month + 1).padStart(2, '0')}`}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
         </div>
 
         <button
@@ -358,8 +386,8 @@ export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?:
       </div>
 
       <CalendarGrid
-        year={year}
-        month={month}
+        year={selectedYear}
+        month={selectedMonth}
         entries={entries}
         holidays={holidays}
         touchedDays={touchedDays}
@@ -500,6 +528,6 @@ export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?:
           </div>
         </div>
       )}
-    </div>
+    </div></LoadingOverlay>
   );
 }

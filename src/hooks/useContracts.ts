@@ -20,6 +20,7 @@ export interface Contract {
   endDate: string;
   profile: string;
   dailyRate: number;
+  isArchived: boolean;
   documents: DocumentFile[];
   attachments?: DocumentFile[];
   client?: { id: number; raison_sociale: string };
@@ -36,13 +37,13 @@ export interface ContractFormData {
   files?: File[];
 }
 
-export function useGetContracts(page = 1, limit = 10) {
+export function useGetContracts(page = 1, limit = 10, includeArchived = false) {
   return useQuery({
-    queryKey: ['contracts', { page, limit }],
+    queryKey: ['contracts', { page, limit, includeArchived }],
     queryFn: () =>
       apiClient
         .get<{ success: true; data: Contract[]; pagination: Pagination }>('/contracts', {
-          params: { page, limit },
+          params: { page, limit, ...(includeArchived ? { includeArchived: 'true' } : {}) },
         })
         .then((res) => ({ data: res.data.data, pagination: res.data.pagination })),
   });
@@ -75,6 +76,22 @@ export function useMutateContract() {
       }
       return apiClient
         .post<{ success: true; data: Contract }>('/contracts', formData)
+        .then((res) => res.data.data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['contracts'] });
+    },
+  });
+}
+
+export function useToggleContractArchive() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, isArchived }: { id: number; isArchived: boolean }) => {
+      const endpoint = isArchived ? 'archive' : 'restore';
+      return apiClient
+        .patch<{ success: true; data: Contract }>(`/contracts/${id}/${endpoint}`)
         .then((res) => res.data.data);
     },
     onSuccess: () => {

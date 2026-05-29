@@ -4,6 +4,7 @@ import { Upload, X } from 'lucide-react';
 import { parseApiError } from '../../../utils/errorParser';
 import { useMutateContract } from '../../../hooks/useContracts';
 import { useGetClients } from '../../../hooks/useClients';
+import LoadingOverlay from '../../../components/common/LoadingOverlay';
 import DatePicker from '../../../components/common/DatePicker';
 
 interface ContractFormProps {
@@ -111,6 +112,7 @@ export default function ContractForm({ onSuccess }: ContractFormProps) {
   ];
 
   return (
+    <LoadingOverlay isLoading={mutation.isPending}>
     <form onSubmit={handleSubmit} className="space-y-4">
       <p className="text-xs text-red-500">(*) Champ obligatoire</p>
       {FIELDS.map(({ key, label, required, type }) => (
@@ -213,5 +215,6 @@ export default function ContractForm({ onSuccess }: ContractFormProps) {
         </button>
       </div>
     </form>
+    </LoadingOverlay>
   );
 }

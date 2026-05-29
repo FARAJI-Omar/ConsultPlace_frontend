@@ -1,9 +1,11 @@
 import { useState } from 'react';
-import { usePayoutsHistory, useTriggerPayout } from '../../../hooks/manager/usePayouts';
+import { Link } from 'react-router-dom';
+import { usePayoutsHistory, useTriggerPayout, useExportPayoutsPdf } from '../../../hooks/manager/usePayouts';
 import { useInvoices } from '../../../hooks/manager/useInvoices';
 import { Skeleton, SkeletonCard, SkeletonTable } from '../../../components/ui/skeleton';
 import { toast } from 'sonner';
 import { formatDate } from '../../../lib/utils';
+import LoadingOverlay from '../../../components/common/LoadingOverlay';
 
 export default function PayoutTrackingPage() {
   const { data, isLoading } = usePayoutsHistory();
@@ -11,8 +13,15 @@ export default function PayoutTrackingPage() {
   const payoutMutation = useTriggerPayout();
   const [payoutModal, setPayoutModal] = useState<{ id: number; ref: string } | null>(null);
   const [payoutPercentage, setPayoutPercentage] = useState('80');
+  const [payoutComment, setPayoutComment] = useState('');
   const [selectedHistoriqueId, setSelectedHistoriqueId] = useState<number | null>(null);
   const [selectedUnpaidId, setSelectedUnpaidId] = useState<number | null>(null);
+  const [exportModal, setExportModal] = useState(false);
+  const [exportMonth, setExportMonth] = useState(new Date().toISOString().slice(5, 7));
+  const exportPdfMutation = useExportPayoutsPdf();
+
+  const months = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0'));
+  const currentMonth = new Date().toISOString().slice(5, 7);
 
   const unpaidConsultants = (paidInvoicesQuery.data?.data ?? []).filter(
     (inv) => inv.timesheet?.status !== 'PAYE',
@@ -21,12 +30,17 @@ export default function PayoutTrackingPage() {
   const handlePayout = () => {
     if (!payoutModal) return;
     payoutMutation.mutate(
-      { invoiceId: payoutModal.id, payoutPercentage: parseFloat(payoutPercentage) || 80 },
+      {
+        invoiceId: payoutModal.id,
+        payoutPercentage: parseFloat(payoutPercentage) || 80,
+        comment: payoutComment || undefined,
+      },
       {
         onSuccess: () => {
           toast.success(`Paiement déclenché pour ${payoutModal.ref}`);
           setPayoutModal(null);
           setPayoutPercentage('80');
+          setPayoutComment('');
         },
         onError: () => toast.error("Erreur lors du paiement"),
       },
@@ -58,6 +72,7 @@ export default function PayoutTrackingPage() {
   const history = payoutData?.history ?? [];
 
   return (
+    <LoadingOverlay isLoading={payoutMutation.isPending || exportPdfMutation.isPending}>
     <div className="space-y-6">
       <h1 className="text-2xl font-semibold text-[#111111]">Paiements consultants</h1>
 
@@ -93,7 +108,9 @@ export default function PayoutTrackingPage() {
                     onClick={() => setSelectedUnpaidId(selectedUnpaidId === inv.id ? null : inv.id)}
                     className={`border-b border-[#e5e7eb] cursor-pointer transition-colors ${selectedUnpaidId === inv.id ? 'bg-yellow-100/50' : 'hover:bg-yellow-50'}`}
                   >
-                    <td className="px-3 py-2 font-medium text-[#111111]">{inv.ref}</td>
+                    <td className="px-3 py-2 font-medium">
+                      <Link to={`/manager/invoices/${inv.id}`} className="text-[#3b82f6] hover:underline">{inv.ref}</Link>
+                    </td>
                     <td className="px-3 py-2 text-[#6b7280]">{inv.timesheet?.month ?? '-'}</td>
                     <td className="px-3 py-2 text-[#111111]">{inv.consultant?.name ?? '-'}</td>
                     {/* <td className="px-3 py-2 text-[#6b7280]">{inv.timesheet?.mission?.title ?? '-'}</td> */}
@@ -115,7 +132,15 @@ export default function PayoutTrackingPage() {
       )}
 
       <div className="rounded-[12px] bg-[#f5f5f5] p-6">
-        <h2 className="mb-4 text-lg font-semibold text-[#111111]">Historique</h2>
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-[#111111]">Historique</h2>
+          <button
+            onClick={() => setExportModal(true)}
+            className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-4 py-2 text-xs font-medium text-white transition-colors bg-red-400 hover:bg-red-500"
+          >
+            Exporter PDF
+          </button>
+        </div>
         {history.length === 0 ? (
           <p className="text-sm text-[#6b7280]">Aucun paiement effectué</p>
         ) : (
@@ -127,6 +152,7 @@ export default function PayoutTrackingPage() {
                   <th className="px-3 py-2 text-left text-xs font-medium text-[#6b7280]">Montant Versé</th>
                   <th className="px-3 py-2 text-left text-xs font-medium text-[#6b7280]">Date</th>
                   <th className="px-3 py-2 text-left text-xs font-medium text-[#6b7280]">Consultant</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-[#6b7280]">Commentaire</th>
                 </tr>
               </thead>
               <tbody>
@@ -136,10 +162,13 @@ export default function PayoutTrackingPage() {
                     onClick={() => setSelectedHistoriqueId(selectedHistoriqueId === entry.id ? null : entry.id)}
                     className={`border-b border-[#e5e7eb] cursor-pointer transition-colors ${selectedHistoriqueId === entry.id ? 'bg-yellow-100/50' : 'hover:bg-yellow-50'}`}
                   >
-                    <td className="px-3 py-2 font-medium text-[#111111]">{entry.invoiceRef}</td>
+                    <td className="px-3 py-2 font-medium">
+                      <Link to={`/manager/invoices/${entry.invoiceId}`} className="text-[#3b82f6] hover:underline">{entry.invoiceRef}</Link>
+                    </td>
                     <td className="px-3 py-2 text-[#111111]">{entry.amount.toLocaleString()} DH</td>
                     <td className="px-3 py-2 text-[#6b7280]">{formatDate(entry.date)}</td>
                     <td className="px-3 py-2"><span className="inline-block rounded-full px-2.5 py-0.5 text-xs font-medium bg-[#f5f3ff] text-[#7c3aed]">{entry.consultant}</span></td>
+                    <td className="px-3 py-2 text-xs text-[#6b7280] max-w-[160px] truncate">{entry.comment ?? '—'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -147,6 +176,46 @@ export default function PayoutTrackingPage() {
           </div>
         )}
       </div>
+
+      {exportModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4" onClick={() => setExportModal(false)}>
+          <div className="w-full max-w-sm rounded-[12px] bg-[#ffffff] p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <h2 className="mb-4 text-lg font-semibold text-[#111111]">Exporter PDF</h2>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-[#111111] mb-1">Mois</label>
+              <select
+                value={exportMonth}
+                onChange={(e) => setExportMonth(e.target.value)}
+                className="w-full rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111]"
+              >
+                {months.map((m) => (
+                  <option key={m} value={m}>
+                    {m}{m === currentMonth ? ' (Mois en cours)' : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex justify-end gap-3">
+              <button onClick={() => setExportModal(false)} className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-4 py-2 text-sm text-[#111111] transition-colors hover:bg-[#f3f4f6]">Annuler</button>
+              <button
+                onClick={() => {
+                  exportPdfMutation.mutate(exportMonth, {
+                    onSuccess: () => {
+                      toast.success('PDF exporté avec succès');
+                      setExportModal(false);
+                    },
+                    onError: () => toast.error("Erreur lors de l'export PDF"),
+                  });
+                }}
+                disabled={exportPdfMutation.isPending}
+                className="cursor-pointer rounded-[8px] bg-[#3b82f6] px-4 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-90 disabled:opacity-50"
+              >
+                {exportPdfMutation.isPending ? 'Export...' : 'Exporter'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {payoutModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4" onClick={() => setPayoutModal(null)}>
@@ -162,6 +231,16 @@ export default function PayoutTrackingPage() {
                 className="w-full rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111]"
               />
             </div>
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-[#111111] mb-1">Commentaire (optionnel)</label>
+              <textarea
+                value={payoutComment}
+                onChange={(e) => setPayoutComment(e.target.value)}
+                rows={2}
+                placeholder="Ajouter un commentaire..."
+                className="w-full rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111]"
+              />
+            </div>
             <div className="mt-6 flex justify-end gap-3">
               <button onClick={() => setPayoutModal(null)} className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-4 py-2 text-sm text-[#111111] transition-colors hover:bg-[#f3f4f6]">Annuler</button>
               <button onClick={handlePayout} disabled={payoutMutation.isPending} className="cursor-pointer rounded-[8px] bg-[#10b981] px-4 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-90 disabled:opacity-50">
@@ -172,5 +251,6 @@ export default function PayoutTrackingPage() {
         </div>
       )}
     </div>
+    </LoadingOverlay>
   );
 }

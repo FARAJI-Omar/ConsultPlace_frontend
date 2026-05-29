@@ -5,27 +5,29 @@ import type { Pagination } from '../types/api';
 export interface AuditLogEntry {
   id: number;
   userId: number;
+  userEmail: string;
   userRole: string;
   action: string;
   entityType: string;
   entityId: number;
   details: Record<string, unknown> | null;
-  ipAddress: string;
-  timestamp: string;
+  createdAt: string;
 }
 
 export function useGetAuditLogs(
   page = 1,
   limit = 10,
-  action?: string,
-  entityType?: string,
+  role?: string,
+  user?: string,
+  startDate?: string,
+  endDate?: string,
 ) {
   return useQuery({
-    queryKey: ['audit-log', { page, limit, action, entityType }],
+    queryKey: ['audit-log', { page, limit, role, user, startDate, endDate }],
     queryFn: () =>
       apiClient
         .get<{ success: true; data: AuditLogEntry[]; pagination: Pagination }>('/audit-log', {
-          params: { page, limit, action, entityType },
+          params: { page, limit, role, user, startDate, endDate },
         })
         .then((res) => ({ data: res.data.data, pagination: res.data.pagination })),
   });

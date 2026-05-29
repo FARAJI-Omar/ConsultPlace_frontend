@@ -6,6 +6,7 @@ import { useMutateMission } from '../../../hooks/useMissions';
 import { useGetContracts } from '../../../hooks/useContracts';
 import { useGetConsultants } from '../../../hooks/useConsultants';
 import DatePicker from '../../../components/common/DatePicker';
+import LoadingOverlay from '../../../components/common/LoadingOverlay';
 
 interface MissionFormProps {
   onSuccess: () => void;
@@ -109,6 +110,7 @@ export default function MissionForm({ onSuccess }: MissionFormProps) {
   ];
 
   return (
+    <LoadingOverlay isLoading={mutation.isPending}>
     <form onSubmit={handleSubmit} className="space-y-4">
       <p className="text-xs text-red-500">(*) Champ obligatoire</p>
       {FIELDS.map(({ key, label, required, type, options }) => (
@@ -210,5 +212,6 @@ export default function MissionForm({ onSuccess }: MissionFormProps) {
         </button>
       </div>
     </form>
+    </LoadingOverlay>
   );
 }

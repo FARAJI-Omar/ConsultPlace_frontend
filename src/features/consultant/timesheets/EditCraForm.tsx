@@ -4,6 +4,8 @@ import { useTimesheetById } from '../../../hooks/consultant/useTimesheets';
 import { useUpdateTimesheet } from '../../../hooks/consultant/useUpdateTimesheet';
 import { useMoroccoHolidays } from '../../../hooks/consultant/useMoroccoHolidays';
 import CalendarGrid from './CalendarGrid';
+import HorizontalStepper from '../../../components/common/HorizontalStepper';
+import LoadingOverlay from '../../../components/common/LoadingOverlay';
 
 const monthNames = [
   'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
@@ -96,7 +98,8 @@ export default function EditCraForm({ timesheetId, onClose }: { timesheetId: num
   }
 
   return (
-    <div className="space-y-6">
+    <LoadingOverlay isLoading={updateTimesheet.isPending}>
+      <div className="space-y-6">
       <div className="flex flex-wrap items-end gap-4">
         <div className="flex flex-col gap-1.5">
           <label className="text-xs font-medium uppercase tracking-wider text-[#6b7280]">Mission</label>
@@ -110,6 +113,20 @@ export default function EditCraForm({ timesheetId, onClose }: { timesheetId: num
             {monthNames[month]} {year}
           </div>
         </div>
+      </div>
+
+      <div className="rounded-[12px] border border-[#e5e7eb] bg-[#f9fafb] p-4">
+        <h3 className="mb-4 text-sm font-semibold text-[#111111]">Suivi du statut</h3>
+        <HorizontalStepper
+          steps={(timesheet.history ?? []).map((e: { newStatus: string; timestamp: string }) => {
+            const STATUS_LABELS: Record<string, string> = {
+              BROUILLON: 'Brouillon', SOUMIS: 'Soumis', VALIDE: 'Validé',
+              FACTURE: 'Facturé', PAYE: 'Payé',
+            };
+            return { status: e.newStatus, label: STATUS_LABELS[e.newStatus] ?? e.newStatus, timestamp: e.timestamp };
+          })}
+          currentStatus={timesheet.status}
+        />
       </div>
 
       <CalendarGrid
@@ -139,6 +156,6 @@ export default function EditCraForm({ timesheetId, onClose }: { timesheetId: num
           {updateTimesheet.isPending ? 'Enregistrement...' : 'Enregistrer'}
         </button>
       </div>
-    </div>
+    </div></LoadingOverlay>
   );
 }

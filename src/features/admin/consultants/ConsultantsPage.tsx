@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 import { DataTable, type Column } from '../../../components/common/DataTable';
 import Modal from '../../../components/common/Modal';
 import ConsultantForm from './ConsultantForm';
+import { cn } from '../../../lib/utils';
 import { useGetConsultants, useToggleConsultantStatus } from '../../../hooks/useConsultants';
 
 interface ConsultantRow {
@@ -95,7 +96,7 @@ export default function ConsultantsPage() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className={cn("space-y-6", toggleStatus.isPending && "pointer-events-none opacity-50")}>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-[#111111]">Consultants</h1>
         <button

@@ -129,8 +129,7 @@ export default function AlertRulesPage() {
         <h1 className="text-2xl font-semibold text-[#111111]">Règles d'alerte</h1>
         <button
           onClick={openCreate}
-          disabled
-          className="cursor-pointer rounded-[8px] bg-primary-blue px-4 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="cursor-pointer rounded-[8px] bg-primary-blue px-4 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-90"
         >
           Créer une règle
         </button>
