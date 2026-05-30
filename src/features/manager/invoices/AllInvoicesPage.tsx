@@ -325,8 +325,8 @@ export default function AllInvoicesPage() {
               disabled={emailMutation.isPending}
               className={`group cursor-pointer rounded-[8px] border border-[#e5e7eb] px-2 py-1 text-xs font-medium transition-colors hover:bg-[#f3f4f6] disabled:cursor-not-allowed disabled:text-[#d1d5db] ${inv.isSent ? 'text-green-500' : 'text-[#111111]'}`}
             >
-              <span className="group-hover:hidden">{inv.isSent ? 'Envoyé' : 'Envoyer par email'}</span>
-              <span className="hidden group-hover:inline">{inv.isSent ? 'Renvoyer' : 'Envoyer par email'}</span>
+              <span className="group-hover:hidden">{inv.isSent ? 'Facture envoyée' : 'Envoyer facture par email'}</span>
+              <span className="hidden group-hover:inline">{inv.isSent ? 'Renvoyer l\'email' : 'Envoyer facture par email'}</span>
             </button>
           )}
           {(inv.status === 'PENDING' || inv.status === 'PARTIAL_PAID') && (
@@ -357,7 +357,7 @@ export default function AllInvoicesPage() {
               )}
             </>
           )}
-          {inv.status !== 'CANCELED' && (
+          {/* {inv.status !== 'CANCELED' && (
             <button
               onClick={() => setCancelConfirm(inv.id)}
               disabled={cancelDisabled(inv.status)}
@@ -365,7 +365,7 @@ export default function AllInvoicesPage() {
             >
               Annuler
             </button>
-          )}
+          )} */}
         </div>
       ),
     },

@@ -418,8 +418,8 @@ export default function InvoiceDetailsPage() {
           className={`group inline-flex items-center gap-2 cursor-pointer rounded-[8px] border border-[#e5e7eb] px-4 py-2 text-sm font-medium transition-colors hover:bg-[#f3f4f6] ${invoice.isSent ? 'text-green-500' : 'text-[#111111]'}`}
         >
           <Mail className="h-4 w-4" />
-          <span className="group-hover:hidden">{invoice.isSent ? 'Envoyé' : 'Envoyer par email'}</span>
-          <span className="hidden group-hover:inline">{invoice.isSent ? 'Renvoyer' : 'Envoyer par email'}</span>
+          <span className="group-hover:hidden">{invoice.isSent ? 'Facture envoyée' : 'Envoyer facture par email'}</span>
+          <span className="hidden group-hover:inline">{invoice.isSent ? 'Renvoyer l\'email' : 'Envoyer facture par email'}</span>
         </button>
         {(invoice.status === 'PENDING' || invoice.status === 'PARTIAL_PAID') && (
           <>
@@ -449,7 +449,7 @@ export default function InvoiceDetailsPage() {
             )}
           </>
         )}
-        {invoice.status !== 'CANCELED' && (
+        {/* {invoice.status !== 'CANCELED' && (
           <button
             onClick={() => setCancelConfirm(true)}
             disabled={cancelMutation.isPending || invoice.status === 'PAID' || invoice.status === 'PARTIAL_PAID'}
@@ -458,7 +458,7 @@ export default function InvoiceDetailsPage() {
             <XCircle className="h-4 w-4" />
             Annuler
           </button>
-        )}
+        )} */}
       </div>
 
       {cancelConfirm && (
