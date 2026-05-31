@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { DataTable } from '../../../components/common/DataTable';
 import { useInvoices, useRegisterPayment, useMarkPaid } from '../../../hooks/manager/useInvoices';
 import { toast } from 'sonner';
@@ -78,7 +79,7 @@ export default function PartialPaymentsPage() {
   };
 
   const columns: Column<Invoice>[] = [
-    { key: 'ref', label: 'Réf', render: (inv) => inv.ref },
+    { key: 'ref', label: 'Réf', render: (inv) => <Link to={`/manager/invoices/${inv.id}`} className="text-[#3b82f6] hover:underline">{inv.ref}</Link> },
     { key: 'client', label: 'Client', render: (inv) => inv.client?.raison_sociale ?? '-' },
     { key: 'total', label: 'Total TTC', render: (inv) => `${(inv.total ?? 0).toLocaleString()} DH` },
     { key: 'paid', label: 'Payé', render: (inv) => `${calcPaid(inv).toLocaleString()} DH` },
