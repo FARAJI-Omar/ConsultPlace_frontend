@@ -45,7 +45,7 @@ export default function ManagerLayout() {
             </span>
             <button
               onClick={handleLogout}
-              className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-4 py-2 text-sm text-[#111111] transition-colors hover:bg-[#f3f4f6]"
+              className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-4 py-2 text-sm text-[#111111] transition-colors hover:bg-[#ff000014]"
             >
               Déconnexion
             </button>
