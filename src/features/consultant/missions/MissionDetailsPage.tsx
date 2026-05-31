@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import apiClient from '../../../lib/apiClient';
 import { useConsultantTimesheets } from '../../../hooks/consultant/useConsultantDashboard';
@@ -23,7 +23,6 @@ const TABS = [
 
 export default function MissionDetailsPage() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const missionId = Number(id);
   const [activeTab, setActiveTab] = useState('timesheets');
 
@@ -86,20 +85,22 @@ export default function MissionDetailsPage() {
 
   return (
     <div className="space-y-6">
-      <button
-        onClick={() => navigate('/consultant/missions')}
-        className="inline-flex cursor-pointer items-center gap-1.5 text-sm text-[#6b7280] hover:text-[#111111] transition-colors"
-      >
-        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-        </svg>
-        Retour aux missions
-      </button>
-
-      <div className="rounded-[12px] bg-[#f5f5f5] p-8">
-        <h1 className="text-[22px] font-semibold text-[#111111] leading-[1.3] tracking-[-0.3px] mb-6">
+      <div className="flex items-center gap-4">
+        <Link
+          to="/consultant/missions"
+          className="inline-flex items-center gap-1.5 rounded-[8px] border border-[#e5e7eb] bg-[#ffffff] px-3 py-1.5 text-sm text-[#111111] transition-colors hover:bg-[#f3f4f6]"
+        >
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+          Retour
+        </Link>
+        <h1 className="text-[22px] font-semibold text-[#111111] leading-[1.3] tracking-[-0.3px]">
           {mission.title}
         </h1>
+      </div>
+
+      <div className="rounded-[12px] bg-[#f5f5f5] p-8">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           <div>
             <p className="text-sm text-[#6b7280] mb-1">Client</p>

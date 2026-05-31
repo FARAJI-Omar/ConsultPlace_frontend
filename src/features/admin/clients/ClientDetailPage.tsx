@@ -1,5 +1,5 @@
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, FileText, Eye } from 'lucide-react';
+import { FileText, Eye } from 'lucide-react';
 import { useGetClientById } from '../../../hooks/useClients';
 import { formatDate } from '../../../lib/utils';
 
@@ -38,20 +38,23 @@ export default function ClientDetailPage() {
 
   return (
     <div className="space-y-6">
-      <Link
-        to="/admin/clients"
-        className="inline-flex cursor-pointer items-center gap-1.5 text-sm text-[#6b7280] transition-colors hover:text-primary-blue"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Retour aux clients
-      </Link>
-
-      <h1 className="text-2xl font-semibold text-[#111111]">
-        {client.raison_sociale}
-        {client.isArchived && (
-          <span className="ml-3 inline-block rounded-full bg-gray-100 px-3 py-0.5 text-sm font-medium text-gray-500">Archivé</span>
-        )}
-      </h1>
+      <div className="flex items-center gap-4">
+        <Link
+          to="/admin/clients"
+          className="inline-flex items-center gap-1.5 rounded-[8px] border border-[#e5e7eb] bg-[#ffffff] px-3 py-1.5 text-sm text-[#111111] transition-colors hover:bg-[#f3f4f6]"
+        >
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+          Retour
+        </Link>
+        <h1 className="text-2xl font-semibold text-[#111111]">
+          {client.raison_sociale}
+          {client.isArchived && (
+            <span className="ml-3 inline-block rounded-full bg-gray-100 px-3 py-0.5 text-sm font-medium text-gray-500">Archivé</span>
+          )}
+        </h1>
+      </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <div className="rounded-[12px] border border-[#e5e7eb] p-6">
