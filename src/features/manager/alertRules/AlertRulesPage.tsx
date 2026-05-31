@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Pencil } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { DataTable, type Column } from '../../../components/common/DataTable';
 import Modal from '../../../components/common/Modal';
 import AlertRuleForm from '../../admin/system/AlertRuleForm';
@@ -125,14 +126,25 @@ export default function AlertRulesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-[#111111]">Règles d'alerte</h1>
-        <button
-          onClick={openCreate}
-          className="cursor-pointer rounded-[8px] bg-primary-blue px-4 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-90"
+      <div className="flex items-center gap-4">
+        <Link
+          to="/manager/alerts"
+          className="inline-flex items-center gap-1.5 rounded-[8px] border border-[#e5e7eb] bg-[#ffffff] px-3 py-1.5 text-sm text-[#111111] transition-colors hover:bg-[#f3f4f6]"
         >
-          Créer une règle
-        </button>
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+          Retour
+        </Link>
+        <h1 className="text-2xl font-semibold text-[#111111]">Règles d'alerte</h1>
+        <div className="ml-auto">
+          <button
+            onClick={openCreate}
+            className="cursor-pointer rounded-[8px] bg-primary-blue px-4 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-90"
+          >
+            Créer une règle
+          </button>
+        </div>
       </div>
 
       <DataTable

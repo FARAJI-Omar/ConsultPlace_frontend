@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { X, DollarSign, Bell } from 'lucide-react';
+import { X, DollarSign, Bell, Settings } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAlerts, useUpdateAlertStatus } from '../../../hooks/manager/useTracking';
 import { useTriggerPayout } from '../../../hooks/manager/usePayouts';
@@ -144,7 +145,16 @@ export default function AlertCenterPage() {
   return (
     <LoadingOverlay isLoading={isLoadingOverlay}>
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold text-[#111111]">Centre d'alertes</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold text-[#111111]">Centre d'alertes</h1>
+        <Link
+          to="/manager/alertrules"
+          className="cursor-pointer rounded-lg p-2 text-[#6b7280] transition-colors hover:bg-light-blue hover:text-primary-blue"
+          title="Règles d'alerte"
+        >
+          <Settings className="h-6 w-6" />
+        </Link>
+      </div>
 
       {isLoading ? (
         <>
