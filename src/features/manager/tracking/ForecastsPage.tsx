@@ -140,7 +140,7 @@ export default function ForecastsPage() {
               : 'text-[#6b7280] hover:text-[#111111]',
           )}
         >
-          Chiffre d'affaires
+          Prévision d'affaires
         </button>
         <button
           role="tab"
