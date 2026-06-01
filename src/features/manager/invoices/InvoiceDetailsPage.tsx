@@ -4,7 +4,7 @@ import { useTriggerPayout } from '../../../hooks/manager/usePayouts';
 import { useSendReminder, useSetAutoReminder, useStopAutoReminder } from '../../../hooks/manager/useReminders';
 import { useJobStatus } from '../../../hooks/manager/useJobStatus';
 import { toast } from 'sonner';
-import { FileText, Download, Mail, XCircle } from 'lucide-react';
+import { FileText, Download, Mail /*, XCircle */ } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { formatDate } from '../../../lib/utils';

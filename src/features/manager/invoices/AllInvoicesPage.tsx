@@ -249,7 +249,7 @@ export default function AllInvoicesPage() {
     );
   };
 
-  const cancelDisabled = (status: string) => status === 'PAID' || status === 'PARTIAL_PAID';
+  // const cancelDisabled = (status: string) => status === 'PAID' || status === 'PARTIAL_PAID';
 
   const columns: Column<Invoice>[] = [
     { key: 'ref', label: 'Réf', render: (inv) => <Link to={`/manager/invoices/${inv.id}`} className="text-[#3b82f6] hover:underline">{inv.ref}</Link> },
