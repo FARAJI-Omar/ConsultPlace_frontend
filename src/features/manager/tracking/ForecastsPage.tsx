@@ -310,12 +310,12 @@ export default function ForecastsPage() {
           ) : margin ? (
             <>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <KpiCard icon={DollarSign} label="Revenu total" value={`${margin.summary.totalRevenue.toLocaleString()} DH`} />
-                <KpiCard icon={Wallet} label="Total versé" value={`${margin.summary.totalPayouts.toLocaleString()} DH`} />
+                <KpiCard icon={DollarSign} label="Revenu total (HT)" value={`${margin.summary.totalRevenue.toLocaleString()} DH`} />
+                <KpiCard icon={Wallet} label="Total versé (consult.)" value={`${margin.summary.totalPayouts.toLocaleString()} DH`} />
                 <KpiCard icon={ArrowUpRight} label="Marge cabinet" value={`${margin.summary.cabinetMargin.toLocaleString()} DH`} />
                 <KpiCard
                   icon={PieChart}
-                  label="Taux de marge"
+                  label="Taux moyen de marge"
                   value={`${margin.summary.marginPercentage.toFixed(1)}%`}
                   className={marginColorClass(margin.summary.marginPercentage)}
                 />
