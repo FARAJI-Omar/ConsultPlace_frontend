@@ -129,7 +129,7 @@ export default function PendingCrasPage() {
             !
           </button>
           {showHint && (
-            <div ref={hintRef} className="absolute left-0 top-full mt-2 bg-white border border-[#e5e7eb] rounded-lg shadow-lg p-6 text-sm text-[#6b7280] z-10 max-w-xl">
+            <div ref={hintRef} className="absolute left-20 top-full mt-2 bg-white border border-[#ff0000] rounded-lg shadow-lg p-6 text-sm text-[#6b7280] z-10 max-w-xl">
               -Cliquez sur <strong>Examiner</strong> pour valider ou rejeter un relevé.<br />
               -Validez un relevé afin de générer une facture.
             </div>
