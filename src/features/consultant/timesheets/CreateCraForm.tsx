@@ -56,11 +56,16 @@ export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?:
   const [selectedYear, setSelectedYear] = useState(currentYear);
 
   const monthOptions = useMemo(() => {
-    const prev = new Date(currentYear, currentMonth - 1, 1);
-    return [
-      { label: `${monthNames[currentMonth]} ${currentYear}`, year: currentYear, month: currentMonth },
-      { label: `${monthNames[prev.getMonth()]} ${prev.getFullYear()}`, year: prev.getFullYear(), month: prev.getMonth() },
-    ];
+    const options: { label: string; year: number; month: number }[] = [];
+    for (let i = 0; i <= 6; i++) {
+      const d = new Date(currentYear, currentMonth - i, 1);
+      options.push({
+        label: `${monthNames[d.getMonth()]} ${d.getFullYear()}`,
+        year: d.getFullYear(),
+        month: d.getMonth(),
+      });
+    }
+    return options;
   }, []);
 
   const [selectedMissionId, setSelectedMissionId] = useState<number | null>(defaultMissionId ?? null);
