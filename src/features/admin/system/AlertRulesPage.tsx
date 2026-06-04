@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Pencil } from 'lucide-react';
 import { DataTable, type Column } from '../../../components/common/DataTable';
 import Modal from '../../../components/common/Modal';
 import AlertRuleForm from './AlertRuleForm';
@@ -114,10 +113,9 @@ export default function AlertRulesPage() {
       render: (item) => (
         <button
           onClick={() => openEdit(item)}
-          className="cursor-pointer rounded p-1.5 text-[#6b7280] transition-colors hover:bg-light-blue hover:text-primary-blue"
-          aria-label="Modifier"
+          className="cursor-pointer rounded-[6px] bg-[#03b5537c] text-green-800 px-2.5 py-1 text-xs font-medium  transition-colors hover:bg-green-700"
         >
-          <Pencil className="h-4 w-4" />
+          Modifier
         </button>
       ),
     },

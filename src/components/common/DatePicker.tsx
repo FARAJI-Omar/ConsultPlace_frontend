@@ -15,7 +15,7 @@ interface DatePickerProps {
 
 export default function DatePicker({ value, onChange, error, placeholder = 'Sélectionner une date' }: DatePickerProps) {
   const [open, setOpen] = useState(false);
-  const selectedDate = value ? new Date(value + 'T00:00:00') : undefined;
+  const selectedDate = value ? new Date(value.includes('T') ? value : value + 'T00:00:00') : undefined;
 
   return (
     <div>

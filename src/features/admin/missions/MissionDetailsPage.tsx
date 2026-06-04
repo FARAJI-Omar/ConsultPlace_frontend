@@ -1,7 +1,10 @@
+import { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { FileText, Download } from 'lucide-react';
 import { useGetMissionById } from '../../../hooks/useMissions';
 import { formatDate } from '../../../lib/utils';
+import Modal from '../../../components/common/Modal';
+import MissionForm from './MissionForm';
 
 const statusBadge: Record<string, string> = {
   BROUILLON: 'bg-[#e5e7eb] text-[#6b7280]',
@@ -25,6 +28,7 @@ export default function MissionDetailsPage() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const missionId = Number(id);
+  const [editModalOpen, setEditModalOpen] = useState(false);
   const { data: mission, isLoading } = useGetMissionById(missionId);
 
   if (isLoading) {
@@ -59,6 +63,12 @@ export default function MissionDetailsPage() {
         <h1 className="text-2xl font-semibold text-[#111111]">
           Mission {mission.title}
         </h1>
+        <button
+          onClick={() => setEditModalOpen(true)}
+          className="ml-auto cursor-pointer rounded-[8px] bg-green-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-green-700"
+        >
+          Modifier
+        </button>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -195,6 +205,19 @@ export default function MissionDetailsPage() {
           <p className="text-sm text-[#6b7280]">Aucun relevé pour cette mission</p>
         )}
       </div>
+
+      <Modal
+        isOpen={editModalOpen}
+        onClose={() => setEditModalOpen(false)}
+        title="Modifier la mission"
+        size="lg"
+      >
+        <MissionForm
+          key={mission.id}
+          mission={mission}
+          onSuccess={() => setEditModalOpen(false)}
+        />
+      </Modal>
     </div>
   );
 }

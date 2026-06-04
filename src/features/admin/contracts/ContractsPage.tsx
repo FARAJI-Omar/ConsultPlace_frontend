@@ -5,27 +5,20 @@ import { toast } from 'sonner';
 import { DataTable, type Column } from '../../../components/common/DataTable';
 import Modal from '../../../components/common/Modal';
 import ContractForm from './ContractForm';
-import { useGetContracts, useToggleContractArchive } from '../../../hooks/useContracts';
+import { useGetContracts, useGetContractById, useToggleContractArchive, type Contract } from '../../../hooks/useContracts';
 import { cn, formatDate } from '../../../lib/utils';
 
-interface ContractRow {
-  id: number;
-  ref: string;
-  client?: { id: number; raison_sociale: string };
-  startDate: string;
-  endDate: string;
-  profile: string;
-  dailyRate: number;
-  isArchived: boolean;
-}
+interface ContractRow extends Contract {}
 
 export default function ContractsPage() {
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [modalOpen, setModalOpen] = useState(false);
+  const [editingContract, setEditingContract] = useState<ContractRow | null>(null);
 
   const { data, isLoading } = useGetContracts(page, pageSize);
+  const { data: fullContract } = useGetContractById(editingContract?.id);
   const toggleArchive = useToggleContractArchive();
 
   const handlePageChange = useCallback((p: number) => setPage(p), []);
@@ -33,6 +26,16 @@ export default function ContractsPage() {
     setPageSize(size);
     setPage(1);
   }, []);
+
+  const handleEdit = (item: ContractRow) => {
+    setEditingContract(item);
+    setModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setModalOpen(false);
+    setEditingContract(null);
+  };
 
   const handleToggleArchive = (item: ContractRow) => {
     const newState = !item.isArchived;
@@ -76,6 +79,12 @@ export default function ContractsPage() {
       label: 'Actions',
       render: (item) => (
         <div className="flex items-center justify-center gap-2">
+          <button
+            onClick={() => handleEdit(item)}
+            className="cursor-pointer rounded-[6px] bg-[#03b5537c] text-green-800 px-2.5 py-1 text-xs font-medium  transition-colors hover:bg-green-700"
+          >
+            Modifier
+          </button>
           <button
             onClick={() => navigate(`/admin/contracts/${item.id}`)}
             className="cursor-pointer rounded-[6px] bg-[#EFF6FF] px-2.5 py-1 text-xs font-medium text-primary-blue transition-colors hover:bg-blue-100"
@@ -127,11 +136,15 @@ export default function ContractsPage() {
 
       <Modal
         isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
-        title="Créer un contrat"
+        onClose={handleCloseModal}
+        title={editingContract ? 'Modifier le contrat' : 'Créer un contrat'}
         size="lg"
       >
-        <ContractForm onSuccess={() => setModalOpen(false)} />
+        <ContractForm
+          key={editingContract?.id ?? 'create'}
+          contract={editingContract ? (fullContract ?? editingContract) : undefined}
+          onSuccess={handleCloseModal}
+        />
       </Modal>
     </div>
   );

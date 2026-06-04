@@ -107,7 +107,7 @@ export default function PendingCrasPage() {
           )}
           <Link
             to={`/manager/timesheets/${ts.id}`}
-            className="inline-block rounded-[8px] border border-[#e5e7eb] px-3 py-1.5 text-xs font-medium text-[#111111] transition-colors hover:bg-[#f3f4f6]"
+            className="inline-block rounded-[8px] border border-[#848383] bg-[#ffffff] px-3 py-1.5 text-xs font-medium text-[#111111] transition-colors hover:bg-[#bdbdbd]"
           >
             Voir détails
           </Link>

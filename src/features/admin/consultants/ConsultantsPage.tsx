@@ -13,12 +13,15 @@ interface ConsultantRow {
   profile: string;
   dailyRate: number;
   isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export default function ConsultantsPage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [modalOpen, setModalOpen] = useState(false);
+  const [editingConsultant, setEditingConsultant] = useState<ConsultantRow | null>(null);
   const [confirmToggle, setConfirmToggle] = useState<{ id: number; isActive: boolean } | null>(null);
 
   const { data, isLoading } = useGetConsultants(page, pageSize);
@@ -29,6 +32,16 @@ export default function ConsultantsPage() {
     setPageSize(size);
     setPage(1);
   }, []);
+
+  const handleEdit = (item: ConsultantRow) => {
+    setEditingConsultant(item);
+    setModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setModalOpen(false);
+    setEditingConsultant(null);
+  };
 
   const handleToggle = (id: number, current: boolean) => {
     setConfirmToggle({ id, isActive: !current });
@@ -68,8 +81,8 @@ export default function ConsultantsPage() {
         <span
           className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
             item.isActive
-              ? 'bg-success-light text-success'
-              : 'bg-danger-light text-danger'
+              ? 'bg-green-100 text-green-700'
+              : 'bg-red-100 text-red-700'
           }`}
         >
           {item.isActive ? 'Actif' : 'Inactif'}
@@ -80,17 +93,25 @@ export default function ConsultantsPage() {
       key: 'actions',
       label: 'Actions',
       render: (item) => (
-        <button
-          onClick={() => handleToggle(item.id, item.isActive)}
-          disabled={toggleStatus.isPending}
-          className={`cursor-pointer rounded-[8px] px-3 py-1.5 text-xs font-medium transition-colors ${
-            item.isActive
-              ? 'border border-red-600 hover:bg-red-600/40'
-              : 'border border-green-600 text-success hover:bg-green-600/40'
-          } disabled:opacity-50`}
-        >
-          {item.isActive ? 'Désactiver' : 'Activer'}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => handleEdit(item)}
+            className="cursor-pointer rounded-[6px] bg-[#03b5537c] text-green-800 px-2.5 py-1 text-xs font-medium  transition-colors hover:bg-green-700"
+          >
+            Modifier
+          </button>
+          <button
+            onClick={() => handleToggle(item.id, item.isActive)}
+            disabled={toggleStatus.isPending}
+            className={`cursor-pointer rounded-[8px] px-3 py-1.5 text-xs font-medium transition-colors ${
+              item.isActive
+                ? 'border border-red-600 hover:bg-red-600/40'
+                : 'border border-green-600 text-success hover:bg-green-600/40'
+            } disabled:opacity-50`}
+          >
+            {item.isActive ? 'Désactiver' : 'Activer'}
+          </button>
+        </div>
       ),
     },
   ];
@@ -127,11 +148,15 @@ export default function ConsultantsPage() {
 
       <Modal
         isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
-        title="Créer un consultant"
+        onClose={handleCloseModal}
+        title={editingConsultant ? 'Modifier le consultant' : 'Créer un consultant'}
         size="lg"
       >
-        <ConsultantForm onSuccess={() => setModalOpen(false)} />
+        <ConsultantForm
+          key={editingConsultant?.id ?? 'create'}
+          consultant={editingConsultant ?? undefined}
+          onSuccess={handleCloseModal}
+        />
       </Modal>
 
       {confirmToggle && (

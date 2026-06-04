@@ -112,7 +112,7 @@ export default function ClientsPage() {
           </button>
           <button
             onClick={() => openEdit(item)}
-            className="cursor-pointer rounded-[6px] bg-[#f3f4f6] px-2.5 py-1 text-xs font-medium text-[#111111] transition-colors hover:bg-gray-200"
+            className="cursor-pointer rounded-[6px] bg-[#03b5537c] text-green-800 px-2.5 py-1 text-xs font-medium transition-colors hover:bg-green-700"
           >
             Modifier
           </button>

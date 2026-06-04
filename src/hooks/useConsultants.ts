@@ -21,6 +21,14 @@ interface ConsultantFormData {
   password?: string;
 }
 
+interface UpdateConsultantFormData {
+  name?: string;
+  email?: string;
+  profile?: string;
+  dailyRate?: number;
+  password?: string;
+}
+
 export function useGetConsultants(page = 1, limit = 10) {
   return useQuery({
     queryKey: ['consultants', { page, limit }],
@@ -40,6 +48,20 @@ export function useMutateConsultant() {
     mutationFn: (data: ConsultantFormData) =>
       apiClient
         .post<{ success: true; data: Consultant }>('/consultants', data)
+        .then((res) => res.data.data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['consultants'] });
+    },
+  });
+}
+
+export function useUpdateConsultant() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: UpdateConsultantFormData }) =>
+      apiClient
+        .patch<{ success: true; data: Consultant }>(`/consultants/${id}`, data)
         .then((res) => res.data.data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['consultants'] });

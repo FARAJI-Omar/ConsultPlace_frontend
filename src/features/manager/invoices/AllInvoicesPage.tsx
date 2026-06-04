@@ -290,7 +290,7 @@ export default function AllInvoicesPage() {
             <button
               onClick={() => setConfirmMarkPaid(inv)}
               disabled={markPaidMutation.isPending}
-              className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-2 py-1 text-xs font-medium text-[#111111] transition-colors hover:bg-[#f3f4f6] disabled:cursor-not-allowed disabled:text-[#d1d5db]"
+              className="cursor-pointer rounded-[8px] border border-[#bdbdbd] bg-[#ffffff] px-2 py-1 text-xs font-medium text-[#111111] transition-colors hover:bg-[#f3f4f6] disabled:cursor-not-allowed disabled:text-[#d1d5db]"
             >
               Marquer payée
             </button>
@@ -306,7 +306,7 @@ export default function AllInvoicesPage() {
                 <button
                   onClick={() => setPayoutModal(inv)}
                   disabled={payoutMutation.isPending}
-                  className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-2 py-1 text-xs font-medium text-[#111111] transition-colors hover:bg-[#f3f4f6] disabled:cursor-not-allowed disabled:text-[#d1d5db]"
+                  className="cursor-pointer rounded-[8px] border border-[#bdbdbd] bg-[#ffffff] px-2 py-1 text-xs font-medium text-[#111111] transition-colors hover:bg-[#f3f4f6] disabled:cursor-not-allowed disabled:text-[#d1d5db]"
                 >
                   Payer consultant
                 </button>
@@ -315,7 +315,7 @@ export default function AllInvoicesPage() {
           <button
             onClick={() => handleDownloadPdf(inv.id)}
             disabled={downloadPdfMutation.isPending}
-            className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-2 py-1 text-xs font-medium text-[#111111] transition-colors hover:bg-[#f3f4f6] disabled:cursor-not-allowed disabled:text-[#d1d5db]"
+            className="cursor-pointer rounded-[8px] border border-[#bdbdbd] bg-[#ffffff] px-2 py-1 text-xs font-medium text-[#111111] transition-colors hover:bg-[#f3f4f6] disabled:cursor-not-allowed disabled:text-[#d1d5db]"
           >
             Télécharger PDF
           </button>
@@ -323,7 +323,7 @@ export default function AllInvoicesPage() {
             <button
               onClick={() => setConfirmEmail(inv)}
               disabled={emailMutation.isPending}
-              className={`group cursor-pointer rounded-[8px] border border-[#e5e7eb] px-2 py-1 text-xs font-medium transition-colors hover:bg-[#f3f4f6] disabled:cursor-not-allowed disabled:text-[#d1d5db] ${inv.isSent ? 'text-green-500' : 'text-[#111111]'}`}
+              className={`group cursor-pointer rounded-[8px] border border-[#bdbdbd] bg-[#ffffff] px-2 py-1 text-xs font-medium transition-colors hover:bg-[#f3f4f6] disabled:cursor-not-allowed disabled:text-[#d1d5db] ${inv.isSent ? 'text-green-500' : 'text-[#111111]'}`}
             >
               <span className="group-hover:hidden">{inv.isSent ? 'Facture envoyée' : 'Envoyer facture par email'}</span>
               <span className="hidden group-hover:inline">{inv.isSent ? 'Renvoyer l\'email' : 'Envoyer facture par email'}</span>
@@ -334,7 +334,7 @@ export default function AllInvoicesPage() {
               <button
                 onClick={() => setConfirmSendReminder(inv)}
                 disabled={sendReminderMutation.isPending}
-                className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-2 py-1 text-xs font-medium text-[#111111] transition-colors hover:bg-[#f3f4f6] disabled:cursor-not-allowed disabled:text-[#d1d5db]"
+                className="cursor-pointer rounded-[8px] border border-[#bdbdbd] bg-[#ffffff] px-2 py-1 text-xs font-medium text-[#111111] transition-colors hover:bg-[#f3f4f6] disabled:cursor-not-allowed disabled:text-[#d1d5db]"
               >
                 Envoyer relance
               </button>
@@ -342,7 +342,7 @@ export default function AllInvoicesPage() {
                 <button
                   onClick={() => setConfirmStopReminder(inv)}
                   disabled={stopAutoReminderMutation.isPending}
-                  className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-2 py-1 text-xs font-medium text-[#ef4444] transition-colors hover:bg-[#fef2f2] disabled:cursor-not-allowed disabled:text-[#d1d5db]"
+                  className="cursor-pointer rounded-[8px] border border-[#bdbdbd] bg-[#ffffff] px-2 py-1 text-xs font-medium text-[#ef4444] transition-colors hover:bg-[#fef2f2] disabled:cursor-not-allowed disabled:text-[#d1d5db]"
                 >
                   Arrêter relance auto
                 </button>
@@ -350,7 +350,7 @@ export default function AllInvoicesPage() {
                 <button
                   onClick={() => handleSetAutoReminder(inv)}
                   disabled={setAutoReminderMutation.isPending}
-                  className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-2 py-1 text-xs font-medium text-[#111111] transition-colors hover:bg-[#f3f4f6] disabled:cursor-not-allowed disabled:text-[#d1d5db]"
+                  className="cursor-pointer rounded-[8px] border border-[#bdbdbd] bg-[#ffffff] px-2 py-1 text-xs font-medium text-[#111111] transition-colors hover:bg-[#f3f4f6] disabled:cursor-not-allowed disabled:text-[#d1d5db]"
                 >
                   Relance auto
                 </button>

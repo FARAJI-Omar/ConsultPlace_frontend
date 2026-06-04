@@ -57,7 +57,7 @@ function DataTableInner<T>({
           <thead>
             <tr className="border-b border-[#e5e7eb]">
               {columns.map((col, idx) => (
-              <th key={col.key} className={`${headerClass}${idx === columns.length - 1 ? ` ${lastColClass} bg-[#949e4b] text-center` : ''}`}>
+              <th key={col.key} className={`${headerClass}${col.key === 'actions' ? ` ${lastColClass} bg-[#E1E2ED] text-center` : idx === columns.length - 1 ? ` ${lastColClass} text-center` : ''}`}>
                   {col.label}
                 </th>
               ))}
@@ -67,7 +67,7 @@ function DataTableInner<T>({
             {Array.from({ length: 5 }).map((_, i) => (
               <tr key={i} className="border-b border-[#e5e7eb]">
                 {columns.map((col, idx) => (
-                  <td key={col.key} className={`${cellClass}${idx === columns.length - 1 ? ` ${lastColClass} text-center` : ''}`}>
+                  <td key={col.key} className={`${col.key === 'actions' ? 'whitespace-nowrap px-4 py-3 text-[#111111]' : cellClass}${col.key === 'actions' ? ` ${lastColClass} bg-[#E1E2ED] text-center` : idx === columns.length - 1 ? ` ${lastColClass} text-center` : ''}`}>
                     <div className="h-4 w-3/4 animate-pulse rounded bg-[#e5e7eb]" />
                   </td>
                 ))}
@@ -82,7 +82,7 @@ function DataTableInner<T>({
   if (isEmpty) {
     return (
       <div className="overflow-x-auto">
-        <div className="flex min-h-[200px] items-center justify-center">
+        <div className="flex min-h-50 items-center justify-center">
           <p className="text-sm text-[#6b7280]">{emptyMessage}</p>
         </div>
       </div>
@@ -95,7 +95,7 @@ function DataTableInner<T>({
         <thead>
           <tr className="border-b border-[#e5e7eb]">
             {columns.map((col, idx) => (
-              <th key={col.key} className={`${headerClass}${idx === columns.length - 1 ? ` ${lastColClass} bg-[#E1E2ED] text-center` : ''}`}>
+              <th key={col.key} className={`${headerClass}${col.key === 'actions' ? ` ${lastColClass} bg-[#E1E2ED] text-center` : idx === columns.length - 1 ? ` ${lastColClass} text-center` : ''}`}>
                 {col.label}
               </th>
             ))}
@@ -112,7 +112,7 @@ function DataTableInner<T>({
               >
               {columns.map((col, colIdx) => {
                 const isLast = colIdx === columns.length - 1;
-                const cellClassName = `whitespace-nowrap px-4 py-3 text-[#111111]${isLast ? ` ${lastColClass} text-center` : ''}${isSelected ? ' bg-yellow-100/50' : ' bg-[#ffffff] hover:bg-[#f9fafb]'}`;
+                const cellClassName = `whitespace-nowrap px-4 py-3 text-[#111111]${col.key === 'actions' ? ` ${lastColClass} bg-[#f7f8fa] text-center` : isLast ? ` ${lastColClass} text-center` : ''}${col.key !== 'actions' ? (isSelected ? ' bg-yellow-100/50' : ' bg-[#ffffff] hover:bg-[#f9fafb]') : ''}`;
                 return (
                   <td key={col.key} className={cellClassName}>
                     {col.render ? col.render(item) : String((item as Record<string, unknown>)[col.key] ?? '')}

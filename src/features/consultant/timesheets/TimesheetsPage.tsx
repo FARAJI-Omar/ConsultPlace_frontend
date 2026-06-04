@@ -54,7 +54,7 @@ const columns: Column<Timesheet>[] = [
     render: (t) => (
       <Link
         to={`/consultant/timesheets/${t.id}`}
-        className="inline-block rounded-[8px] border border-[#e5e7eb] px-2.5 py-1.5 text-xs font-medium text-[#111111] transition-colors hover:bg-[#f3f4f6]"
+        className="inline-block rounded-[8px] border border-[#bdbdbd] bg-[#ffffff] px-2.5 py-1.5 text-xs font-medium text-[#111111] transition-colors hover:bg-[#f3f4f6]"
       >
         Détails
       </Link>

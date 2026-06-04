@@ -4,16 +4,18 @@ import { Link } from 'react-router-dom';
 import { DataTable, type Column } from '../../../components/common/DataTable';
 import Modal from '../../../components/common/Modal';
 import MissionForm from './MissionForm';
-import { useGetMissions, useCloseMission, type Mission } from '../../../hooks/useMissions';
+import { useGetMissions, useGetMissionById, useCloseMission, type Mission } from '../../../hooks/useMissions';
 import { cn, formatDate } from '../../../lib/utils';
 
 export default function MissionsPage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [modalOpen, setModalOpen] = useState(false);
+  const [editingMission, setEditingMission] = useState<Mission | null>(null);
   const [confirmClose, setConfirmClose] = useState<Mission | null>(null);
 
   const { data, isLoading } = useGetMissions(page, pageSize);
+  const { data: fullMission } = useGetMissionById(editingMission?.id);
   const closeMutation = useCloseMission();
 
   const handlePageChange = useCallback((p: number) => setPage(p), []);
@@ -21,6 +23,16 @@ export default function MissionsPage() {
     setPageSize(size);
     setPage(1);
   }, []);
+
+  const handleEdit = (item: Mission) => {
+    setEditingMission(item);
+    setModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setModalOpen(false);
+    setEditingMission(null);
+  };
 
   const handleCloseMission = () => {
     if (!confirmClose) return;
@@ -86,6 +98,12 @@ export default function MissionsPage() {
       label: 'Actions',
       render: (item) => (
         <div className="flex items-center justify-left gap-2">
+          <button
+            onClick={() => handleEdit(item)}
+            className="cursor-pointer rounded-[6px]  px-2.5 py-1 text-xs font-medium bg-[#03b5537c] text-green-800 transition-colors hover:bg-green-700"
+          >
+            Modifier
+          </button>
           <Link
             to={`/admin/missions/${item.id}`}
             className="cursor-pointer rounded-[6px] bg-[#EFF6FF] px-2.5 py-1 text-xs font-medium text-primary-blue transition-colors hover:bg-blue-100"
@@ -137,11 +155,15 @@ export default function MissionsPage() {
 
       <Modal
         isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
-        title="Créer une mission"
+        onClose={handleCloseModal}
+        title={editingMission ? 'Modifier la mission' : 'Créer une mission'}
         size="lg"
       >
-        <MissionForm onSuccess={() => setModalOpen(false)} />
+        <MissionForm
+          key={editingMission?.id ?? 'create'}
+          mission={editingMission ? (fullMission ?? editingMission) : undefined}
+          onSuccess={handleCloseModal}
+        />
       </Modal>
 
       {confirmClose && (

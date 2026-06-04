@@ -9,7 +9,7 @@ interface GestionnaireFormProps {
 }
 
 export default function GestionnaireForm({ onSuccess }: GestionnaireFormProps) {
-  const [form, setForm] = useState({ email: '', password: '' });
+  const [form, setForm] = useState({ email: '', password: '', confirmPassword: '' });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const mutation = useCreateGestionnaire();
 
@@ -37,10 +37,14 @@ export default function GestionnaireForm({ onSuccess }: GestionnaireFormProps) {
     } else if (form.password.length < 6) {
       newErrors.password = 'Le mot de passe doit contenir au moins 6 caractères';
     }
+    if (form.password !== form.confirmPassword) {
+      newErrors.confirmPassword = 'Les mots de passe ne correspondent pas';
+    }
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) return;
 
-    mutation.mutate(form, {
+    const { confirmPassword: _, ...payload } = form;
+    mutation.mutate(payload, {
       onSuccess: () => {
         toast.success('Gestionnaire créé avec succès');
         onSuccess();
@@ -59,6 +63,7 @@ export default function GestionnaireForm({ onSuccess }: GestionnaireFormProps) {
   const FIELDS = [
     { key: 'email', label: 'Email', required: true, type: 'email' },
     { key: 'password', label: 'Mot de passe', required: true, type: 'password' },
+    { key: 'confirmPassword', label: 'Confirmer le mot de passe', required: true, type: 'password' },
   ];
 
   return (
@@ -82,13 +87,16 @@ export default function GestionnaireForm({ onSuccess }: GestionnaireFormProps) {
           {errors[key] && (
             <p className="mt-1 text-xs text-red-500">{errors[key]}</p>
           )}
+          {key === 'confirmPassword' && form.confirmPassword && form.password !== form.confirmPassword && (
+            <p className="mt-1 text-xs text-red-500">Les mots de passe ne correspondent pas</p>
+          )}
         </div>
       ))}
 
       <div className="flex justify-end gap-3 pt-2">
         <button
           type="submit"
-          disabled={mutation.isPending}
+          disabled={mutation.isPending || form.password !== form.confirmPassword}
           className="cursor-pointer rounded-[8px] bg-primary-blue px-6 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-90 disabled:opacity-50"
         >
           {mutation.isPending ? 'Enregistrement...' : 'Créer'}

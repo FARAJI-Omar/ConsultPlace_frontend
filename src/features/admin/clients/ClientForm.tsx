@@ -73,23 +73,55 @@ export default function ClientForm({ client, onSuccess }: ClientFormProps) {
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) return;
 
-    mutation.mutate(
-      { id: client?.id, data: form },
-      {
-        onSuccess: () => {
-          toast.success(client ? 'Client modifié avec succès' : 'Client créé avec succès');
-          onSuccess();
+    if (client) {
+      const diff: Record<string, string> = {};
+      if (form.raison_sociale !== client.raison_sociale) diff.raison_sociale = form.raison_sociale;
+      if (form.rc !== (client.rc ?? '')) diff.rc = form.rc;
+      if (form.identifiant_commun !== client.identifiant_commun) diff.identifiant_commun = form.identifiant_commun;
+      if (form.identifiant_fiscal !== (client.identifiant_fiscal ?? '')) diff.identifiant_fiscal = form.identifiant_fiscal;
+      if (form.contact !== client.contact) diff.contact = form.contact;
+      if (form.email !== client.email) diff.email = form.email;
+      if (form.address !== client.address) diff.address = form.address;
+      if (form.phone_n !== (client.phone_n ?? '')) diff.phone_n = form.phone_n;
+      mutation.mutate(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        { id: client.id, data: diff as any },
+        {
+          onSuccess: () => {
+            toast.success('Client modifié avec succès');
+            onSuccess();
+          },
+          onError: (err) => {
+            const fieldErrors = parseApiError(err);
+            if (fieldErrors) {
+              setErrors(fieldErrors);
+            } else {
+              const axiosErr = err as { response?: { data?: { error?: { message?: string } } } };
+              toast.error(axiosErr.response?.data?.error?.message ?? "Une erreur est survenue lors de l'enregistrement");
+            }
+          },
         },
-        onError: (err) => {
-          const fieldErrors = parseApiError(err);
-          if (fieldErrors) {
-            setErrors(fieldErrors);
-          } else {
-            toast.error("Une erreur est survenue lors de l'enregistrement");
-          }
+      );
+    } else {
+      mutation.mutate(
+        { id: undefined, data: form },
+        {
+          onSuccess: () => {
+            toast.success('Client créé avec succès');
+            onSuccess();
+          },
+          onError: (err) => {
+            const fieldErrors = parseApiError(err);
+            if (fieldErrors) {
+              setErrors(fieldErrors);
+            } else {
+              const axiosErr = err as { response?: { data?: { error?: { message?: string } } } };
+              toast.error(axiosErr.response?.data?.error?.message ?? "Une erreur est survenue lors de l'enregistrement");
+            }
+          },
         },
-      },
-    );
+      );
+    }
   };
 
   return (

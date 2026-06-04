@@ -182,7 +182,8 @@ export default function AlertRuleForm({ rule, onSuccess }: AlertRuleFormProps) {
             if (fieldErrors) {
               setErrors(fieldErrors);
             } else {
-              toast.error("Une erreur est survenue lors de l'enregistrement");
+              const axiosErr = err as { response?: { data?: { error?: { message?: string } } } };
+              toast.error(axiosErr.response?.data?.error?.message ?? "Une erreur est survenue lors de l'enregistrement");
             }
           },
         },
@@ -200,7 +201,8 @@ export default function AlertRuleForm({ rule, onSuccess }: AlertRuleFormProps) {
             if (fieldErrors) {
               setErrors(fieldErrors);
             } else {
-              toast.error("Une erreur est survenue lors de l'enregistrement");
+              const axiosErr = err as { response?: { data?: { error?: { message?: string } } } };
+              toast.error(axiosErr.response?.data?.error?.message ?? "Une erreur est survenue lors de l'enregistrement");
             }
           },
         },

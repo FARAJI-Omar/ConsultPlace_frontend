@@ -40,6 +40,14 @@ export interface MissionFormData {
   files?: File[];
 }
 
+export interface UpdateMissionFormData {
+  title?: string;
+  startDate?: string;
+  endDate?: string;
+  files?: File[];
+  deleteAttachmentIds?: number[];
+}
+
 export function useGetMissions(page = 1, limit = 10) {
   return useQuery({
     queryKey: ['missions', { page, limit }],
@@ -92,6 +100,34 @@ export function useMutateMission() {
       }
       return apiClient
         .post<{ success: true; data: Mission }>('/missions', formData)
+        .then((res) => res.data.data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['missions'] });
+    },
+  });
+}
+
+export function useUpdateMission() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: UpdateMissionFormData }) => {
+      const hasFiles = data.files && data.files.length > 0;
+      if (hasFiles) {
+        const formData = new FormData();
+        if (data.title !== undefined) formData.append('title', data.title);
+        if (data.startDate !== undefined) formData.append('startDate', data.startDate);
+        if (data.endDate !== undefined) formData.append('endDate', data.endDate);
+        data.files!.forEach((file) => formData.append('files', file));
+        if (data.deleteAttachmentIds && data.deleteAttachmentIds.length > 0)
+          formData.append('deleteAttachmentIds', JSON.stringify(data.deleteAttachmentIds));
+        return apiClient
+          .patch<{ success: true; data: Mission }>(`/missions/${id}`, formData)
+          .then((res) => res.data.data);
+      }
+      return apiClient
+        .patch<{ success: true; data: Mission }>(`/missions/${id}`, data)
         .then((res) => res.data.data);
     },
     onSuccess: () => {

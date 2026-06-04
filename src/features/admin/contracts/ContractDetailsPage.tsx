@@ -1,12 +1,16 @@
+import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Eye, FileText } from 'lucide-react';
 import { useGetContractById } from '../../../hooks/useContracts';
 import { useGetMissionsByContract } from '../../../hooks/useMissions';
 import { formatDate } from '../../../lib/utils';
+import Modal from '../../../components/common/Modal';
+import ContractForm from './ContractForm';
 
 export default function ContractDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const contractId = Number(id);
+  const [editModalOpen, setEditModalOpen] = useState(false);
 
   const { data: contract, isLoading: contractLoading } = useGetContractById(contractId);
   const { data: missions, isLoading: missionsLoading } = useGetMissionsByContract(contractId);
@@ -46,6 +50,12 @@ export default function ContractDetailsPage() {
         <h1 className="text-2xl font-semibold text-[#111111]">
           Contrat {contract.ref}
         </h1>
+        <button
+          onClick={() => setEditModalOpen(true)}
+          className="ml-auto cursor-pointer rounded-[8px] bg-green-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-green-700"
+        >
+          Modifier
+        </button>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -171,6 +181,19 @@ export default function ContractDetailsPage() {
           )}
         </div>
       </div>
+
+      <Modal
+        isOpen={editModalOpen}
+        onClose={() => setEditModalOpen(false)}
+        title="Modifier le contrat"
+        size="lg"
+      >
+        <ContractForm
+          key={contract.id}
+          contract={contract}
+          onSuccess={() => setEditModalOpen(false)}
+        />
+      </Modal>
     </div>
   );
 }

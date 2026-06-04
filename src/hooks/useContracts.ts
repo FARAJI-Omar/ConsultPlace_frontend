@@ -37,6 +37,15 @@ export interface ContractFormData {
   files?: File[];
 }
 
+export interface UpdateContractFormData {
+  startDate?: string;
+  endDate?: string;
+  profile?: string;
+  dailyRate?: number;
+  files?: File[];
+  deleteAttachmentIds?: number[];
+}
+
 export function useGetContracts(page = 1, limit = 10, includeArchived = false) {
   return useQuery({
     queryKey: ['contracts', { page, limit, includeArchived }],
@@ -76,6 +85,29 @@ export function useMutateContract() {
       }
       return apiClient
         .post<{ success: true; data: Contract }>('/contracts', formData)
+        .then((res) => res.data.data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['contracts'] });
+    },
+  });
+}
+
+export function useUpdateContract() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: UpdateContractFormData }) => {
+      const formData = new FormData();
+      if (data.startDate !== undefined) formData.append('startDate', data.startDate);
+      if (data.endDate !== undefined) formData.append('endDate', data.endDate);
+      if (data.profile !== undefined) formData.append('profile', data.profile);
+      if (data.dailyRate !== undefined) formData.append('dailyRate', String(data.dailyRate));
+      if (data.files) data.files.forEach((file) => formData.append('files', file));
+      if (data.deleteAttachmentIds && data.deleteAttachmentIds.length > 0)
+        formData.append('deleteAttachmentIds', JSON.stringify(data.deleteAttachmentIds));
+      return apiClient
+        .patch<{ success: true; data: Contract }>(`/contracts/${id}`, formData)
         .then((res) => res.data.data);
     },
     onSuccess: () => {
