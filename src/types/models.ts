@@ -67,7 +67,7 @@ export interface DocumentFile {
   contractId?: number | null;
   filename: string;
   url: string;
-  type: 'CONTRACT_DOC' | 'PROOF' | 'CRA' | 'INVOICE' | 'MISSION_DOC';
+  type: 'CONTRACT_DOC' | 'PROOF' | 'CRA' | 'INVOICE' | 'MISSION_DOC' | 'CONSULTANT_FACTURE';
   uploadedAt?: string;
 }
 

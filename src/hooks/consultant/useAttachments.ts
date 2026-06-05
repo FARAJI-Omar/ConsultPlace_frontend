@@ -22,13 +22,16 @@ export function useUploadAttachments() {
     mutationFn: async ({
       files,
       timesheetId,
+      type,
     }: {
       files: File[];
       timesheetId: string;
+      type?: 'PROOF' | 'CONSULTANT_FACTURE';
     }) => {
       const formData = new FormData();
       files.forEach((file) => formData.append('files', file));
       formData.append('timesheetId', timesheetId);
+      if (type) formData.append('type', type);
       const { data } = await apiClient.post<ApiResponse<DocumentFile[]>>(
         '/attachments',
         formData,

@@ -44,7 +44,7 @@ function generateDefaultEntries(year: number, month: number, holidays: { date: s
   return entries;
 }
 
-const MAX_FILES = 10;
+const MAX_PROOF_FILES = 9;
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?: number }) {
@@ -71,13 +71,15 @@ export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?:
   const [selectedMissionId, setSelectedMissionId] = useState<number | null>(defaultMissionId ?? null);
   const [entriesByMonth, setEntriesByMonth] = useState<Record<string, Record<string, number>>>({});
   const [touchedByMonth, setTouchedByMonth] = useState<Record<string, string[]>>({});
-  const [files, setFiles] = useState<File[]>([]);
+  const [proofFiles, setProofFiles] = useState<File[]>([]);
+  const [factureFile, setFactureFile] = useState<File | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
   const [showWeekendWarning, setShowWeekendWarning] = useState(false);
   const [weekendDayLabels, setWeekendDayLabels] = useState<string[]>([]);
   const [pendingWeekendAction, setPendingWeekendAction] = useState<'save' | 'submit' | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const proofInputRef = useRef<HTMLInputElement>(null);
+  const factureInputRef = useRef<HTMLInputElement>(null);
 
   const holidays = useMoroccoHolidays(selectedYear);
 
@@ -191,52 +193,126 @@ export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?:
     setPendingWeekendAction(null);
   }
 
-  const validateAndAddFiles = useCallback((incoming: FileList | File[]) => {
+  const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png'];
+  const allowedExts = ['.pdf', '.jpg', '.jpeg', '.png'];
+
+  function isValidFile(file: File): boolean {
+    return allowedTypes.includes(file.type) || allowedExts.some((ext) => file.name.toLowerCase().endsWith(ext));
+  }
+
+  function validateFiles(incoming: FileList | File[]): File[] {
+    const valid: File[] = [];
+    for (const f of Array.from(incoming)) {
+      if (f.size > MAX_FILE_SIZE) {
+        setFileError('Chaque fichier ne doit pas dépasser 10 Mo.');
+        return [];
+      }
+      if (!isValidFile(f)) {
+        setFileError('Seuls les fichiers PDF, JPG et PNG sont acceptés.');
+        return [];
+      }
+      valid.push(f);
+    }
+    return valid;
+  }
+
+  function addProofFiles(incoming: FileList | File[]) {
     setFileError(null);
-    const newFiles = Array.from(incoming);
-    const combined = [...files, ...newFiles];
-
-    if (combined.length > MAX_FILES) {
-      setFileError(`Maximum ${MAX_FILES} fichiers autorisés.`);
+    const valid = validateFiles(incoming);
+    if (valid.length === 0) return;
+    const combined = [...proofFiles, ...valid];
+    if (combined.length > MAX_PROOF_FILES) {
+      setFileError(`Maximum ${MAX_PROOF_FILES} fichiers pour le rapport d'activité.`);
       return;
     }
+    setProofFiles(combined);
+  }
 
-    const oversized = newFiles.find((f) => f.size > MAX_FILE_SIZE);
-    if (oversized) {
-      setFileError('Chaque fichier ne doit pas dépasser 10 Mo.');
-      return;
-    }
-
-    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png'];
-    const allowedExts = ['.pdf', '.jpg', '.jpeg', '.png'];
-    const invalid = newFiles.find(
-      (f) => !allowedTypes.includes(f.type) && !allowedExts.some((ext) => f.name.toLowerCase().endsWith(ext)),
-    );
-    if (invalid) {
-      setFileError('Seuls les fichiers PDF, JPG et PNG sont acceptés.');
-      return;
-    }
-
-    setFiles(combined);
-  }, [files]);
-
-  function removeFile(index: number) {
-    setFiles((prev) => prev.filter((_, i) => i !== index));
+  function removeProofFile(index: number) {
+    setProofFiles((prev) => prev.filter((_, i) => i !== index));
     setFileError(null);
   }
 
-  function handleDrop(e: React.DragEvent) {
+  function setFactureFileValidated(incoming: FileList | File[]) {
+    setFileError(null);
+    const valid = validateFiles(incoming);
+    if (valid.length === 0) return;
+    setFactureFile(valid[0]);
+  }
+
+  function removeFactureFile() {
+    setFactureFile(null);
+    setFileError(null);
+  }
+
+  function handleProofDrop(e: React.DragEvent) {
     e.preventDefault();
     if (e.dataTransfer.files.length > 0) {
-      validateAndAddFiles(e.dataTransfer.files);
+      addProofFiles(e.dataTransfer.files);
     }
   }
 
-  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleProofFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     if (e.target.files && e.target.files.length > 0) {
-      validateAndAddFiles(e.target.files);
+      addProofFiles(e.target.files);
       e.target.value = '';
     }
+  }
+
+  function handleFactureDrop(e: React.DragEvent) {
+    e.preventDefault();
+    if (e.dataTransfer.files.length > 0) {
+      setFactureFileValidated(e.dataTransfer.files);
+    }
+  }
+
+  function handleFactureFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    if (e.target.files && e.target.files.length > 0) {
+      setFactureFileValidated(e.target.files);
+      e.target.value = '';
+    }
+  }
+
+  async function finishAndReset() {
+    setEntriesByMonth((prev) => {
+      const next = { ...prev };
+      delete next[selectedMonthStr];
+      return next;
+    });
+    setTouchedByMonth((prev) => {
+      const next = { ...prev };
+      delete next[selectedMonthStr];
+      return next;
+    });
+    setProofFiles([]);
+    setFactureFile(null);
+    setSelectedMissionId(null);
+  }
+
+  async function uploadAllZones(timesheetId: number) {
+    const promises: Promise<unknown>[] = [];
+
+    if (proofFiles.length > 0) {
+      promises.push(
+        uploadMutation.mutateAsync({
+          files: proofFiles,
+          timesheetId: String(timesheetId),
+          type: 'PROOF',
+        }),
+      );
+    }
+
+    if (factureFile) {
+      promises.push(
+        uploadMutation.mutateAsync({
+          files: [factureFile],
+          timesheetId: String(timesheetId),
+          type: 'CONSULTANT_FACTURE',
+        }),
+      );
+    }
+
+    await Promise.all(promises);
   }
 
   async function handleSaveDraft() {
@@ -251,26 +327,10 @@ export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?:
         dailyEntries: formatEntriesForApi(entries),
       });
 
-      if (files.length > 0) {
-        await uploadMutation.mutateAsync({
-          files,
-          timesheetId: String(timesheet.id),
-        });
-      }
+      await uploadAllZones(timesheet.id);
 
       toast.success('Brouillon enregistré avec succès.');
-      setEntriesByMonth((prev) => {
-        const next = { ...prev };
-        delete next[selectedMonthStr];
-        return next;
-      });
-      setTouchedByMonth((prev) => {
-        const next = { ...prev };
-        delete next[selectedMonthStr];
-        return next;
-      });
-      setFiles([]);
-      setSelectedMissionId(null);
+      finishAndReset();
     } catch (err: unknown) {
       const msg =
         (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error?.message ??
@@ -291,30 +351,16 @@ export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?:
         dailyEntries: formatEntriesForApi(entries),
       });
 
-      await uploadMutation.mutateAsync({
-        files,
-        timesheetId: String(timesheet.id),
-      });
+      await uploadAllZones(timesheet.id);
 
       await submitTimesheet.mutateAsync(timesheet.id);
 
       toast.success('Relevé mensuel soumis avec succès.');
-      setEntriesByMonth((prev) => {
-        const next = { ...prev };
-        delete next[selectedMonthStr];
-        return next;
-      });
-      setTouchedByMonth((prev) => {
-        const next = { ...prev };
-        delete next[selectedMonthStr];
-        return next;
-      });
-      setFiles([]);
-      setSelectedMissionId(null);
+      finishAndReset();
     } catch (err: unknown) {
       const msg =
         (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error?.message ??
-        'Au moins une pièce jointe est requise pour soumettre.';
+        'Le rapport d\'activité et la facture sont requis pour soumettre.';
       toast.error(msg);
     }
   }
@@ -400,61 +446,108 @@ export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?:
         onChange={handleEntryChange}
       />
 
-      <div className="space-y-2">
-        <label className="text-sm font-medium tracking-wider text-[#494d56]">
-          Relevé d'heures signé, Attestation de présence, Rapport d'activité, Facture ...<span className="text-xs text-[#ff0909]"> (*)</span>
-        </label>
+      <div className="space-y-4">
+        <p className="text-sm font-medium text-[#ff0909]">* Les deux entrées sont obligatoires pour soumettre</p>
 
-        <div
-          onDragOver={(e) => e.preventDefault()}
-          onDrop={handleDrop}
-          onClick={() => fileInputRef.current?.click()}
-          className="cursor-pointer rounded-[12px] border-2 border-dashed border-[#e5e7eb] bg-[#ffffff] px-6 py-8 text-center transition-colors hover:border-[#111111]"
-        >
-          <p className="text-sm text-[#6b7280]">
-            Glissez-déposez vos fichiers ici ou cliquez pour parcourir
-          </p>
-          <p className="text-xs text-[#6b7280] mt-1">
-            Maximum {MAX_FILES} fichiers, 10 Mo chacun
-          </p>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
-            multiple
-            onChange={handleFileSelect}
-            className="hidden"
-          />
+        <div className="space-y-2">
+          <label className="text-sm font-medium tracking-wider text-[#494d56]">
+            Rapport d'activité <span className="text-xs text-[#ff0909]">*</span>
+          </label>
+
+          <div
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={handleProofDrop}
+            onClick={() => proofInputRef.current?.click()}
+            className="cursor-pointer rounded-[12px] border-2 border-dashed border-[#e5e7eb] bg-[#ffffff] px-6 py-6 text-center transition-colors hover:border-[#111111]"
+          >
+            <p className="text-sm text-[#6b7280]">
+              Glissez-déposez vos fichiers ici ou cliquez pour parcourir
+            </p>
+            <p className="text-xs text-[#6b7280] mt-1">
+              Maximum {MAX_PROOF_FILES} fichiers, 10 Mo chacun
+            </p>
+            <input
+              ref={proofInputRef}
+              type="file"
+              accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+              multiple
+              onChange={handleProofFileSelect}
+              className="hidden"
+            />
+          </div>
+
+          {proofFiles.length > 0 && (
+            <ul className="space-y-1.5">
+              {proofFiles.map((file, i) => (
+                <li
+                  key={`proof-${file.name}-${i}`}
+                  className="flex items-center justify-between rounded-[8px] bg-[#f5f5f5] px-4 py-2"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="inline-block rounded-[9999px] bg-[#e5e7eb] px-2 py-0.5 text-xs text-[#6b7280]">
+                      {file.name.split('.').pop()?.toUpperCase() ?? 'FICHIER'}
+                    </span>
+                    <span className="text-sm text-[#111111]">{file.name}</span>
+                    <span className="text-xs text-[#6b7280]">
+                      ({(file.size / 1024 / 1024).toFixed(1)} Mo)
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => removeProofFile(i)}
+                    disabled={isOrchestrating}
+                    className="cursor-pointer rounded-[8px] px-2 py-1 text-xs font-semibold text-[#dc5252] hover:bg-[#fef2f2] disabled:opacity-50 transition-colors"
+                  >
+                    Retirer
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
 
-        {files.length > 0 && (
-          <ul className="space-y-1.5">
-            {files.map((file, i) => (
-              <li
-                key={`${file.name}-${i}`}
-                className="flex items-center justify-between rounded-[8px] bg-[#f5f5f5] px-4 py-2"
+        <div className="space-y-2">
+          <label className="text-sm font-medium tracking-wider text-[#494d56]">
+            Facture du consultant <span className="text-xs text-[#ff0909]">*</span>
+          </label>
+
+          {factureFile ? (
+            <div className="rounded-[12px] border-2 border-solid border-[#e5e7eb] bg-[#f9f9f9] px-6 py-6 text-center">
+              <p className="text-sm text-[#6b7280]">
+                Fichier sélectionné : <span className="font-medium text-[#111111]">{factureFile.name}</span>
+              </p>
+              <button
+                type="button"
+                onClick={removeFactureFile}
+                disabled={isOrchestrating}
+                className="cursor-pointer rounded-[8px] px-3 py-1.5 mt-3 text-xs font-semibold text-[#dc5252] hover:bg-[#fef2f2] disabled:opacity-50 transition-colors"
               >
-                <div className="flex items-center gap-3">
-                  <span className="inline-block rounded-[9999px] bg-[#e5e7eb] px-2 py-0.5 text-xs text-[#6b7280]">
-                    {file.name.split('.').pop()?.toUpperCase() ?? 'FICHIER'}
-                  </span>
-                  <span className="text-sm text-[#111111]">{file.name}</span>
-                  <span className="text-xs text-[#6b7280]">
-                    ({(file.size / 1024 / 1024).toFixed(1)} Mo)
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => removeFile(i)}
-                  disabled={isOrchestrating}
-                  className="cursor-pointer rounded-[8px] px-2 py-1 text-xs font-semibold text-[#ef4444] hover:bg-[#fef2f2] disabled:opacity-50 transition-colors"
-                >
-                  Retirer
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
+                Retirer
+              </button>
+            </div>
+          ) : (
+            <div
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={handleFactureDrop}
+              onClick={() => factureInputRef.current?.click()}
+              className="cursor-pointer rounded-[12px] border-2 border-dashed border-[#e5e7eb] bg-[#ffffff] px-6 py-6 text-center transition-colors hover:border-[#111111]"
+            >
+              <p className="text-sm text-[#6b7280]">
+                Glissez-déposez votre fichier ici ou cliquez pour parcourir
+              </p>
+              <p className="text-xs text-[#6b7280] mt-1">
+                1 fichier uniquement, 10 Mo maximum
+              </p>
+              <input
+                ref={factureInputRef}
+                type="file"
+                accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+                onChange={handleFactureFileSelect}
+                className="hidden"
+              />
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="flex items-center justify-end gap-3 pt-2">
@@ -469,7 +562,8 @@ export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?:
         <button
           type="button"
           onClick={handleSubmitClick}
-          disabled={!selectedMissionId || files.length === 0 || isOrchestrating}
+          disabled={!selectedMissionId || proofFiles.length === 0 || !factureFile || isOrchestrating}
+          title={(!proofFiles.length || !factureFile) ? 'Les documents Rapport d\'activité et facture du consultant requis' : ''}
           className="cursor-pointer rounded-[8px] bg-green-600 px-5 py-2.5 text-sm font-semibold text-[#ffffff] hover:bg-green-700 disabled:bg-[#e5e7eb] disabled:text-[#6b7280] disabled:cursor-not-allowed transition-colors"
         >
           {submitTimesheet.isPending ? 'Soumission...' : 'Soumettre'}

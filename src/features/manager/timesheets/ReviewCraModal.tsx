@@ -96,8 +96,8 @@ export default function ReviewCraModal({ timesheetId, open, onClose }: ReviewCra
                     <p className="font-medium text-[#111111]">{formatMonth(timesheet.month)}</p>
                   </div>
                   <div>
-                    <p className="text-[#6b7280]">Total heures</p>
-                    <p className="font-medium text-[#111111]">{timesheet.totalHours}h</p>
+                    <p className="text-[#6b7280]">Total Jours travaillés</p>
+                    <p className="font-medium text-[#111111]">{timesheet.days} jour{timesheet.days > 1 ? 's' : ''}</p>
                   </div>
                 </div>
               </div>

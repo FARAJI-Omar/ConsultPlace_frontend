@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 import { useConsultantTimesheets } from '../../../hooks/consultant/useConsultantDashboard';
 import {
@@ -21,7 +21,6 @@ function formatMonth(month: string) {
   return `${monthNames[parseInt(m, 10) - 1]} ${year}`;
 }
 
-const MAX_FILES = 10;
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 export default function DraftsPage() {
@@ -92,9 +91,9 @@ export default function DraftsPage() {
                 toast.error(msg);
               }
             }}
-            onUploadFiles={async (files) => {
+            onUploadFiles={async (files, type) => {
               try {
-                await uploadAttachments.mutateAsync({ files, timesheetId: String(draft.id) });
+                await uploadAttachments.mutateAsync({ files, timesheetId: String(draft.id), type });
                 toast.success('Fichier(s) ajouté(s).');
               } catch (err: unknown) {
                 const msg =
@@ -126,7 +125,7 @@ interface DraftCardProps {
   onSubmit: () => void;
   isSubmitting: boolean;
   onDeleteAttachment: (attachmentId: number) => Promise<void>;
-  onUploadFiles: (files: File[]) => Promise<void>;
+  onUploadFiles: (files: File[], type: 'PROOF' | 'CONSULTANT_FACTURE') => Promise<void>;
   isUploading: boolean;
   isDeleting: boolean;
   onEdit: () => void;
@@ -148,7 +147,6 @@ function DraftCard({
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
   const [fileError, setFileError] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleConfirmSubmit = async () => {
     setShowSubmitConfirm(false);
@@ -162,6 +160,10 @@ function DraftCard({
   const { data: attachments, isLoading: attachmentsLoading } = useGetAttachments(
     isExpanded ? draft.id : 0,
   );
+
+  const proofAttachments = attachments?.filter((a) => a.type === 'PROOF') ?? [];
+  const factureAttachments = attachments?.filter((a) => a.type === 'CONSULTANT_FACTURE') ?? [];
+  const hasRequiredFiles = !attachmentsLoading && proofAttachments.length > 0 && factureAttachments.length > 0;
 
   return (
     <div className={`rounded-[12px] bg-[#ffffff] border border-[#e5e7eb] overflow-hidden ${(isSubmitting || isUploading || isDeleting) ? 'pointer-events-none opacity-60' : ''}`}>
@@ -199,7 +201,8 @@ function DraftCard({
           <button
             type="button"
             onClick={() => setShowSubmitConfirm(true)}
-            disabled={isSubmitting}
+            disabled={isSubmitting || !hasRequiredFiles}
+            title={!hasRequiredFiles ? 'Les documents Rapport d\'activité et facture du consultant requis' : ''}
             className="cursor-pointer rounded-[8px] bg-green-600 px-3 py-2 text-xs font-semibold text-[#ffffff] hover:bg-green-700 transition-colors disabled:bg-[#e5e7eb] disabled:text-[#6b7280] disabled:cursor-not-allowed"
           >
             {isSubmitting ? 'Soumission...' : 'Soumettre'}
@@ -208,119 +211,173 @@ function DraftCard({
       </div>
 
       {isExpanded && (
-        <div className="border-t border-[#e5e7eb] px-6 py-4 space-y-3">
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isUploading}
-            className="cursor-pointer rounded-[8px] border border-[#e5e7eb] bg-[#ffffff] px-4 py-2 text-xs font-semibold text-[#111111] hover:bg-[#e7e8eb] disabled:opacity-50 transition-colors"
-          >
-            {isUploading ? 'Ajout en cours...' : '+ Ajouter des fichiers'}
-          </button>
-          {fileError && (
-            <p className="text-xs font-medium text-[#ef4444]">{fileError}</p>
-          )}
-
-          <input
-            ref={fileInputRef}
-            type="file"
-          accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
-          multiple
-          onChange={(e) => {
-            setFileError(null);
-            const selected = e.target.files;
-            if (!selected || selected.length === 0) return;
-
-            const incoming = Array.from(selected);
-            const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png'];
-            const allowedExts = ['.pdf', '.jpg', '.jpeg', '.png'];
-            const invalid = incoming.find(
-              (f) => !allowedTypes.includes(f.type) && !allowedExts.some((ext) => f.name.toLowerCase().endsWith(ext)),
-            );
-            if (invalid) { setFileError('Seuls les fichiers PDF, JPG et PNG sont acceptés.'); e.target.value = ''; return; }
-
-              const oversized = incoming.find((f) => f.size > MAX_FILE_SIZE);
-              if (oversized) { setFileError('Chaque fichier ne doit pas dépasser 10 Mo.'); e.target.value = ''; return; }
-
-              if (incoming.length + (attachments?.length ?? 0) > MAX_FILES) {
-                setFileError(`Maximum ${MAX_FILES} fichiers par relevé.`); e.target.value = ''; return;
-              }
-
-              onUploadFiles(incoming);
-              e.target.value = '';
-            }}
-            className="hidden"
-          />
-
+        <div className="border-t border-[#e5e7eb] px-6 py-4 space-y-4">
           {attachmentsLoading && (
             <p className="text-xs text-[#6b7280]">Chargement des pièces jointes...</p>
           )}
 
-          {!attachmentsLoading && (!attachments || attachments.length === 0) && (
-            <p className="text-xs text-[#6b7280]">
-              Aucune pièce jointe pour ce brouillon.
-            </p>
-          )}
-
-          {!attachmentsLoading && attachments && attachments.length > 0 && (
-            <ul className="space-y-2">
-              {attachments.map((att) => (
-                <li
-                  key={att.id}
-                  className="flex items-center justify-between rounded-[8px] bg-[#f5f5f5] px-4 py-2"
+          {!attachmentsLoading && (
+            <>
+              <div className="space-y-2">
+                <label className="text-sm font-medium tracking-wider text-[#494d56]">Rapport d'activité <span className="text-xs text-[#ff0909]">*</span></label>
+                <button
+                  type="button"
+                  onClick={() => document.getElementById(`proof-input-${draft.id}`)?.click()}
+                  disabled={isUploading}
+                  className="cursor-pointer rounded-[8px] border border-[#e5e7eb] bg-[#ffffff] px-4 py-2 text-xs font-semibold text-[#111111] hover:bg-[#e7e8eb] disabled:opacity-50 transition-colors"
                 >
-                  <div className="flex items-center gap-3">
-                    <span className="inline-block rounded-[9999px] bg-[#e5e7eb] px-2 py-0.5 text-xs text-[#6b7280]">
-                      {att.filename.split('.').pop()?.toUpperCase() ?? 'FICHIER'}
-                    </span>
-                    <div className="flex flex-col">
-                      <a href={att.url} target="_blank" rel="noopener noreferrer" className="text-sm text-[#111111] underline underline-offset-2 hover:text-[#6b7280] transition-colors">{att.filename}</a>
-                      {att.uploadedAt && (
-                        <span className="text-xs text-[#6b7280] mt-0.5">Ajouté le {formatDate(att.uploadedAt)}</span>
-                      )}
+                  {isUploading ? 'Ajout en cours...' : '+ Ajouter un rapport'}
+                </button>
+                <input
+                  id={`proof-input-${draft.id}`}
+                  type="file"
+                  accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+                  multiple
+                  onChange={(e) => {
+                    setFileError(null);
+                    const selected = e.target.files;
+                    if (!selected || selected.length === 0) return;
+                    const incoming = Array.from(selected);
+                    const invalid = incoming.find(
+                      (f) => !['application/pdf', 'image/jpeg', 'image/png'].includes(f.type) &&
+                        !['.pdf', '.jpg', '.jpeg', '.png'].some((ext) => f.name.toLowerCase().endsWith(ext)),
+                    );
+                    if (invalid) { setFileError('Seuls les fichiers PDF, JPG et PNG sont acceptés.'); e.target.value = ''; return; }
+                    const oversized = incoming.find((f) => f.size > MAX_FILE_SIZE);
+                    if (oversized) { setFileError('Chaque fichier ne doit pas dépasser 10 Mo.'); e.target.value = ''; return; }
+                    onUploadFiles(incoming, 'PROOF');
+                    e.target.value = '';
+                  }}
+                  className="hidden"
+                />
+                {attachments && attachments.filter((a) => a.type === 'PROOF').length > 0 && (
+                  <ul className="space-y-1.5">
+                    {attachments.filter((a) => a.type === 'PROOF').map((att) => (
+                      <li key={att.id} className="flex items-center justify-between rounded-[8px] bg-[#f5f5f5] px-4 py-2">
+                        <div className="flex items-center gap-3">
+                          <span className="inline-block rounded-[9999px] bg-[#e5e7eb] px-2 py-0.5 text-xs text-[#6b7280]">
+                            {att.filename.split('.').pop()?.toUpperCase() ?? 'FICHIER'}
+                          </span>
+                          <div className="flex flex-col">
+                            <a href={att.url} target="_blank" rel="noopener noreferrer" className="text-sm text-[#111111] underline underline-offset-2 hover:text-[#6b7280] transition-colors">{att.filename}</a>
+                            {att.uploadedAt && (
+                              <span className="text-xs text-[#6b7280] mt-0.5">Ajouté le {formatDate(att.uploadedAt)}</span>
+                            )}
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setConfirmDeleteId(att.id)}
+                          className="cursor-pointer rounded-[8px] px-2 py-1 text-xs font-semibold text-[#ef4444] hover:bg-[#fef2f2] transition-colors"
+                        >
+                          Supprimer
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium tracking-wider text-[#494d56]">Facture du consultant <span className="text-xs text-[#ff0909]">*</span></label>
+                {attachments && attachments.filter((a) => a.type === 'CONSULTANT_FACTURE').length > 0 ? (
+                  <ul className="space-y-1.5">
+                    {attachments.filter((a) => a.type === 'CONSULTANT_FACTURE').map((att) => (
+                      <li key={att.id} className="flex items-center justify-between rounded-[8px] bg-[#f5f5f5] px-4 py-2">
+                        <div className="flex items-center gap-3">
+                          <span className="inline-block rounded-[9999px] bg-[#e5e7eb] px-2 py-0.5 text-xs text-[#6b7280]">
+                            {att.filename.split('.').pop()?.toUpperCase() ?? 'FICHIER'}
+                          </span>
+                          <div className="flex flex-col">
+                            <a href={att.url} target="_blank" rel="noopener noreferrer" className="text-sm text-[#111111] underline underline-offset-2 hover:text-[#6b7280] transition-colors">{att.filename}</a>
+                            {att.uploadedAt && (
+                              <span className="text-xs text-[#6b7280] mt-0.5">Ajouté le {formatDate(att.uploadedAt)}</span>
+                            )}
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setConfirmDeleteId(att.id)}
+                          className="cursor-pointer rounded-[8px] px-2 py-1 text-xs font-semibold text-[#ef4444] hover:bg-[#fef2f2] transition-colors"
+                        >
+                          Supprimer
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => document.getElementById(`facture-input-${draft.id}`)?.click()}
+                      disabled={isUploading}
+                      className="cursor-pointer rounded-[8px] border border-[#e5e7eb] bg-[#ffffff] px-4 py-2 text-xs font-semibold text-[#111111] hover:bg-[#e7e8eb] disabled:opacity-50 transition-colors"
+                    >
+                      {isUploading ? 'Ajout en cours...' : '+ Ajouter une facture'}
+                    </button>
+                    <input
+                      id={`facture-input-${draft.id}`}
+                      type="file"
+                      accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+                      onChange={(e) => {
+                        setFileError(null);
+                        const selected = e.target.files;
+                        if (!selected || selected.length === 0) return;
+                        const file = selected[0];
+                        if (!['application/pdf', 'image/jpeg', 'image/png'].includes(file.type) &&
+                          !['.pdf', '.jpg', '.jpeg', '.png'].some((ext) => file.name.toLowerCase().endsWith(ext))) {
+                          setFileError('Seuls les fichiers PDF, JPG et PNG sont acceptés.'); e.target.value = ''; return;
+                        }
+                        if (file.size > MAX_FILE_SIZE) {
+                          setFileError('Chaque fichier ne doit pas dépasser 10 Mo.'); e.target.value = ''; return;
+                        }
+                        onUploadFiles([file], 'CONSULTANT_FACTURE');
+                        e.target.value = '';
+                      }}
+                      className="hidden"
+                    />
+                  </>
+                )}
+              </div>
+
+              {fileError && (
+                <p className="text-xs font-medium text-[#ef4444]">{fileError}</p>
+              )}
+
+              {(!attachments || attachments.length === 0) && (
+                <p className="text-xs text-[#6b7280]">Aucune pièce jointe pour ce brouillon.</p>
+              )}
+
+              {confirmDeleteId && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setConfirmDeleteId(null)}>
+                  <div className="rounded-[12px] bg-[#ffffff] p-6 shadow-lg w-80" onClick={(e) => e.stopPropagation()}>
+                    <p className="text-sm font-semibold text-[#111111] mb-2">Confirmer la suppression</p>
+                    <p className="text-sm text-[#6b7280] mb-6">Cette action est irréversible.</p>
+                    <div className="flex justify-end gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setConfirmDeleteId(null)}
+                        className="cursor-pointer rounded-[8px] border border-[#e5e7eb] bg-[#ffffff] px-4 py-2 text-xs font-semibold text-[#111111] hover:bg-[#f3f4f6] transition-colors"
+                      >
+                        Annuler
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onDeleteAttachment(confirmDeleteId);
+                          setConfirmDeleteId(null);
+                        }}
+                        disabled={isDeleting}
+                        className="cursor-pointer rounded-[8px] bg-[#ef4444] px-4 py-2 text-xs font-semibold text-[#ffffff] hover:bg-[#dc2626] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isDeleting ? 'Suppression...' : 'Supprimer'}
+                      </button>
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setConfirmDeleteId(att.id)}
-                    className="cursor-pointer rounded-[8px] px-2 py-1 text-xs font-semibold text-[#ef4444] hover:bg-[#fef2f2] transition-colors"
-                  >
-                    Supprimer
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-
-          {confirmDeleteId && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setConfirmDeleteId(null)}>
-              <div className="rounded-[12px] bg-[#ffffff] p-6 shadow-lg w-80" onClick={(e) => e.stopPropagation()}>
-                <p className="text-sm font-semibold text-[#111111] mb-2">Confirmer la suppression</p>
-                <p className="text-sm text-[#6b7280] mb-6">Cette action est irréversible.</p>
-                <div className="flex justify-end gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setConfirmDeleteId(null)}
-                    className="cursor-pointer rounded-[8px] border border-[#e5e7eb] bg-[#ffffff] px-4 py-2 text-xs font-semibold text-[#111111] hover:bg-[#f3f4f6] transition-colors"
-                  >
-                    Annuler
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      onDeleteAttachment(confirmDeleteId);
-                      setConfirmDeleteId(null);
-                    }}
-                    disabled={isDeleting}
-                    className="cursor-pointer rounded-[8px] bg-[#ef4444] px-4 py-2 text-xs font-semibold text-[#ffffff] hover:bg-[#dc2626] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isDeleting ? 'Suppression...' : 'Supprimer'}
-                  </button>
                 </div>
-              </div>
-            </div>
+              )}
+            </>
           )}
-
         </div>
       )}
 
