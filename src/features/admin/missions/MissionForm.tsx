@@ -91,7 +91,7 @@ export default function MissionForm({ onSuccess, mission }: MissionFormProps) {
       if (form.title !== mission!.title) patchData.title = form.title;
       if (curStart !== origStart) patchData.startDate = curStart;
       if (curEnd !== origEnd) {
-        if (curEnd) patchData.endDate = curEnd;
+        patchData.endDate = curEnd || null;
       }
       if (files.length > 0) patchData.files = files;
       if (deletedAttachmentIds.length > 0) patchData.deleteAttachmentIds = deletedAttachmentIds;
@@ -189,11 +189,25 @@ export default function MissionForm({ onSuccess, mission }: MissionFormProps) {
               ))}
             </select>
           ) : type === 'date' ? (
-            <DatePicker
-              value={String((form as Record<string, string>)[key] ?? '')}
-              onChange={(val) => handleChange(key, val)}
-              error={errors[key]}
-            />
+            <div className="flex items-center gap-2">
+              <div className="flex-1">
+                <DatePicker
+                  value={String((form as Record<string, string>)[key] ?? '')}
+                  onChange={(val) => handleChange(key, val)}
+                  error={errors[key]}
+                />
+              </div>
+              {isEdit && key === 'endDate' && form.endDate && (
+                <button
+                  type="button"
+                  onClick={() => handleChange('endDate', '')}
+                  className="cursor-pointer rounded p-1 text-[#6b7280] transition-colors hover:text-red-500"
+                  title="Enlever la date de fin"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
           ) : (
             <input
               type={type ?? 'text'}

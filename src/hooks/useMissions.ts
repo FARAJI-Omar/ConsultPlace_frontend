@@ -43,7 +43,7 @@ export interface MissionFormData {
 export interface UpdateMissionFormData {
   title?: string;
   startDate?: string;
-  endDate?: string;
+  endDate?: string | null;
   files?: File[];
   deleteAttachmentIds?: number[];
 }
@@ -118,7 +118,7 @@ export function useUpdateMission() {
         const formData = new FormData();
         if (data.title !== undefined) formData.append('title', data.title);
         if (data.startDate !== undefined) formData.append('startDate', data.startDate);
-        if (data.endDate !== undefined) formData.append('endDate', data.endDate);
+        if (data.endDate !== undefined) formData.append('endDate', data.endDate ?? '');
         data.files!.forEach((file) => formData.append('files', file));
         if (data.deleteAttachmentIds && data.deleteAttachmentIds.length > 0)
           formData.append('deleteAttachmentIds', JSON.stringify(data.deleteAttachmentIds));
