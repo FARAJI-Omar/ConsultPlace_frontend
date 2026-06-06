@@ -271,6 +271,9 @@ export default function AllInvoicesPage() {
     { key: 'client', label: 'Client', render: (inv) => (
       <span className="inline-block rounded-[6px] bg-[#EFF6FF] px-2.5 py-1 text-sm font-medium text-[#111111]">{inv.client?.raison_sociale ?? '-'}</span>
     ) },
+    { key: 'consultant', label: 'Consultant', render: (inv) => (
+      <span className="inline-block rounded-[6px] bg-[#ffea002e] px-2.5 py-1 text-sm font-medium text-[#111111]">{inv.consultant?.name ?? '-'}</span>
+    ) },
     { key: 'amount', label: 'Montant HT', render: (inv) => `${(inv.amount ?? 0).toLocaleString()} DH` },
     { key: 'vat', label: 'TVA', render: (inv) => `${(inv.vat ?? 0).toLocaleString()} DH (${inv.vatRate ?? 0}%)` },
     { key: 'total', label: 'Total TTC', render: (inv) => `${(inv.total ?? 0).toLocaleString()} DH` },

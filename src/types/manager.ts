@@ -104,6 +104,8 @@ export interface Invoice {
   timesheet?: { id: number; month: string; days: number; status: string; mission: { id: number; title: string; contractId: number } };
   client?: { id: number; raison_sociale: string; email: string };
   consultant?: { id: number; name: string; email: string };
+  consultantPayoutStatus?: 'non_paye' | 'paiement_partiel' | 'paye';
+  consultantPayments?: { amount: number; date: string; paid: number; rest: number }[];
 }
 
 export interface PaymentRecord {

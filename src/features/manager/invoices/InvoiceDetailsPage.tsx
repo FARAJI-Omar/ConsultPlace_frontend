@@ -22,7 +22,7 @@ const statusBadge: Record<string, string> = {
 
 const statusLabels: Record<string, string> = {
   PENDING: 'En attente',
-  PARTIAL_PAID: 'Partiellement payé',
+  PARTIAL_PAID: 'Partiellement paye',
   PAID: 'Payé',
   CANCELED: 'Annulé',
 };
@@ -142,7 +142,7 @@ export default function InvoiceDetailsPage() {
       { invoiceId: invoice.id, paymentDate: markPaidDate, comment: markPaidComment || undefined },
       {
         onSuccess: () => {
-          toast.success(`Facture ${invoice.ref} marquée comme payée`);
+          toast.success(`Facture ${invoice.ref} marquée comme payee`);
           setConfirmMarkPaid(false);
           setMarkPaidComment('');
           if (invoice.reminderFrequency) {
@@ -291,17 +291,17 @@ export default function InvoiceDetailsPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <div className="rounded-[12px] bg-[#f5f5f5] p-6">
+        <div className="rounded-[12px] bg-[#ffffff] border border-[#e5e7eb] p-6">
           <h2 className="mb-4 text-lg font-semibold text-[#111111]">Informations</h2>
           <div className="space-y-3 text-sm">
             <div className="flex justify-between"><span className="text-[#6b7280]">Référence</span><span className="font-medium text-[#111111]">{invoice.ref}</span></div>
             <div className="flex justify-between"><span className="text-[#6b7280]">Date d'émission</span><span className="font-medium text-[#111111]">{formatDate(invoice.issueDate)}</span></div>
             <div className="flex justify-between"><span className="text-[#6b7280]">Date d'échéance</span><span className="font-medium text-[#111111]">{formatDate(invoice.dueDate)}</span></div>
-            {invoice.paymentDate && <div className="flex justify-between"><span className="text-[#6b7280]">Date de paiement</span><span className="font-medium text-[#111111]">{formatDate(invoice.paymentDate)}</span></div>}
+            {invoice.paymentDate && <div className="flex justify-between border-t border-[#e5e7eb] pt-2"><span className="text-[#6b7280]">Date de paiement</span><span className="font-medium text-[#111111]">{formatDate(invoice.paymentDate)}</span></div>}
           </div>
         </div>
 
-        <div className="rounded-[12px] bg-[#f5f5f5] p-6">
+        <div className="rounded-[12px] bg-[#ffffff] border border-[#e5e7eb] p-6">
           <h2 className="mb-4 text-lg font-semibold text-[#111111]">Montants</h2>
           <div className="space-y-3 text-sm">
             <div className="flex justify-between"><span className="text-[#6b7280]">Montant HT</span><span className="font-medium text-[#111111]">{(invoice.amount ?? 0).toLocaleString()} DH</span></div>
@@ -313,25 +313,95 @@ export default function InvoiceDetailsPage() {
           </div>
         </div>
 
-        <div className="rounded-[12px] bg-[#f5f5f5] p-6">
+        <div className="rounded-[12px] bg-[#ffffff] border border-[#e5e7eb] p-6">
           <h2 className="mb-4 text-lg font-semibold text-[#111111]">Client</h2>
           <div className="space-y-2 text-sm">
             <p className="font-medium text-[#111111]">{invoice.client?.raison_sociale}</p>
             <p className="text-[#6b7280]">{invoice.client?.email}</p>
           </div>
+          {invoice.payments && invoice.payments.filter(p => p.type === 'CLIENT').length > 0 && (
+            <div className="mt-4 border-t border-[#e5e7eb] pt-4">
+              <h3 className="mb-2 text-sm font-semibold text-[#111111]">Historique des paiements Client</h3>
+              <table className="w-full border-collapse text-sm">
+                <thead>
+                  <tr className="border-b border-[#e5e7eb]">
+                    <th className="px-2 py-1.5 text-left text-xs font-medium text-[#6b7280]">#</th>
+                    <th className="px-2 py-1.5 text-left text-xs font-medium text-[#6b7280]">Réf</th>
+                    <th className="px-2 py-1.5 text-left text-xs font-medium text-[#6b7280]">Montant</th>
+                    <th className="px-2 py-1.5 text-left text-xs font-medium text-[#6b7280]">Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {invoice.payments.filter(p => p.type === 'CLIENT').map((p, idx) => (
+                    <tr key={p.id} className="border-b border-[#e5e7eb]">
+                      <td className="px-2 py-1.5 text-xs text-[#6b7280]">{idx + 1}</td>
+                      <td className="px-2 py-1.5 text-xs text-[#6b7280]">{p.ref}</td>
+                      <td className="px-2 py-1.5 text-[#111111]">{(p.amount ?? 0).toLocaleString()} DH</td>
+                      <td className="px-2 py-1.5 text-[#6b7280]">{formatDate(p.date)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
 
-        <div className="rounded-[12px] bg-[#f5f5f5] p-6">
+        <div className="rounded-[12px] bg-[#ffffff] border border-[#e5e7eb] p-6">
           <h2 className="mb-4 text-lg font-semibold text-[#111111]">Consultant</h2>
           <div className="space-y-2 text-sm">
             <p className="font-medium text-[#111111]">{invoice.consultant?.name}</p>
             <p className="text-[#6b7280]">{invoice.consultant?.email}</p>
+            <div className="flex justify-between border-t border-[#e5e7eb] pt-2">
+              <span className="text-[#6b7280]">Montant à payer au consultant</span>
+              <span className="font-medium text-[#111111]">{(invoice.consultantPayout ?? 0).toLocaleString()} DH</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-[#6b7280]">Statut</span>
+              <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                invoice.consultantPayoutStatus === 'paye'
+                  ? 'bg-green-100 text-green-700'
+                  : invoice.consultantPayoutStatus === 'paiement_partiel'
+                    ? 'bg-yellow-100 text-yellow-700'
+                    : 'bg-gray-100 text-gray-500'
+              }`}>
+                {invoice.consultantPayoutStatus === 'paye'
+                  ? 'Payé'
+                  : invoice.consultantPayoutStatus === 'paiement_partiel'
+                    ? 'Paiement partiel'
+                    : 'Non payé'}
+              </span>
+            </div>
           </div>
+          {invoice.consultantPayments && invoice.consultantPayments.length > 0 && (
+            <div className="mt-4 border-t border-[#e5e7eb] pt-4">
+              <h3 className="mb-2 text-sm font-semibold text-[#111111]">Historique des paiements Consultant</h3>
+              <table className="w-full border-collapse text-sm">
+                <thead>
+                  <tr className="border-b border-[#e5e7eb]">
+                    <th className="px-2 py-1.5 text-left text-xs font-medium text-[#6b7280]">#</th>
+                    <th className="px-2 py-1.5 text-left text-xs font-medium text-[#6b7280]">Montant</th>
+                    <th className="px-2 py-1.5 text-left text-xs font-medium text-[#6b7280]">Reste</th>
+                    <th className="px-2 py-1.5 text-left text-xs font-medium text-[#6b7280]">Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {invoice.consultantPayments.map((cp, idx) => (
+                    <tr key={idx} className="border-b border-[#e5e7eb]">
+                      <td className="px-2 py-1.5 text-xs text-[#6b7280]">{idx + 1}</td>
+                      <td className="px-2 py-1.5 text-[#111111]">{(cp.amount ?? 0).toLocaleString()} DH</td>
+                      <td className="px-2 py-1.5 text-[#111111]">{(cp.rest ?? 0).toLocaleString()} DH</td>
+                      <td className="px-2 py-1.5 text-[#6b7280]">{formatDate(cp.date)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
 
       {invoice.timesheet && (
-        <div className="rounded-[12px] bg-[#f5f5f5] p-6">
+        <div className="rounded-[12px] bg-[#ffffff] border border-[#e5e7eb] p-6">
           <h2 className="mb-4 text-lg font-semibold text-[#111111]">Relevé associé</h2>
           <div className="space-y-3 text-sm">
             <div className="flex justify-between"><span className="text-[#6b7280]">Mission</span><span className="font-medium text-[#111111]">{invoice.timesheet.mission.title}</span></div>
@@ -341,35 +411,9 @@ export default function InvoiceDetailsPage() {
         </div>
       )}
 
-      {invoice.payments && invoice.payments.length > 0 && (
-        <div className="rounded-[12px] bg-[#f5f5f5] p-6">
-          <h2 className="mb-4 text-lg font-semibold text-[#111111]">Historique des paiements</h2>
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-sm">
-              <thead>
-                <tr className="border-b border-[#e5e7eb]">
-                  <th className="px-3 py-2 text-left text-xs font-medium text-[#6b7280]">Réf</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-[#6b7280]">Montant</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-[#6b7280]">Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                {invoice.payments.map((p) => (
-                  <tr key={p.id} className="border-b border-[#e5e7eb]">
-                    <td className="px-3 py-2 text-xs text-[#6b7280]">{p.ref}</td>
-                    <td className="px-3 py-2 text-[#111111]">{(p.amount ?? 0).toLocaleString()} DH</td>
-                    <td className="px-3 py-2 text-[#6b7280]">{formatDate(p.date)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
       {invoice.documents && invoice.documents.length > 0 && (
-        <div className="rounded-[12px] bg-[#f5f5f5] p-6">
-          <h2 className="mb-4 text-lg font-semibold text-[#111111]">Documents</h2>
+        <div className="rounded-[12px] bg-[#ffffff] border border-[#e5e7eb] p-6">
+          <h2 className="mb-4 text-lg font-semibold text-[#111111]">Documents associés</h2>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {invoice.documents.map((url, i) => (
               <a
@@ -399,7 +443,7 @@ export default function InvoiceDetailsPage() {
             disabled={markPaidMutation.isPending}
             className="inline-flex items-center gap-2 cursor-pointer rounded-[8px] bg-[#10b981] px-4 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-90 disabled:opacity-50"
           >
-            Marquer payée
+            Marquer payee
           </button>
         )}
         {invoice.status === 'PAID' && (
@@ -592,8 +636,8 @@ export default function InvoiceDetailsPage() {
           setMarkPaidDate(new Date().toISOString().split('T')[0]);
         }}>
           <div className="w-full max-w-sm rounded-[12px] bg-[#ffffff] p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
-            <h2 className="mb-2 text-lg font-semibold text-[#111111]">Marquer comme payée</h2>
-            <p className="mb-4 text-sm text-[#6b7280]">Confirmer que la facture {invoice.ref} est payée&nbsp;?</p>
+            <h2 className="mb-2 text-lg font-semibold text-[#111111]">Marquer comme payee</h2>
+            <p className="mb-4 text-sm text-[#6b7280]">Confirmer que la facture {invoice.ref} est payee&nbsp;?</p>
             <div className="mb-4">
               <label className="block text-sm font-medium text-[#111111] mb-1">Date de paiement</label>
               <input
