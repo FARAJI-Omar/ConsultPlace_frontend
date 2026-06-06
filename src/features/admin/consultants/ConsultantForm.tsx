@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { parseApiError } from '../../../utils/errorParser';
 import { useMutateConsultant, useUpdateConsultant } from '../../../hooks/useConsultants';
@@ -38,6 +39,8 @@ export default function ConsultantForm({ onSuccess, consultant }: ConsultantForm
     confirmPassword: '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const createMutation = useMutateConsultant();
   const updateMutation = useUpdateConsultant();
@@ -122,14 +125,35 @@ export default function ConsultantForm({ onSuccess, consultant }: ConsultantForm
             {label}
             {required && <span className="text-red-500 ml-0.5">*</span>}
           </label>
-          <input
-            type={type ?? 'text'}
-            value={(form as Record<string, string>)[key]}
-            onChange={(e) => handleChange(key, e.target.value)}
-            className={`w-full rounded-[8px] border px-3 py-2 text-sm text-[#111111] outline-none transition-colors focus:border-primary-blue ${
-              errors[key] ? 'border-red-500' : 'border-[#e5e7eb]'
-            }`}
-          />
+          {type === 'password' ? (
+            <div className="relative">
+              <input
+                type={key === 'confirmPassword' ? (showConfirmPassword ? 'text' : 'password') : (showPassword ? 'text' : 'password')}
+                value={(form as Record<string, string>)[key]}
+                onChange={(e) => handleChange(key, e.target.value)}
+                autoComplete="new-password"
+                className={`w-full rounded-[8px] border px-3 py-2 pr-10 text-sm text-[#111111] outline-none transition-colors focus:border-primary-blue ${
+                  errors[key] ? 'border-red-500' : 'border-[#e5e7eb]'
+                }`}
+              />
+              <button
+                type="button"
+                onClick={() => key === 'confirmPassword' ? setShowConfirmPassword(!showConfirmPassword) : setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-[#6b7280] hover:text-[#111111]"
+              >
+                {(key === 'confirmPassword' ? showConfirmPassword : showPassword) ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+          ) : (
+            <input
+              type={type ?? 'text'}
+              value={(form as Record<string, string>)[key]}
+              onChange={(e) => handleChange(key, e.target.value)}
+              className={`w-full rounded-[8px] border px-3 py-2 text-sm text-[#111111] outline-none transition-colors focus:border-primary-blue ${
+                errors[key] ? 'border-red-500' : 'border-[#e5e7eb]'
+              }`}
+            />
+          )}
           {errors[key] && (
             <p className="mt-1 text-xs text-red-500">{errors[key]}</p>
           )}

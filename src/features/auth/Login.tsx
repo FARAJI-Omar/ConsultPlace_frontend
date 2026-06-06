@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
 import { useLoginMutation } from './useLoginMutation';
 import newLogo from '../../assets/new-logo.png';
 
@@ -10,6 +11,7 @@ interface FieldErrors {
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const loginMutation = useLoginMutation();
 
@@ -120,21 +122,30 @@ export default function Login() {
             >
               Mot de passe
             </label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => {
-                setPassword(e.target.value);
-                if (fieldErrors.password) setFieldErrors((prev) => ({ ...prev, password: undefined }));
-              }}
-              placeholder="••••••••"
-              className={`mt-1 block w-full rounded-[8px] border bg-[#ffffff] px-[14px] py-[10px] text-base text-[#111111] placeholder:text-[#6b7280] focus:outline-none ${
-                fieldErrors.password
-                  ? 'border-[#ef4444] focus:border-[#ef4444]'
-                  : 'border-[#e5e7eb] focus:border-primary-blue'
-              }`}
-            />
+            <div className="relative">
+              <input
+                id="password"
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (fieldErrors.password) setFieldErrors((prev) => ({ ...prev, password: undefined }));
+                }}
+                placeholder="••••••••"
+                className={`mt-1 block w-full rounded-[8px] border bg-[#ffffff] px-[14px] py-[10px] pr-10 text-base text-[#111111] placeholder:text-[#6b7280] focus:outline-none ${
+                  fieldErrors.password
+                    ? 'border-[#ef4444] focus:border-[#ef4444]'
+                    : 'border-[#e5e7eb] focus:border-primary-blue'
+                }`}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-[#6b7280] hover:text-[#111111]"
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
             {fieldErrors.password && (
               <p className="mt-1 text-sm text-[#ef4444]">{fieldErrors.password}</p>
             )}
