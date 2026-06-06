@@ -60,7 +60,7 @@ export default function GenerateInvoiceModal({
           <h2 className="mb-4 text-lg font-semibold text-[#111111]">Générer une facture</h2>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-[#111111] mb-1">Relevé validé</label>
+              <label className="block text-sm font-medium text-[#111111] mb-1">Relevé validé <span className='text-gray-400 text-xs'>(mois | consultant | mission)</span></label>
               {isPrefilled ? (
                 <div className="rounded-[8px] border border-[#e5e7eb] bg-[#f9fafb] px-3 py-2 text-sm text-[#111111]">
                   {formatMonth(selectedFromList?.month ?? '')} | {selectedFromList?.consultant.name ?? ''} | {selectedFromList?.mission.title ?? ''}

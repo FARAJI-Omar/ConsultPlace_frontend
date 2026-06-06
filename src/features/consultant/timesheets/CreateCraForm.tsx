@@ -432,7 +432,7 @@ export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?:
           onClick={handleClearMonth}
           className="cursor-pointer rounded-[8px] border border-[#ef4444] bg-[#ffffff] px-4 py-2 text-sm font-medium text-[#ef4444] hover:bg-[#fef2f2] disabled:opacity-50 transition-colors ml-auto"
         >
-          Effacer
+          Effacer les heures
         </button>
       </div>
 

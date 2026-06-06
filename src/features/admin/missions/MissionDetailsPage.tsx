@@ -72,49 +72,66 @@ export default function MissionDetailsPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <div className="rounded-[12px] border border-[#e5e7eb] p-6">
+        <div className="rounded-[12px] border border-[#e5e7eb] bg-[#ffffff] p-6">
           <h2 className="mb-4 text-lg font-semibold text-[#111111]">
             Informations de la mission
           </h2>
           <dl className="space-y-3 text-sm">
-            <div className="flex justify-between">
-              <dt className="text-[#6b7280]">Titre</dt>
-              <dd className="font-medium text-[#111111]">{mission.title}</dd>
+            <div className="flex items-center gap-2">
+              <dt className="shrink-0 text-[#6b7280]">Titre</dt>
+              <span className="flex-1 border-b border-dashed border-[#cdcfd1]" />
+              <dd className="shrink-0 font-medium text-[#111111]">{mission.title}</dd>
             </div>
-            <div className="flex justify-between">
-              <dt className="text-[#6b7280]">Contrat</dt>
-              <dd className="font-medium text-[#111111]">
-                {mission.contract?.ref ?? '—'}
+            <div className="flex items-center gap-2">
+              <dt className="shrink-0 text-[#6b7280]">Créée le</dt>
+              <span className="flex-1 border-b border-dashed border-[#cdcfd1]" />
+              <dd className="shrink-0 font-medium text-[#111111]">{formatDate(mission.createdAt)}</dd>
+            </div>
+            <div className="flex items-center gap-2">
+              <dt className="shrink-0 text-[#6b7280]">Contrat</dt>
+              <span className="flex-1 border-b border-dashed border-[#cdcfd1]" />
+              <dd className="shrink-0 font-medium text-[#111111]">
+                {mission.contract?.ref ? (
+                  <Link to={`/admin/contracts/${mission.contractId}`} className="text-[#3b82f6] hover:underline">
+                    {mission.contract.ref}
+                  </Link>
+                ) : '—'}
               </dd>
             </div>
-            <div className="flex justify-between">
-              <dt className="text-[#6b7280]">Profil</dt>
-              <dd className="font-medium text-[#111111]">
+            <div className="flex items-center gap-2">
+              <dt className="shrink-0 text-[#6b7280]">Profil demandé</dt>
+              <span className="flex-1 border-b border-dashed border-[#cdcfd1]" />
+              <dd className="shrink-0 font-medium text-[#111111]">
                 {mission.contract?.profile ?? '—'}
               </dd>
             </div>
-            <div className="flex justify-between">
-              <dt className="text-[#6b7280]">Taux journalier</dt>
-              <dd className="font-medium text-[#111111]">
-                {mission.contract?.dailyRate ? `${mission.contract.dailyRate} DH` : '—'}
+            <div className="flex items-center gap-2">
+              <dt className="shrink-0 text-[#6b7280]">Taux journalier</dt>
+              <span className="flex-1 border-b border-dashed border-[#cdcfd1]" />
+              <dd className="shrink-0 font-medium text-[#111111]">
+                {mission.missionDailyRate ? `${mission.missionDailyRate} DH` : '—'}
               </dd>
             </div>
-            <div className="flex justify-between">
-              <dt className="text-[#6b7280]">Consultant</dt>
-              <dd className="font-medium text-[#111111]">
+            <div className="flex items-center gap-2">
+              <dt className="shrink-0 text-[#6b7280]">Consultant</dt>
+              <span className="flex-1 border-b border-dashed border-[#cdcfd1]" />
+              <dd className="shrink-0 font-medium text-[#111111]">
                 {mission.consultant?.name ?? '—'}
               </dd>
             </div>
-            <div className="flex justify-between">
-              <dt className="text-[#6b7280]">Date de début</dt>
-              <dd className="font-medium text-[#111111]">{formatDate(mission.startDate)}</dd>
+            <div className="flex items-center gap-2">
+              <dt className="shrink-0 text-[#6b7280]">Date de début</dt>
+              <span className="flex-1 border-b border-dashed border-[#cdcfd1]" />
+              <dd className="shrink-0 font-medium text-[#111111]">{formatDate(mission.startDate)}</dd>
             </div>
-            <div className="flex justify-between">
-              <dt className="text-[#6b7280]">Date de fin</dt>
-              <dd className="font-medium text-[#111111]">{formatDate(mission.endDate)}</dd>
+            <div className="flex items-center gap-2">
+              <dt className="shrink-0 text-[#6b7280]">Date de fin</dt>
+              <span className="flex-1 border-b border-dashed border-[#cdcfd1]" />
+              <dd className="shrink-0 font-medium text-[#111111]">{formatDate(mission.endDate)}</dd>
             </div>
-            <div className="flex justify-between">
-              <dt className="text-[#6b7280]">Statut</dt>
+            <div className="flex items-center gap-2">
+              <dt className="shrink-0 text-[#6b7280]">Statut</dt>
+              <span className="flex-1 border-b border-dashed border-[#cdcfd1]" />
               <dd>
                 <span
                   className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
@@ -132,7 +149,7 @@ export default function MissionDetailsPage() {
       </div>
 
       {mission.attachments && mission.attachments.length > 0 && (
-        <div className="rounded-[12px] border border-[#e5e7eb] p-6">
+        <div className="rounded-[12px] border border-[#e5e7eb] bg-[#ffffff] p-6">
           <h2 className="mb-4 text-lg font-semibold text-[#111111]">
             Documents
           </h2>
@@ -159,7 +176,7 @@ export default function MissionDetailsPage() {
         </div>
       )}
 
-      <div className="rounded-[12px] border border-[#e5e7eb] p-6">
+      <div className="rounded-[12px] border border-[#e5e7eb] bg-[#ffffff] p-6">
         <h2 className="mb-4 text-lg font-semibold text-[#111111]">
           Relevés associés ({(mission.timesheets ?? []).length})
         </h2>

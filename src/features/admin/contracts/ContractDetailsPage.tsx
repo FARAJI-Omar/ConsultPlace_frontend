@@ -59,36 +59,42 @@ export default function ContractDetailsPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <div className="rounded-[12px] border border-[#e5e7eb] p-6">
+        <div className="rounded-[12px] border border-[#e5e7eb] bg-[#ffffff] p-6">
           <h2 className="mb-4 text-lg font-semibold text-[#111111]">
             Informations du contrat
           </h2>
           <dl className="space-y-3 text-sm">
-            <div className="flex justify-between">
-              <dt className="text-[#6b7280]">Référence</dt>
-              <dd className="font-medium text-[#111111]">{contract.ref}</dd>
+            <div className="flex items-center gap-2">
+              <dt className="shrink-0 text-[#6b7280]">Référence</dt>
+              <span className="flex-1 border-b border-dashed border-[#cdcfd1]" />
+              <dd className="shrink-0 font-medium text-[#111111]">{contract.ref}</dd>
             </div>
-            <div className="flex justify-between">
-              <dt className="text-[#6b7280]">Client</dt>
-              <dd className="font-medium text-[#111111]">
+            <div className="flex items-center gap-2">
+              <dt className="shrink-0 text-[#6b7280]">Client</dt>
+              <span className="flex-1 border-b border-dashed border-[#cdcfd1]" />
+              <dd className="shrink-0 font-medium text-[#111111]">
                 {contract.client?.raison_sociale ?? '—'}
               </dd>
             </div>
-            <div className="flex justify-between">
-              <dt className="text-[#6b7280]">Date de début</dt>
-              <dd className="font-medium text-[#111111]">{formatDate(contract.startDate)}</dd>
+            <div className="flex items-center gap-2">
+              <dt className="shrink-0 text-[#6b7280]">Date de début</dt>
+              <span className="flex-1 border-b border-dashed border-[#cdcfd1]" />
+              <dd className="shrink-0 font-medium text-[#111111]">{formatDate(contract.startDate)}</dd>
             </div>
-            <div className="flex justify-between">
-              <dt className="text-[#6b7280]">Date de fin</dt>
-              <dd className="font-medium text-[#111111]">{formatDate(contract.endDate)}</dd>
+            <div className="flex items-center gap-2">
+              <dt className="shrink-0 text-[#6b7280]">Date de fin</dt>
+              <span className="flex-1 border-b border-dashed border-[#cdcfd1]" />
+              <dd className="shrink-0 font-medium text-[#111111]">{formatDate(contract.endDate)}</dd>
             </div>
-            <div className="flex justify-between">
-              <dt className="text-[#6b7280]">Profil</dt>
-              <dd className="font-medium text-[#111111]">{contract.profile}</dd>
+            <div className="flex items-center gap-2">
+              <dt className="shrink-0 text-[#6b7280]">Profil</dt>
+              <span className="flex-1 border-b border-dashed border-[#cdcfd1]" />
+              <dd className="shrink-0 font-medium text-[#111111]">{contract.profile}</dd>
             </div>
-            <div className="flex justify-between">
-              <dt className="text-[#6b7280]">Taux journalier</dt>
-              <dd className="font-medium text-[#111111]">{contract.dailyRate} DH</dd>
+            <div className="flex items-center gap-2">
+              <dt className="shrink-0 text-[#6b7280]">Taux journalier</dt>
+              <span className="flex-1 border-b border-dashed border-[#cdcfd1]" />
+              <dd className="shrink-0 font-medium text-[#111111]">{contract.dailyRate} DH</dd>
             </div>
           </dl>
 
@@ -116,7 +122,7 @@ export default function ContractDetailsPage() {
           )}
         </div>
 
-        <div className="rounded-[12px] border border-[#e5e7eb] p-6">
+        <div className="rounded-[12px] border border-[#e5e7eb] bg-[#ffffff] p-6">
           <h2 className="mb-4 text-lg font-semibold text-[#111111]">
             Missions associées
           </h2>

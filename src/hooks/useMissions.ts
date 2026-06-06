@@ -10,6 +10,7 @@ export interface Mission {
   startDate: string;
   endDate: string | null;
   status: 'ACTIVE' | 'CLOSED';
+  missionDailyRate?: number;
   attachments?: { id: number; filename: string; url: string; type: string; createdAt: string }[];
   contract?: { id: number; ref: string; startDate?: string; endDate?: string; profile?: string; dailyRate?: number };
   consultant?: { id: number; name: string };
@@ -37,6 +38,7 @@ export interface MissionFormData {
   title: string;
   startDate: string;
   endDate?: string;
+  missionDailyRate: number;
   files?: File[];
 }
 
@@ -44,6 +46,7 @@ export interface UpdateMissionFormData {
   title?: string;
   startDate?: string;
   endDate?: string | null;
+  missionDailyRate?: number;
   files?: File[];
   deleteAttachmentIds?: number[];
 }
@@ -95,6 +98,7 @@ export function useMutateMission() {
       formData.append('title', data.title);
       formData.append('startDate', data.startDate);
       if (data.endDate) formData.append('endDate', data.endDate);
+      formData.append('missionDailyRate', String(data.missionDailyRate));
       if (data.files) {
         data.files.forEach((file) => formData.append('files', file));
       }
@@ -119,6 +123,7 @@ export function useUpdateMission() {
         if (data.title !== undefined) formData.append('title', data.title);
         if (data.startDate !== undefined) formData.append('startDate', data.startDate);
         if (data.endDate !== undefined) formData.append('endDate', data.endDate ?? '');
+        if (data.missionDailyRate !== undefined) formData.append('missionDailyRate', String(data.missionDailyRate));
         data.files!.forEach((file) => formData.append('files', file));
         if (data.deleteAttachmentIds && data.deleteAttachmentIds.length > 0)
           formData.append('deleteAttachmentIds', JSON.stringify(data.deleteAttachmentIds));

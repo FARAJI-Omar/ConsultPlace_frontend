@@ -32,12 +32,16 @@ export default function ManagerDashboard() {
   const sendReminderMutation = useSendReminder();
 
   const [payoutAlert, setPayoutAlert] = useState<AlertItem | null>(null);
-  const [payoutPercentage, setPayoutPercentage] = useState('80');
+  const [payoutMode, setPayoutMode] = useState<'DH' | '%'>('DH');
+  const [payoutAmount, setPayoutAmount] = useState('');
   const [payoutComment, setPayoutComment] = useState('');
   const [reminderAlert, setReminderAlert] = useState<AlertItem | null>(null);
 
   const reminderInvoiceId = reminderAlert?.payload.entityType === 'INVOICE' ? reminderAlert.payload.entityId : null;
   const { data: invoiceDetail } = useInvoiceDetail(reminderInvoiceId);
+  const payoutInvoiceId = payoutAlert?.payload.entityType === 'INVOICE' ? payoutAlert.payload.entityId : null;
+  const { data: payoutInvoice } = useInvoiceDetail(payoutInvoiceId);
+  const consultantPayoutRest = payoutInvoice?.data?.consultantPayoutRest ?? 0;
 
   const queryClient = useQueryClient();
   const [pendingJob, setPendingJob] = useState<StoredJob | null>(null);
@@ -89,18 +93,25 @@ export default function ManagerDashboard() {
       return;
     }
     const invoiceId = payoutAlert.payload.entityId;
-    const pct = Number(payoutPercentage);
-    if (isNaN(pct) || pct < 0 || pct > 100) {
-      toast.error('Le pourcentage doit être entre 0 et 100');
+    const parsed = parseFloat(payoutAmount);
+    if (isNaN(parsed) || parsed <= 0) {
+      toast.error('Le montant doit être supérieur à 0');
       return;
     }
+    if (payoutMode === 'DH' && parsed > consultantPayoutRest) {
+      toast.error("Le montant ne peut pas dépasser le restant dû");
+      return;
+    }
+    const dhAmount = payoutMode === '%'
+      ? Math.round(consultantPayoutRest * parsed / 100 * 100) / 100
+      : parsed;
     payoutMutation.mutate(
-      { invoiceId, payoutPercentage: pct, comment: payoutComment || undefined },
+      { invoiceId, amount: dhAmount, comment: payoutComment || undefined },
       {
         onSuccess: () => {
           toast.success('Paiement déclenché');
           setPayoutAlert(null);
-          setPayoutPercentage('80');
+          setPayoutAmount('');
           setPayoutComment('');
           handleResolve(payoutAlert.id);
         },
@@ -216,7 +227,7 @@ export default function ManagerDashboard() {
                         <button
                           onClick={() => {
                             setPayoutAlert(alert);
-                            setPayoutPercentage('80');
+          setPayoutAmount('80');
                             setPayoutComment('');
                           }}
                           disabled={payoutMutation.isPending}
@@ -278,20 +289,51 @@ export default function ManagerDashboard() {
       {payoutAlert && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4" onClick={() => setPayoutAlert(null)}>
           <div className="w-full max-w-sm rounded-[12px] bg-[#ffffff] p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
-            <h2 className="mb-2 text-lg font-semibold text-[#111111]">Payer le consultant</h2>
+            <h2 className="mb-4 text-lg font-semibold text-[#111111]">Payer le consultant</h2>
             <p className="mb-4 text-sm text-[#6b7280]">Facture #{payoutAlert.payload.entityId}</p>
+
+            <p className="mb-3 text-sm text-[#6b7280]">
+              Reste à payer : <span className="font-bold bg-green-500/20 px-4 py-1 rounded text-[#111111]">{consultantPayoutRest.toLocaleString()} DH</span>
+            </p>
+
             <div className="mb-4">
-              <label className="block text-sm font-medium text-[#111111] mb-1">Pourcentage du consultant (0–100)</label>
-              <input
-                type="number"
-                min={0}
-                max={100}
-                value={payoutPercentage}
-                onChange={(e) => setPayoutPercentage(e.target.value)}
-                className="w-full rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111]"
-              />
+              <label className="block text-sm font-medium text-[#111111] mb-1">
+                {payoutMode === 'DH' ? 'Montant (DH)' : 'Pourcentage (%)'}
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  value={payoutAmount}
+                  onChange={(e) => setPayoutAmount(e.target.value)}
+                  className="flex-1 rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                  min={0}
+                  step="any"
+                />
+                <div className="flex rounded-[8px] border border-[#e5e7eb] overflow-hidden shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => { setPayoutMode('DH'); setPayoutAmount(String(consultantPayoutRest)); }}
+                    className={`cursor-pointer px-3 py-2 text-xs font-semibold transition-colors ${payoutMode === 'DH' ? 'bg-[#111111] text-[#ffffff]' : 'bg-[#ffffff] text-[#6b7280] hover:bg-[#f3f4f6]'}`}
+                  >
+                    DH
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setPayoutMode('%'); setPayoutAmount('100'); }}
+                    className={`cursor-pointer px-3 py-2 text-xs font-semibold transition-colors ${payoutMode === '%' ? 'bg-[#111111] text-[#ffffff]' : 'bg-[#ffffff] text-[#6b7280] hover:bg-[#f3f4f6]'}`}
+                  >
+                    %
+                  </button>
+                </div>
+              </div>
+              {payoutMode === '%' && payoutAmount && !isNaN(parseFloat(payoutAmount)) && (
+                <p className="mt-1 text-xs text-[#6b7280]">
+                  Montant calculé : {Math.round(consultantPayoutRest * parseFloat(payoutAmount) / 100 * 100) / 100} DH
+                </p>
+              )}
             </div>
-            <div className="mb-6">
+
+            <div className="mt-4">
               <label className="block text-sm font-medium text-[#111111] mb-1">Commentaire (optionnel)</label>
               <textarea
                 value={payoutComment}
@@ -301,9 +343,14 @@ export default function ManagerDashboard() {
                 className="w-full rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111]"
               />
             </div>
-            <div className="flex justify-end gap-3">
+
+            <div className="mt-6 flex justify-end gap-3">
               <button onClick={() => setPayoutAlert(null)} className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-4 py-2 text-sm text-[#111111] transition-colors hover:bg-[#f3f4f6]">Annuler</button>
-              <button onClick={handlePayout} disabled={payoutMutation.isPending} className="cursor-pointer rounded-[8px] bg-[#3b82f6] px-4 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-70 disabled:opacity-50">
+              <button
+                onClick={handlePayout}
+                disabled={payoutMutation.isPending || !payoutAmount || parseFloat(payoutAmount) <= 0 || parseFloat(payoutAmount) > (payoutMode === 'DH' ? consultantPayoutRest : 100)}
+                className="cursor-pointer rounded-[8px] bg-[#3b82f6] px-4 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-70 disabled:opacity-50"
+              >
                 {payoutMutation.isPending ? 'Traitement...' : 'Confirmer le paiement'}
               </button>
             </div>

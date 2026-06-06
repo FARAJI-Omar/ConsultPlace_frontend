@@ -25,6 +25,7 @@ export default function MissionForm({ onSuccess, mission }: MissionFormProps) {
     title: mission?.title ?? '',
     startDate: mission?.startDate ?? '',
     endDate: mission?.endDate ?? '',
+    missionDailyRate: mission?.missionDailyRate?.toString() ?? '',
   });
   const [files, setFiles] = useState<File[]>([]);
   const [deletedAttachmentIds, setDeletedAttachmentIds] = useState<number[]>([]);
@@ -75,6 +76,7 @@ export default function MissionForm({ onSuccess, mission }: MissionFormProps) {
     if (!isEdit && !form.consultantId) newErrors.consultantId = 'Ce champ est requis';
     if (!form.title) newErrors.title = 'Ce champ est requis';
     if (!form.startDate) newErrors.startDate = 'Ce champ est requis';
+    if (!form.missionDailyRate || parseFloat(form.missionDailyRate) <= 0) newErrors.missionDailyRate = 'Le taux journalier doit être supérieur à 0';
     if (form.startDate && form.endDate && form.startDate >= form.endDate) {
       newErrors.endDate = 'La date de fin doit être postérieure à la date de début';
     }
@@ -92,6 +94,9 @@ export default function MissionForm({ onSuccess, mission }: MissionFormProps) {
       if (curStart !== origStart) patchData.startDate = curStart;
       if (curEnd !== origEnd) {
         patchData.endDate = curEnd || null;
+      }
+      if (form.missionDailyRate && parseFloat(form.missionDailyRate) !== (mission!.missionDailyRate ?? 0)) {
+        patchData.missionDailyRate = parseFloat(form.missionDailyRate);
       }
       if (files.length > 0) patchData.files = files;
       if (deletedAttachmentIds.length > 0) patchData.deleteAttachmentIds = deletedAttachmentIds;
@@ -125,6 +130,7 @@ export default function MissionForm({ onSuccess, mission }: MissionFormProps) {
           title: form.title,
           startDate: form.startDate,
           endDate: form.endDate || undefined,
+          missionDailyRate: parseFloat(form.missionDailyRate),
           files: files.length > 0 ? files : undefined,
         },
         {
@@ -153,6 +159,7 @@ export default function MissionForm({ onSuccess, mission }: MissionFormProps) {
         { key: 'title', label: 'Titre', required: true },
         { key: 'startDate', label: 'Date de début', required: true, type: 'date' },
         { key: 'endDate', label: 'Date de fin', required: false, type: 'date' },
+        { key: 'missionDailyRate', label: 'Taux journalier consultant (DH)', required: true },
       ]
     : [
         { key: 'contractId', label: 'Contrat', required: true, type: 'select', options: (contractsData?.data ?? []).map((c) => ({ id: c.id, ref: c.ref })) },
@@ -160,6 +167,7 @@ export default function MissionForm({ onSuccess, mission }: MissionFormProps) {
         { key: 'title', label: 'Titre', required: true },
         { key: 'startDate', label: 'Date de début', required: true, type: 'date' },
         { key: 'endDate', label: 'Date de fin', required: false, type: 'date' },
+        { key: 'missionDailyRate', label: 'Taux journalier consultant (DH)', required: true },
       ];
 
   return (

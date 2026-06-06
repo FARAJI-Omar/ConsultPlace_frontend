@@ -39,7 +39,8 @@ export default function InvoiceDetailsPage() {
   const [confirmSendReminder, setConfirmSendReminder] = useState(false);
   const [confirmStopReminder, setConfirmStopReminder] = useState(false);
   const [showPayoutModal, setShowPayoutModal] = useState(false);
-  const [payoutPercentage, setPayoutPercentage] = useState('80');
+  const [payoutMode, setPayoutMode] = useState<'DH' | '%'>('DH');
+  const [payoutAmount, setPayoutAmount] = useState('');
   const [payoutComment, setPayoutComment] = useState('');
   const [showReminderModal, setShowReminderModal] = useState(false);
   const [reminderFrequency, setReminderFrequency] = useState<'7' | '15' | '30'>('15');
@@ -204,14 +205,28 @@ export default function InvoiceDetailsPage() {
     });
   };
 
+  const payoutRest = invoice.consultantPayoutRest ?? 0;
+
   const handlePayout = () => {
+    const parsed = parseFloat(payoutAmount);
+    if (isNaN(parsed) || parsed <= 0) {
+      toast.error('Le montant doit être supérieur à 0');
+      return;
+    }
+    if (payoutMode === 'DH' && parsed > payoutRest) {
+      toast.error("Le montant ne peut pas dépasser le restant dû");
+      return;
+    }
+    const dhAmount = payoutMode === '%'
+      ? Math.round(payoutRest * parsed / 100 * 100) / 100
+      : parsed;
     payoutMutation.mutate(
-      { invoiceId: invoice.id, payoutPercentage: parseFloat(payoutPercentage) || 80, comment: payoutComment || undefined },
+      { invoiceId: invoice.id, amount: dhAmount, comment: payoutComment || undefined },
       {
         onSuccess: () => {
           toast.success('Paiement déclenché');
           setShowPayoutModal(false);
-          setPayoutPercentage('80');
+          setPayoutAmount('');
           setPayoutComment('');
         },
         onError: () => toast.error('Erreur lors du paiement'),
@@ -388,7 +403,7 @@ export default function InvoiceDetailsPage() {
           </button>
         )}
         {invoice.status === 'PAID' && (
-          invoice.payments?.some((p) => p.type === 'CONSULTANT' && p.status === 'COMPLETED')
+          payoutRest <= 0
             ? (
               <span className="inline-flex items-center rounded-[8px] bg-green-50 px-3 py-2 text-sm font-medium text-green-700">
                 Le consultant est rémunéré.
@@ -484,14 +499,46 @@ export default function InvoiceDetailsPage() {
           <div className="w-full max-w-sm rounded-[12px] bg-[#ffffff] p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
             <h2 className="mb-4 text-lg font-semibold text-[#111111]">Payer le consultant</h2>
             <p className="mb-4 text-sm text-[#6b7280]">Facture {invoice.ref}</p>
+
+            <p className="mb-3 text-sm text-[#6b7280]">
+              Reste à payer : <span className="font-bold bg-green-500/20 px-4 py-1 rounded text-[#111111]">{payoutRest.toLocaleString()} DH</span>
+            </p>
+
             <div>
-              <label className="block text-sm font-medium text-[#111111] mb-1">Pourcentage consultant (%)</label>
-              <input
-                type="number"
-                value={payoutPercentage}
-                onChange={(e) => setPayoutPercentage(e.target.value)}
-                className="w-full rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111]"
-              />
+              <label className="block text-sm font-medium text-[#111111] mb-1">
+                {payoutMode === 'DH' ? 'Montant (DH)' : 'Pourcentage (%)'}
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  value={payoutAmount}
+                  onChange={(e) => setPayoutAmount(e.target.value)}
+                  className="flex-1 rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                  min={0}
+                  step="any"
+                />
+                <div className="flex rounded-[8px] border border-[#e5e7eb] overflow-hidden shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => { setPayoutMode('DH'); setPayoutAmount(String(payoutRest)); }}
+                    className={`cursor-pointer px-3 py-2 text-xs font-semibold transition-colors ${payoutMode === 'DH' ? 'bg-[#111111] text-[#ffffff]' : 'bg-[#ffffff] text-[#6b7280] hover:bg-[#f3f4f6]'}`}
+                  >
+                    DH
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setPayoutMode('%'); setPayoutAmount('100'); }}
+                    className={`cursor-pointer px-3 py-2 text-xs font-semibold transition-colors ${payoutMode === '%' ? 'bg-[#111111] text-[#ffffff]' : 'bg-[#ffffff] text-[#6b7280] hover:bg-[#f3f4f6]'}`}
+                  >
+                    %
+                  </button>
+                </div>
+              </div>
+              {payoutMode === '%' && payoutAmount && !isNaN(parseFloat(payoutAmount)) && (
+                <p className="mt-1 text-xs text-[#6b7280]">
+                  Montant calculé : {Math.round(payoutRest * parseFloat(payoutAmount) / 100 * 100) / 100} DH
+                </p>
+              )}
             </div>
             <div className="mt-4">
               <label className="block text-sm font-medium text-[#111111] mb-1">Commentaire (optionnel)</label>
@@ -504,7 +551,7 @@ export default function InvoiceDetailsPage() {
             </div>
             <div className="mt-6 flex justify-end gap-3">
               <button onClick={() => setShowPayoutModal(false)} className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-4 py-2 text-sm text-[#111111] transition-colors hover:bg-[#f3f4f6]">Annuler</button>
-              <button onClick={handlePayout} disabled={payoutMutation.isPending} className="cursor-pointer rounded-[8px] bg-[#10b981] px-4 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-90 disabled:opacity-50">
+              <button onClick={handlePayout} disabled={payoutMutation.isPending || !payoutAmount || parseFloat(payoutAmount) <= 0 || parseFloat(payoutAmount) > (payoutMode === 'DH' ? payoutRest : 100)} className="cursor-pointer rounded-[8px] bg-[#10b981] px-4 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-90 disabled:opacity-50">
                 {payoutMutation.isPending ? 'Traitement...' : 'Confirmer le paiement'}
               </button>
             </div>

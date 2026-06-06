@@ -11,8 +11,9 @@ export default function PayoutTrackingPage() {
   const { data, isLoading } = usePayoutsHistory();
   const paidInvoicesQuery = useInvoices(1, 1000, 'PAID');
   const payoutMutation = useTriggerPayout();
-  const [payoutModal, setPayoutModal] = useState<{ id: number; ref: string } | null>(null);
-  const [payoutPercentage, setPayoutPercentage] = useState('80');
+  const [payoutModal, setPayoutModal] = useState<{ id: number; ref: string; consultantPayoutRest: number } | null>(null);
+  const [payoutMode, setPayoutMode] = useState<'DH' | '%'>('DH');
+  const [payoutAmount, setPayoutAmount] = useState('');
   const [payoutComment, setPayoutComment] = useState('');
   const [selectedHistoriqueId, setSelectedHistoriqueId] = useState<number | null>(null);
   const [selectedUnpaidId, setSelectedUnpaidId] = useState<number | null>(null);
@@ -29,18 +30,28 @@ export default function PayoutTrackingPage() {
 
   const handlePayout = () => {
     if (!payoutModal) return;
+    const parsed = parseFloat(payoutAmount);
+    if (isNaN(parsed) || parsed <= 0) {
+      toast.error('Le montant doit être supérieur à 0');
+      return;
+    }
+    if (parsed > (payoutModal.consultantPayoutRest ?? 0)) {
+      toast.error('Le montant ne peut pas dépasser le reste à payer');
+      return;
+    }
+    const dhAmount = payoutMode === '%'
+      ? Math.round(((payoutModal.consultantPayoutRest ?? 0) * parsed) / 100 * 100) / 100
+      : parsed;
     payoutMutation.mutate(
       {
         invoiceId: payoutModal.id,
-        payoutPercentage: parseFloat(payoutPercentage) || 80,
+        amount: dhAmount,
         comment: payoutComment || undefined,
       },
       {
         onSuccess: () => {
           toast.success(`Paiement déclenché pour ${payoutModal.ref}`);
           setPayoutModal(null);
-          setPayoutPercentage('80');
-          setPayoutComment('');
         },
         onError: () => toast.error("Erreur lors du paiement"),
       },
@@ -116,7 +127,12 @@ export default function PayoutTrackingPage() {
                     {/* <td className="px-3 py-2 text-[#6b7280]">{inv.timesheet?.mission?.title ?? '-'}</td> */}
                     <td className="px-3 py-2">
                       <button
-                        onClick={() => setPayoutModal({ id: inv.id, ref: inv.ref })}
+                        onClick={() => {
+                          setPayoutModal({ id: inv.id, ref: inv.ref, consultantPayoutRest: inv.consultantPayoutRest ?? 0 });
+                          setPayoutMode('DH');
+                          setPayoutAmount(String(inv.consultantPayoutRest ?? 0));
+                          setPayoutComment('');
+                        }}
                         disabled={payoutMutation.isPending}
                         className="cursor-pointer rounded-[8px] bg-[#3b82f6] px-3 py-1.5 text-xs font-medium text-[#ffffff] transition-opacity hover:opacity-90 disabled:opacity-50"
                       >
@@ -222,15 +238,48 @@ export default function PayoutTrackingPage() {
           <div className="w-full max-w-sm rounded-[12px] bg-[#ffffff] p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
             <h2 className="mb-4 text-lg font-semibold text-[#111111]">Payer le consultant</h2>
             <p className="mb-4 text-sm text-[#6b7280]">Facture {payoutModal.ref}</p>
-            <div>
-              <label className="block text-sm font-medium text-[#111111] mb-1">Pourcentage consultant (%)</label>
-              <input
-                type="number"
-                value={payoutPercentage}
-                onChange={(e) => setPayoutPercentage(e.target.value)}
-                className="w-full rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111]"
-              />
+
+            <p className="mb-3 text-sm text-[#6b7280]">
+              Reste à payer : <span className="font-bold bg-green-500/20 px-4 py-1 rounded text-[#111111]">{(payoutModal.consultantPayoutRest ?? 0).toLocaleString()} DH</span>
+            </p>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-[#111111] mb-1">
+                {payoutMode === 'DH' ? 'Montant (DH)' : 'Pourcentage (%)'}
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  value={payoutAmount}
+                  onChange={(e) => setPayoutAmount(e.target.value)}
+                  className="flex-1 rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                  min={0}
+                  step="any"
+                />
+                <div className="flex rounded-[8px] border border-[#e5e7eb] overflow-hidden shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => { setPayoutMode('DH'); setPayoutAmount(String((payoutModal.consultantPayoutRest ?? 0))); }}
+                    className={`cursor-pointer px-3 py-2 text-xs font-semibold transition-colors ${payoutMode === 'DH' ? 'bg-[#111111] text-[#ffffff]' : 'bg-[#ffffff] text-[#6b7280] hover:bg-[#f3f4f6]'}`}
+                  >
+                    DH
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setPayoutMode('%'); setPayoutAmount('100'); }}
+                    className={`cursor-pointer px-3 py-2 text-xs font-semibold transition-colors ${payoutMode === '%' ? 'bg-[#111111] text-[#ffffff]' : 'bg-[#ffffff] text-[#6b7280] hover:bg-[#f3f4f6]'}`}
+                  >
+                    %
+                  </button>
+                </div>
+              </div>
+              {payoutMode === '%' && payoutAmount && !isNaN(parseFloat(payoutAmount)) && (
+                <p className="mt-1 text-xs text-[#6b7280]">
+                  Montant calculé : {Math.round((payoutModal.consultantPayoutRest ?? 0) * parseFloat(payoutAmount) / 100 * 100) / 100} DH
+                </p>
+              )}
             </div>
+
             <div className="mt-4">
               <label className="block text-sm font-medium text-[#111111] mb-1">Commentaire (optionnel)</label>
               <textarea
@@ -241,9 +290,14 @@ export default function PayoutTrackingPage() {
                 className="w-full rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111]"
               />
             </div>
+
             <div className="mt-6 flex justify-end gap-3">
               <button onClick={() => setPayoutModal(null)} className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-4 py-2 text-sm text-[#111111] transition-colors hover:bg-[#f3f4f6]">Annuler</button>
-              <button onClick={handlePayout} disabled={payoutMutation.isPending} className="cursor-pointer rounded-[8px] bg-[#10b981] px-4 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-90 disabled:opacity-50">
+              <button
+                onClick={handlePayout}
+                disabled={payoutMutation.isPending || !payoutAmount || parseFloat(payoutAmount) <= 0 || parseFloat(payoutAmount) > (payoutMode === 'DH' ? (payoutModal.consultantPayoutRest ?? 0) : 100)}
+                className="cursor-pointer rounded-[8px] bg-[#10b981] px-4 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-90 disabled:opacity-50"
+              >
                 {payoutMutation.isPending ? 'Traitement...' : 'Confirmer le paiement'}
               </button>
             </div>

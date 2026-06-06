@@ -85,6 +85,8 @@ export interface Invoice {
   vatRate: number;
   vat: number;
   total: number;
+  consultantPayout: number;
+  consultantPayoutRest: number;
   status: string;
   issueDate: string;
   dueDate: string;
@@ -133,7 +135,7 @@ export interface GenerateInvoicePayload {
 
 export interface PayoutPayload {
   invoiceId: number;
-  payoutPercentage?: number;
+  amount: number;
   comment?: string;
 }
 

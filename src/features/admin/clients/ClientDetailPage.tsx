@@ -57,7 +57,7 @@ export default function ClientDetailPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <div className="rounded-[12px] border border-[#e5e7eb] p-6">
+        <div className="rounded-[12px] border border-[#e5e7eb] bg-[#ffffff] p-6">
           <h2 className="mb-4 text-lg font-semibold text-[#111111]">Informations du client</h2>
           <dl className="space-y-3 text-sm">
             <div className="flex justify-between">
@@ -95,7 +95,7 @@ export default function ClientDetailPage() {
           </dl>
         </div>
 
-        <div className="rounded-[12px] border border-[#e5e7eb] p-6">
+        <div className="rounded-[12px] border border-[#e5e7eb] bg-[#ffffff] p-6">
           <h2 className="mb-4 text-lg font-semibold text-[#111111]">
             Contrats ({client.contracts.length})
           </h2>
@@ -150,7 +150,7 @@ export default function ClientDetailPage() {
         </div>
       </div>
 
-      <div className="rounded-[12px] border border-[#e5e7eb] p-6">
+      <div className="rounded-[12px] border border-[#e5e7eb] bg-[#ffffff] p-6">
         <h2 className="mb-4 text-lg font-semibold text-[#111111]">
           Historique des modifications ({client.history.length})
         </h2>
