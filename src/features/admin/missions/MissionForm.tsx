@@ -277,7 +277,7 @@ export default function MissionForm({ onSuccess, mission }: MissionFormProps) {
 
       <div>
         <label className="mb-1 block text-sm font-medium text-[#111111]">
-          Ordre de mission, Planning, Fiche de présence ... (Optionnel)
+          Ordre de mission, Planning ... (Optionnel)
         </label>
         <div
           onClick={() => fileRef.current?.click()}
