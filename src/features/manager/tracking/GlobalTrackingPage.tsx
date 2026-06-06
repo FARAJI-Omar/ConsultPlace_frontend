@@ -268,6 +268,7 @@ export default function GlobalTrackingPage() {
                 placeholder="jj/mm/aaaa"
                 value={customStart}
                 onChange={(e) => { setCustomStart(e.target.value); setPage(1); }}
+                autoComplete="off"
                 className="rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111] w-[150px]"
               />
             </div>
@@ -278,6 +279,7 @@ export default function GlobalTrackingPage() {
                 placeholder="jj/mm/aaaa"
                 value={customEnd}
                 onChange={(e) => { setCustomEnd(e.target.value); setPage(1); }}
+                autoComplete="off"
                 className="rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111] w-[150px]"
               />
             </div>

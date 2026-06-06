@@ -149,6 +149,7 @@ export default function ConsultantForm({ onSuccess, consultant }: ConsultantForm
               type={type ?? 'text'}
               value={(form as Record<string, string>)[key]}
               onChange={(e) => handleChange(key, e.target.value)}
+              autoComplete="new-password"
               className={`w-full rounded-[8px] border px-3 py-2 text-sm text-[#111111] outline-none transition-colors focus:border-primary-blue ${
                 errors[key] ? 'border-red-500' : 'border-[#e5e7eb]'
               }`}
