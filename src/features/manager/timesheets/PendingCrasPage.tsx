@@ -47,8 +47,8 @@ export default function PendingCrasPage() {
         setShowHint(false);
       }
     }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
   const { data, isLoading } = useManagerTimesheets(page, limit, statusFilter || undefined);
@@ -123,7 +123,7 @@ export default function PendingCrasPage() {
           <h1 className="text-2xl font-semibold text-[#111111]">Relevés des consultants</h1>
           <button
             type="button"
-            onClick={() => setShowHint((p) => !p)}
+            onClick={(e) => { e.stopPropagation(); setShowHint((p) => !p); }}
             className="w-5 h-5 rounded-full border border-[#ff0000] text-[#ff0000] text-[10px] flex items-center justify-center hover:bg-[#f3f4f6] transition-colors flex-shrink-0 cursor-pointer"
           >
             !
@@ -140,7 +140,7 @@ export default function PendingCrasPage() {
           <select
             value={statusFilter}
             onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-            className="rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111]"
+            className="rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm bg-white text-[#111111] focus:outline-none focus:border-[#111111]"
           >
             {STATUS_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>{opt.label}</option>

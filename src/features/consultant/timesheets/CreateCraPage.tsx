@@ -12,8 +12,8 @@ export default function CreateCraPage() {
         setShowHint(false);
       }
     }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
   const [searchParams] = useSearchParams();
@@ -28,7 +28,7 @@ export default function CreateCraPage() {
         </h1>
         <button
           type="button"
-          onClick={() => setShowHint((p) => !p)}
+          onClick={(e) => { e.stopPropagation(); setShowHint((p) => !p); }}
           className="w-5 h-5 rounded-full border border-[#ff0000] text-[#ff0000] text-[10px] flex items-center justify-center hover:bg-[#f3f4f6] transition-colors flex-shrink-0 cursor-pointer"
         >
           !
