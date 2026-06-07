@@ -1,10 +1,37 @@
 import { useState, useCallback, useEffect, useRef, type ReactNode } from 'react';
 
 import { DataTable, type Column } from '../../../components/common/DataTable';
-import DatePicker from '../../../components/common/DatePicker';
 import Modal from '../../../components/common/Modal';
 import { useGetAuditLogs, type AuditLogEntry } from '../../../hooks/useAuditLog';
 import { format } from 'date-fns';
+
+function toDisplayDate(val: string): string {
+  if (!val) return '';
+  const iso = val.slice(0, 10);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(iso)) {
+    const [y, m, d] = iso.split('-');
+    return `${d}/${m}/${y}`;
+  }
+  return val;
+}
+
+function toStorageDate(ddmm: string): string {
+  const parts = ddmm.split('/');
+  if (parts.length !== 3) return ddmm;
+  return `${parts[2]}-${parts[1]}-${parts[0]}`;
+}
+
+function getDateError(val: string): string {
+  if (!val) return '';
+  const m = val.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (!m) return 'Format de date invalide (jj/mm/aaaa)';
+  const [, dd, mm, yyyy] = m;
+  const d = new Date(+yyyy, +mm - 1, +dd);
+  if (d.getDate() !== +dd || d.getMonth() !== +mm - 1 || d.getFullYear() !== +yyyy) {
+    return `Le jour ${dd} n'existe pas pour le mois ${mm}/${yyyy}`;
+  }
+  return '';
+}
 
 const ROLE_OPTIONS = ['', 'ADMIN', 'CONSULTANT', 'GESTIONNAIRE'] as const;
 const ROLE_LABELS: Record<string, string> = {
@@ -27,6 +54,8 @@ export default function AuditLogPage() {
   const [userFilter, setUserFilter] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [startDateError, setStartDateError] = useState('');
+  const [endDateError, setEndDateError] = useState('');
   const [selectedEntry, setSelectedEntry] = useState<AuditLogEntry | null>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
 
@@ -61,29 +90,13 @@ export default function AuditLogPage() {
     debounce(setDebouncedUser, val);
   };
 
-  const handleStartDateChange = (val: string) => {
-    setStartDate(val);
-    clearTimeout(debounceTimer.current);
-    debounceTimer.current = setTimeout(() => {
-      setDebouncedStartDate(val);
-      setPage(1);
-    }, 300);
-  };
-
-  const handleEndDateChange = (val: string) => {
-    setEndDate(val);
-    clearTimeout(debounceTimer.current);
-    debounceTimer.current = setTimeout(() => {
-      setDebouncedEndDate(val);
-      setPage(1);
-    }, 300);
-  };
-
   const handleReset = () => {
     setRoleFilter('');
     setUserFilter('');
     setStartDate('');
     setEndDate('');
+    setStartDateError('');
+    setEndDateError('');
     setDebouncedRole('');
     setDebouncedUser('');
     setDebouncedStartDate('');
@@ -187,23 +200,66 @@ export default function AuditLogPage() {
               value={userFilter}
               onChange={handleUserChange}
               placeholder="Rechercher par email..."
+              autoComplete="off"
               className="h-10 w-56 rounded-[8px] border border-[#e5e7eb] bg-[#ffffff] px-3 text-sm text-[#111111] placeholder:text-[#9ca3af] focus:outline-none focus:border-[#111111]"
             />
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-[#6b7280]">De</label>
-            <DatePicker value={startDate} onChange={handleStartDateChange} placeholder="Date début" />
+            <label className="text-xs font-medium text-[#6b7280]">De (jj/mm/aaaa)</label>
+            <input
+              type="text"
+              placeholder="jj/mm/aaaa"
+              value={toDisplayDate(startDate)}
+              onChange={(e) => {
+                const raw = e.target.value;
+                setStartDate(raw);
+                setStartDateError('');
+                clearTimeout(debounceTimer.current);
+                if (raw && getDateError(raw)) {
+                  setStartDateError(getDateError(raw));
+                  return;
+                }
+                debounceTimer.current = setTimeout(() => {
+                  setDebouncedStartDate(raw ? toStorageDate(raw) : '');
+                  setPage(1);
+                }, 400);
+              }}
+              autoComplete="off"
+              className={`h-10 w-40 rounded-[8px] border bg-[#ffffff] px-3 text-sm text-[#111111] placeholder:text-[#9ca3af] focus:outline-none focus:border-[#111111] ${startDateError ? 'border-red-500' : 'border-[#e5e7eb]'}`}
+            />
+            {startDateError && <p className="text-xs text-red-500">{startDateError}</p>}
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-[#6b7280]">Au</label>
-            <DatePicker value={endDate} onChange={handleEndDateChange} placeholder="Date fin" />
+            <label className="text-xs font-medium text-[#6b7280]">Au (jj/mm/aaaa)</label>
+            <input
+              type="text"
+              placeholder="jj/mm/aaaa"
+              value={toDisplayDate(endDate)}
+              onChange={(e) => {
+                const raw = e.target.value;
+                setEndDate(raw);
+                setEndDateError('');
+                clearTimeout(debounceTimer.current);
+                if (raw && getDateError(raw)) {
+                  setEndDateError(getDateError(raw));
+                  return;
+                }
+                debounceTimer.current = setTimeout(() => {
+                  setDebouncedEndDate(raw ? toStorageDate(raw) : '');
+                  setPage(1);
+                }, 400);
+              }}
+              autoComplete="off"
+              className={`h-10 w-40 rounded-[8px] border bg-[#ffffff] px-3 text-sm text-[#111111] placeholder:text-[#9ca3af] focus:outline-none focus:border-[#111111] ${endDateError ? 'border-red-500' : 'border-[#e5e7eb]'}`}
+            />
+            {endDateError && <p className="text-xs text-red-500">{endDateError}</p>}
           </div>
 
           <button
             onClick={handleReset}
-            className="h-10 cursor-pointer rounded-[8px] border border-[#e5e7eb] bg-[#ffffff] px-4 text-sm font-medium text-[#111111] transition-colors hover:bg-[#f3f4f6]"
+            className="h-10 cursor-pointer rounded-[8px] border border-[#e5e7eb] bg-[#f1f1f281] px-4 text-sm font-medium text-[#111111] transition-colors hover:bg-[#f3f4f6]"
           >
             Réinitialiser
           </button>

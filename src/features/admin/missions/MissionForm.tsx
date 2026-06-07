@@ -6,8 +6,35 @@ import { useMutateMission, useUpdateMission } from '../../../hooks/useMissions';
 import type { Mission } from '../../../hooks/useMissions';
 import { useGetContracts } from '../../../hooks/useContracts';
 import { useGetConsultants } from '../../../hooks/useConsultants';
-import DatePicker from '../../../components/common/DatePicker';
 import LoadingOverlay from '../../../components/common/LoadingOverlay';
+
+function toDisplayDate(val: string): string {
+  if (!val) return '';
+  const iso = val.slice(0, 10);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(iso)) {
+    const [y, m, d] = iso.split('-');
+    return `${d}/${m}/${y}`;
+  }
+  return val;
+}
+
+function toStorageDate(ddmm: string): string {
+  const parts = ddmm.split('/');
+  if (parts.length !== 3) return ddmm;
+  return `${parts[2]}-${parts[1]}-${parts[0]}`;
+}
+
+function getDateError(val: string): string {
+  if (!val) return '';
+  const m = val.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (!m) return 'Format de date invalide (jj/mm/aaaa)';
+  const [, dd, mm, yyyy] = m;
+  const d = new Date(+yyyy, +mm - 1, +dd);
+  if (d.getDate() !== +dd || d.getMonth() !== +mm - 1 || d.getFullYear() !== +yyyy) {
+    return `Le jour ${dd} n'existe pas pour le mois ${mm}/${yyyy}`;
+  }
+  return '';
+}
 
 interface MissionFormProps {
   onSuccess: () => void;
@@ -71,13 +98,22 @@ export default function MissionForm({ onSuccess, mission }: MissionFormProps) {
     e.preventDefault();
     setErrors({});
 
+    const conv = (v: string) => v && v.includes('/') ? toStorageDate(v) : v;
+    const f = { ...form, startDate: conv(form.startDate), endDate: conv(form.endDate ?? '') };
+
     const newErrors: Record<string, string> = {};
-    if (!isEdit && !form.contractId) newErrors.contractId = 'Ce champ est requis';
-    if (!isEdit && !form.consultantId) newErrors.consultantId = 'Ce champ est requis';
-    if (!form.title) newErrors.title = 'Ce champ est requis';
-    if (!form.startDate) newErrors.startDate = 'Ce champ est requis';
-    if (!form.missionDailyRate || parseFloat(form.missionDailyRate) <= 0) newErrors.missionDailyRate = 'Le taux journalier doit être supérieur à 0';
-    if (form.startDate && form.endDate && form.startDate >= form.endDate) {
+    if (!isEdit && !f.contractId) newErrors.contractId = 'Ce champ est requis';
+    if (!isEdit && !f.consultantId) newErrors.consultantId = 'Ce champ est requis';
+    if (!f.title) newErrors.title = 'Ce champ est requis';
+    if (!f.startDate) newErrors.startDate = 'Ce champ est requis';
+    if (!f.missionDailyRate || parseFloat(f.missionDailyRate) <= 0) newErrors.missionDailyRate = 'Le taux journalier doit être supérieur à 0';
+    if (f.startDate && f.startDate.includes('/') && getDateError(f.startDate)) {
+      newErrors.startDate = getDateError(f.startDate);
+    }
+    if (f.endDate && f.endDate.includes('/') && getDateError(f.endDate)) {
+      newErrors.endDate = getDateError(f.endDate);
+    }
+    if (f.startDate && f.endDate && !newErrors.startDate && !newErrors.endDate && f.startDate >= f.endDate) {
       newErrors.endDate = 'La date de fin doit être postérieure à la date de début';
     }
     setErrors(newErrors);
@@ -87,16 +123,16 @@ export default function MissionForm({ onSuccess, mission }: MissionFormProps) {
       const normalize = (d: string) => d ? d.slice(0, 10) : '';
       const origStart = normalize(mission!.startDate);
       const origEnd = normalize(mission!.endDate ?? '');
-      const curStart = normalize(form.startDate);
-      const curEnd = normalize(form.endDate);
+      const curStart = normalize(f.startDate);
+      const curEnd = normalize(f.endDate);
       const patchData: Record<string, unknown> = {};
-      if (form.title !== mission!.title) patchData.title = form.title;
+      if (f.title !== mission!.title) patchData.title = f.title;
       if (curStart !== origStart) patchData.startDate = curStart;
       if (curEnd !== origEnd) {
         patchData.endDate = curEnd || null;
       }
-      if (form.missionDailyRate && parseFloat(form.missionDailyRate) !== (mission!.missionDailyRate ?? 0)) {
-        patchData.missionDailyRate = parseFloat(form.missionDailyRate);
+      if (f.missionDailyRate && parseFloat(f.missionDailyRate) !== (mission!.missionDailyRate ?? 0)) {
+        patchData.missionDailyRate = parseFloat(f.missionDailyRate);
       }
       if (files.length > 0) patchData.files = files;
       if (deletedAttachmentIds.length > 0) patchData.deleteAttachmentIds = deletedAttachmentIds;
@@ -128,8 +164,8 @@ export default function MissionForm({ onSuccess, mission }: MissionFormProps) {
           contractId: Number(form.contractId),
           consultantId: Number(form.consultantId),
           title: form.title,
-          startDate: form.startDate,
-          endDate: form.endDate || undefined,
+          startDate: f.startDate,
+          endDate: f.endDate || undefined,
           missionDailyRate: parseFloat(form.missionDailyRate),
           files: files.length > 0 ? files : undefined,
         },
@@ -177,7 +213,7 @@ export default function MissionForm({ onSuccess, mission }: MissionFormProps) {
       {FIELDS.map(({ key, label, required, type, options }) => (
         <div key={key}>
           <label className="mb-1 block text-sm font-medium text-[#111111]">
-            {label}
+            {label}{type === 'date' ? ' (jj/mm/aaaa)' : ''}
             {required && <span className="text-red-500 ml-0.5">*</span>}
           </label>
           {type === 'select' ? (
@@ -199,10 +235,23 @@ export default function MissionForm({ onSuccess, mission }: MissionFormProps) {
           ) : type === 'date' ? (
             <div className="flex items-center gap-2">
               <div className="flex-1">
-                <DatePicker
-                  value={String((form as Record<string, string>)[key] ?? '')}
-                  onChange={(val) => handleChange(key, val)}
-                  error={errors[key]}
+                <input
+                  type="text"
+                  placeholder="jj/mm/aaaa"
+                  value={toDisplayDate(String((form as Record<string, string>)[key] ?? ''))}
+                  onChange={(e) => {
+                    const raw = e.target.value;
+                    setErrors((prev) => { const n = { ...prev }; delete n[key]; return n; });
+                    handleChange(key, raw);
+                    if (raw) {
+                      const err = getDateError(raw);
+                      if (err) setErrors((prev) => ({ ...prev, [key]: err }));
+                    }
+                  }}
+                  autoComplete="off"
+                  className={`w-full rounded-[8px] border px-3 py-2 text-sm text-[#111111] outline-none transition-colors focus:border-primary-blue ${
+                    errors[key] ? 'border-red-500' : 'border-[#e5e7eb]'
+                  }`}
                 />
               </div>
               {isEdit && key === 'endDate' && form.endDate && (
@@ -226,7 +275,7 @@ export default function MissionForm({ onSuccess, mission }: MissionFormProps) {
               }`}
             />
           )}
-          {type !== 'date' && errors[key] && (
+          {errors[key] && (
             <p className="mt-1 text-xs text-red-500">{errors[key]}</p>
           )}
         </div>
@@ -324,8 +373,8 @@ export default function MissionForm({ onSuccess, mission }: MissionFormProps) {
       <div className="flex justify-end gap-3 pt-2">
         <button
           type="submit"
-          disabled={mutation.isPending}
-          className="cursor-pointer rounded-[8px] bg-primary-blue px-6 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-90 disabled:opacity-50"
+          disabled={mutation.isPending || Object.keys(errors).length > 0}
+          className="cursor-pointer rounded-[8px] bg-primary-blue px-6 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {mutation.isPending ? 'Enregistrement...' : isEdit ? 'Modifier' : 'Créer'}
         </button>
