@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import apiClient from '../../../lib/apiClient';
 import { useConsultantTimesheets } from '../../../hooks/consultant/useConsultantDashboard';
@@ -22,6 +22,7 @@ const TABS = [
 ];
 
 export default function MissionDetailsPage() {
+  const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const missionId = Number(id);
   const [activeTab, setActiveTab] = useState('timesheets');
@@ -173,9 +174,26 @@ export default function MissionDetailsPage() {
 
       {activeTab === 'timesheets' && (
         <div className="rounded-[12px] bg-[#f5f5f5] p-8">
-          <h2 className="text-[18px] font-semibold text-[#111111] leading-[1.4] mb-4">
-            Relevés mensuels associés
-          </h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-[18px] font-semibold text-[#111111] leading-[1.4]">
+              Relevés mensuels associés
+            </h2>
+            {mission.canCreateTimesheet ? (
+              <button
+                onClick={() => navigate(`/consultant/timesheets/new?missionId=${missionId}`)}
+                className="cursor-pointer rounded-[8px] bg-[#3b82f6] px-3 py-1.5 text-xs font-medium text-[#ffffff] transition-colors hover:bg-[#2563eb]"
+              >
+                + Créer relevé
+              </button>
+            ) : (
+              <span className="inline-flex items-center gap-1 rounded-[8px] border border-[#e5e7eb] bg-[#f9fafb] px-3 py-1.5 text-xs text-[#6b7280]">
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                ✓ À jour
+              </span>
+            )}
+          </div>
           {associatedTimesheets.length === 0 ? (
             <p className="text-sm text-[#6b7280]">
               Aucun relevé pour cette mission.

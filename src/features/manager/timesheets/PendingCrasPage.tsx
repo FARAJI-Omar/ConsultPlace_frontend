@@ -35,7 +35,7 @@ function formatMonth(month: string) {
 export default function PendingCrasPage() {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
-  const [statusFilter, setStatusFilter] = useState('SOUMIS');
+  const [statusFilter, setStatusFilter] = useState('');
   const [selectedTimesheetId, setSelectedTimesheetId] = useState<number | null>(null);
   const [invoiceTimesheet, setInvoiceTimesheet] = useState<ManagerTimesheet | null>(null);
   const [showHint, setShowHint] = useState(true);
