@@ -55,7 +55,7 @@ export default function GenerateInvoiceModal({
 
   return (
     <>
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4" onClick={onClose}>
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
         <div className="w-full max-w-sm rounded-[12px] bg-[#ffffff] p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
           <h2 className="mb-4 text-lg font-semibold text-[#111111]">Générer une facture</h2>
           <div className="space-y-4">
@@ -109,7 +109,7 @@ export default function GenerateInvoiceModal({
       </div>
 
       {showConfirm && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 px-4" onClick={() => setShowConfirm(false)}>
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 px-4">
           <div className="w-full max-w-sm rounded-[12px] bg-[#ffffff] p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
             <h2 className="mb-2 text-lg font-semibold text-[#111111]">Générer la facture</h2>
             <p className="mb-6 text-sm text-[#6b7280]">

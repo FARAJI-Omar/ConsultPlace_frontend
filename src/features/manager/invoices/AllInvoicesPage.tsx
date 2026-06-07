@@ -427,7 +427,7 @@ export default function AllInvoicesPage() {
       />
 
       {generateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4" onClick={() => setGenerateModal(false)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
           <div className="w-full max-w-sm rounded-[12px] bg-[#ffffff] p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
             <h2 className="mb-4 text-lg font-semibold text-[#111111]">Générer une facture</h2>
             <div className="space-y-4">
@@ -479,7 +479,6 @@ export default function AllInvoicesPage() {
       {cancelConfirm !== null && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
-          onClick={(e) => { if (e.target === e.currentTarget) setCancelConfirm(null); }}
         >
           <div className="w-full max-w-sm rounded-[12px] bg-[#ffffff] p-6 shadow-xl">
             <h2 className="mb-2 text-lg font-semibold text-[#111111]">Annuler la facture</h2>
@@ -504,7 +503,7 @@ export default function AllInvoicesPage() {
       )}
 
       {payoutModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4" onClick={() => { setPayoutModal(null); setPayoutComment(''); }}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
           <div className="w-full max-w-sm rounded-[12px] bg-[#ffffff] p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
             <h2 className="mb-4 text-lg font-semibold text-[#111111]">Payer le consultant</h2>
             <p className="mb-4 text-sm text-[#6b7280]">Facture {payoutModal.ref}</p>
@@ -570,7 +569,7 @@ export default function AllInvoicesPage() {
       )}
 
       {reminderModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4" onClick={() => setReminderModal(null)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
           <div className="w-full max-w-sm rounded-[12px] bg-[#ffffff] p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
             <h2 className="mb-4 text-lg font-semibold text-[#111111]">Configurer la relance automatique</h2>
             <p className="mb-4 text-sm text-[#6b7280]">Facture {reminderModal.ref}</p>
@@ -597,11 +596,7 @@ export default function AllInvoicesPage() {
       )}
 
       {confirmMarkPaid && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4" onClick={() => {
-          setConfirmMarkPaid(null);
-          setMarkPaidDate(new Date().toISOString().split('T')[0]);
-          setMarkPaidComment('');
-        }}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
           <div className="w-full max-w-sm rounded-[12px] bg-[#ffffff] p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
             <h2 className="mb-2 text-lg font-semibold text-[#111111]">Marquer comme payée</h2>
             <p className="mb-4 text-sm text-[#6b7280]">Confirmer que la facture {confirmMarkPaid.ref} est payée&nbsp;?</p>
@@ -639,7 +634,7 @@ export default function AllInvoicesPage() {
       )}
 
       {confirmSendReminder && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4" onClick={() => setConfirmSendReminder(null)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
           <div className="w-full max-w-sm rounded-[12px] bg-[#ffffff] p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
             <h2 className="mb-2 text-lg font-semibold text-[#111111]">Envoyer une relance</h2>
             <p className="mb-6 text-sm text-[#6b7280]">Envoyer un email de relance pour {confirmSendReminder.ref}&nbsp;?</p>
@@ -654,7 +649,7 @@ export default function AllInvoicesPage() {
       )}
 
       {confirmStopReminder && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4" onClick={() => setConfirmStopReminder(null)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
           <div className="w-full max-w-sm rounded-[12px] bg-[#ffffff] p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
             <h2 className="mb-2 text-lg font-semibold text-[#111111]">Arrêter la relance automatique</h2>
             <p className="mb-6 text-sm text-[#6b7280]">Confirmer l'arrêt des relances automatiques pour {confirmStopReminder.ref}&nbsp;?</p>
@@ -669,7 +664,7 @@ export default function AllInvoicesPage() {
       )}
 
       {confirmEmail && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4" onClick={() => setConfirmEmail(null)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
           <div className="w-full max-w-sm rounded-[12px] bg-[#ffffff] p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
             <h2 className="mb-2 text-lg font-semibold text-[#111111]">{confirmEmail.isSent ? 'Renvoyer par email' : 'Envoyer par email'}</h2>
             <p className="mb-6 text-sm text-[#6b7280]">Envoyer {confirmEmail.ref} à {confirmEmail.client?.email ?? 'aucun email'}&nbsp;?</p>
@@ -684,7 +679,7 @@ export default function AllInvoicesPage() {
       )}
 
       {confirmGenerate && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4" onClick={() => setConfirmGenerate(false)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
           <div className="w-full max-w-sm rounded-[12px] bg-[#ffffff] p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
             <h2 className="mb-2 text-lg font-semibold text-[#111111]">Générer la facture</h2>
             <p className="mb-6 text-sm text-[#6b7280]">Créer une facture pour {selectedTimesheet ? `${selectedTimesheet.month} | ${selectedTimesheet.consultant.name} | ${selectedTimesheet.mission.title}` : `Relevé n°${generateTimesheetId}`} avec TVA à {vatRate}%&nbsp;?</p>

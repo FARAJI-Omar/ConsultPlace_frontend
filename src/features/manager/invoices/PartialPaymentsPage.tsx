@@ -122,7 +122,7 @@ export default function PartialPaymentsPage() {
       />
 
       {paymentModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4" onClick={() => setPaymentModal(null)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
           <div className="w-full max-w-sm rounded-[12px] bg-[#ffffff] p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
             <h2 className="mb-4 text-lg font-semibold text-[#111111]">
               Paiement — {paymentModal.ref}
@@ -171,11 +171,7 @@ export default function PartialPaymentsPage() {
       )}
 
       {confirmPayAll && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4" onClick={() => {
-          setConfirmPayAll(null);
-          setPayAllDate(new Date().toISOString().split('T')[0]);
-          setPayAllComment('');
-        }}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
           <div className="w-full max-w-sm rounded-[12px] bg-[#ffffff] p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
             <h2 className="mb-2 text-lg font-semibold text-[#111111]">Tout payer</h2>
             <p className="mb-4 text-sm text-[#6b7280]">Marquer la facture {confirmPayAll.ref} comme intégralement payée&nbsp;?</p>

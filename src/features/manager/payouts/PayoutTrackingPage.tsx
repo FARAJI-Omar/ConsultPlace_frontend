@@ -194,7 +194,7 @@ export default function PayoutTrackingPage() {
       </div>
 
       {exportModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4" onClick={() => setExportModal(false)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
           <div className="w-full max-w-sm rounded-[12px] bg-[#ffffff] p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
             <h2 className="mb-4 text-lg font-semibold text-[#111111]">Exporter PDF</h2>
             <div className="mb-4">
@@ -234,7 +234,7 @@ export default function PayoutTrackingPage() {
       )}
 
       {payoutModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4" onClick={() => setPayoutModal(null)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
           <div className="w-full max-w-sm rounded-[12px] bg-[#ffffff] p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
             <h2 className="mb-4 text-lg font-semibold text-[#111111]">Payer le consultant</h2>
             <p className="mb-4 text-sm text-[#6b7280]">Facture {payoutModal.ref}</p>

@@ -523,7 +523,6 @@ export default function InvoiceDetailsPage() {
       {cancelConfirm && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
-          onClick={(e) => { if (e.target === e.currentTarget) setCancelConfirm(false); }}
         >
           <div className="w-full max-w-sm rounded-[12px] bg-[#ffffff] p-6 shadow-xl">
             <h2 className="mb-2 text-lg font-semibold text-[#111111]">Annuler la facture</h2>
@@ -539,7 +538,7 @@ export default function InvoiceDetailsPage() {
       )}
 
       {showPayoutModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4" onClick={() => setShowPayoutModal(false)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
           <div className="w-full max-w-sm rounded-[12px] bg-[#ffffff] p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
             <h2 className="mb-4 text-lg font-semibold text-[#111111]">Payer le consultant</h2>
             <p className="mb-4 text-sm text-[#6b7280]">Facture {invoice.ref}</p>
@@ -605,7 +604,7 @@ export default function InvoiceDetailsPage() {
       )}
 
       {showReminderModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4" onClick={() => setShowReminderModal(false)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
           <div className="w-full max-w-sm rounded-[12px] bg-[#ffffff] p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
             <h2 className="mb-4 text-lg font-semibold text-[#111111]">Configurer la relance automatique</h2>
             <p className="mb-4 text-sm text-[#6b7280]">Facture {invoice.ref}</p>
@@ -632,10 +631,7 @@ export default function InvoiceDetailsPage() {
       )}
 
       {confirmMarkPaid && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4" onClick={() => {
-          setConfirmMarkPaid(false);
-          setMarkPaidDate(new Date().toISOString().split('T')[0]);
-        }}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
           <div className="w-full max-w-sm rounded-[12px] bg-[#ffffff] p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
             <h2 className="mb-2 text-lg font-semibold text-[#111111]">Marquer comme payee</h2>
             <p className="mb-4 text-sm text-[#6b7280]">Confirmer que la facture {invoice.ref} est payee&nbsp;?</p>
@@ -674,7 +670,7 @@ export default function InvoiceDetailsPage() {
   )}
 
       {confirmEmail && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4" onClick={() => setConfirmEmail(false)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
           <div className="w-full max-w-sm rounded-[12px] bg-[#ffffff] p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
             <h2 className="mb-2 text-lg font-semibold text-[#111111]">{invoice.isSent ? 'Renvoyer par email' : 'Envoyer par email'}</h2>
             <p className="mb-6 text-sm text-[#6b7280]">Envoyer {invoice.ref} à {invoice.client?.email ?? 'aucun email'}&nbsp;?</p>
@@ -689,7 +685,7 @@ export default function InvoiceDetailsPage() {
       )}
 
       {confirmSendReminder && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4" onClick={() => setConfirmSendReminder(false)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
           <div className="w-full max-w-sm rounded-[12px] bg-[#ffffff] p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
             <h2 className="mb-2 text-lg font-semibold text-[#111111]">Envoyer une relance</h2>
             <p className="mb-6 text-sm text-[#6b7280]">Envoyer un email de relance pour {invoice.ref}&nbsp;?</p>
@@ -704,7 +700,7 @@ export default function InvoiceDetailsPage() {
       )}
 
       {confirmStopReminder && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4" onClick={() => setConfirmStopReminder(false)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
           <div className="w-full max-w-sm rounded-[12px] bg-[#ffffff] p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
             <h2 className="mb-2 text-lg font-semibold text-[#111111]">Arrêter la relance automatique</h2>
             <p className="mb-6 text-sm text-[#6b7280]">Confirmer l'arrêt des relances automatiques pour {invoice.ref}&nbsp;?</p>

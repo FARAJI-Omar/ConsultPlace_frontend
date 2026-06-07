@@ -173,7 +173,6 @@ export default function AlertRulesPage() {
       {popoverMessage && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4"
-          onClick={() => setPopoverMessage(null)}
         >
           <div
             className="max-w-lg w-full rounded-[12px] bg-[#ffffff] p-5 shadow-xl"
@@ -183,11 +182,9 @@ export default function AlertRulesPage() {
               <h3 className="text-sm font-semibold text-[#111111]">Message personnalisé</h3>
               <button
                 onClick={() => setPopoverMessage(null)}
-                className="cursor-pointer rounded p-1 text-[#6b7280] hover:text-[#111111] transition-colors"
+                className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-4 py-1.5 text-sm text-[#111111] transition-colors hover:bg-[#f3f4f6]"
               >
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                Annuler
               </button>
             </div>
             <p className="text-sm text-[#111111] whitespace-pre-wrap break-words">{popoverMessage.text}</p>

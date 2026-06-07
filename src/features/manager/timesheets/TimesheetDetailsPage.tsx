@@ -277,7 +277,6 @@ export default function TimesheetDetailsPage() {
       {showApproveConfirm && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
-          onClick={(e) => { if (e.target === e.currentTarget) setShowApproveConfirm(false); }}
         >
           <div className="w-full max-w-lg rounded-[12px] bg-[#ffffff] p-6 shadow-xl">
             <h2 className="mb-2 text-lg font-semibold text-[#111111]">Approuver le Relevé</h2>
@@ -317,7 +316,6 @@ export default function TimesheetDetailsPage() {
       {showReject && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
-          onClick={(e) => { if (e.target === e.currentTarget) { setShowReject(false); setRejectReason(''); } }}
         >
           <div className="w-full max-w-xl rounded-[12px] bg-[#ffffff] p-6 shadow-xl">
             <h2 className="mb-2 text-lg font-semibold text-[#111111]">Rejeter le Relevé</h2>

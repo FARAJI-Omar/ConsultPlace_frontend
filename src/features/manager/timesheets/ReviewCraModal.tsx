@@ -63,7 +63,7 @@ export default function ReviewCraModal({ timesheetId, open, onClose }: ReviewCra
 
   return (
     <>
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
         <div
           className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-[12px] bg-[#ffffff] p-6 shadow-xl"
           onClick={(e) => e.stopPropagation()}
@@ -74,7 +74,7 @@ export default function ReviewCraModal({ timesheetId, open, onClose }: ReviewCra
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-[#111111]">Examiner le relevé</h2>
-                <button onClick={onClose} className="cursor-pointer text-[#6b7280] hover:text-[#111111]">
+                <button onClick={onClose} className="cursor-pointer rounded p-1 text-[#6b7280] transition-colors hover:bg-[#f3f4f6] hover:text-[#111111]">
                   <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                   </svg>
@@ -164,6 +164,9 @@ export default function ReviewCraModal({ timesheetId, open, onClose }: ReviewCra
               )}
 
               <div className="flex items-center justify-end gap-3">
+                <button onClick={onClose} className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-4 py-2 text-sm font-medium text-[#111111] transition-colors hover:bg-[#f3f4f6]">
+                  Annuler
+                </button>
                 {!rejectMode ? (
                   <>
                     <button

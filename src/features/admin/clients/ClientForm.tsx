@@ -150,6 +150,13 @@ export default function ClientForm({ client, onSuccess }: ClientFormProps) {
 
       <div className="flex justify-end gap-3 pt-2">
         <button
+          type="button"
+          onClick={onSuccess}
+          className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-6 py-2 text-sm font-medium text-[#111111] transition-colors hover:bg-[#f3f4f6]"
+        >
+          Annuler
+        </button>
+        <button
           type="submit"
           disabled={mutation.isPending}
           className="cursor-pointer rounded-[8px] bg-primary-blue px-6 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-90 disabled:opacity-50"

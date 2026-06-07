@@ -349,8 +349,8 @@ function DraftCard({
               )}
 
               {confirmDeleteId && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setConfirmDeleteId(null)}>
-                  <div className="rounded-[12px] bg-[#ffffff] p-6 shadow-lg w-80" onClick={(e) => e.stopPropagation()}>
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+                <div className="rounded-[12px] bg-[#ffffff] p-6 shadow-lg w-80" onClick={(e) => e.stopPropagation()}>
                     <p className="text-sm font-semibold text-[#111111] mb-2">Confirmer la suppression</p>
                     <p className="text-sm text-[#6b7280] mb-6">Cette action est irréversible.</p>
                     <div className="flex justify-end gap-2">
@@ -382,7 +382,7 @@ function DraftCard({
       )}
 
       {showSubmitConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowSubmitConfirm(false)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="rounded-[12px] bg-[#ffffff] p-6 shadow-lg w-80" onClick={(e) => e.stopPropagation()}>
             <p className="text-sm font-semibold text-[#111111] mb-2">Confirmer la soumission</p>
             <p className="text-sm text-[#6b7280] mb-6">Envoyer ce brouillon pour validation ?</p>

@@ -571,7 +571,7 @@ export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?:
       </div>
 
       {showWeekendWarning && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => { setShowWeekendWarning(false); setPendingWeekendAction(null); }}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="rounded-[12px] bg-[#ffffff] p-6 shadow-lg w-110" onClick={(e) => e.stopPropagation()}>
             <p className="text-xl font-semibold text-[#111111] mb-2">Heures saisies sur jours non ouvrables</p>
             <p className="text-sm text-[#6b7280] mb-4">
@@ -604,7 +604,7 @@ export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?:
       )}
 
       {showSubmitConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowSubmitConfirm(false)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="rounded-[12px] bg-[#ffffff] p-6 shadow-lg w-80" onClick={(e) => e.stopPropagation()}>
             <p className="text-sm font-semibold text-[#111111] mb-2">Confirmer la soumission</p>
             <p className="text-sm text-[#6b7280] mb-6">Envoyer ce relevé mensuel pour validation ?</p>

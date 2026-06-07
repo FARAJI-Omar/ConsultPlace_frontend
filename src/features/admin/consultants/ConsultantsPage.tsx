@@ -162,7 +162,6 @@ export default function ConsultantsPage() {
       {confirmToggle && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
-          onClick={(e) => { if (e.target === e.currentTarget) setConfirmToggle(null); }}
         >
           <div className="w-full max-w-sm rounded-[12px] bg-[#ffffff] p-6 shadow-xl">
             <h2 className="mb-2 text-lg font-semibold text-[#111111]">
