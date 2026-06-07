@@ -1,12 +1,16 @@
+import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { FileText, Eye } from 'lucide-react';
 import { useGetClientById } from '../../../hooks/useClients';
 import { formatDate } from '../../../lib/utils';
+import Modal from '../../../components/common/Modal';
+import ClientForm from './ClientForm';
 
 export default function ClientDetailPage() {
   const { id } = useParams<{ id: string }>();
   const clientId = Number(id);
   const { data: client, isLoading } = useGetClientById(clientId);
+  const [modalOpen, setModalOpen] = useState(false);
 
   const LABELS: Record<string, string> = {
     raison_sociale: 'Raison sociale',
@@ -54,6 +58,12 @@ export default function ClientDetailPage() {
             <span className="ml-3 inline-block rounded-full bg-gray-100 px-3 py-0.5 text-sm font-medium text-gray-500">Archivé</span>
           )}
         </h1>
+        <button
+          onClick={() => setModalOpen(true)}
+          className="ml-auto cursor-pointer rounded-[8px] bg-green-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-green-700"
+        >
+          Modifier
+        </button>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -178,6 +188,18 @@ export default function ClientDetailPage() {
           <p className="text-sm text-[#6b7280]">Aucune modification enregistrée</p>
         )}
       </div>
+
+      <Modal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title="Modifier le client"
+        size="lg"
+      >
+        <ClientForm
+          client={client && { ...client, phone_n: client.phone_n ?? null }}
+          onSuccess={() => setModalOpen(false)}
+        />
+      </Modal>
     </div>
   );
 }
