@@ -16,6 +16,7 @@ export default function ContractsPage() {
   const [pageSize, setPageSize] = useState(10);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingContract, setEditingContract] = useState<ContractRow | null>(null);
+  const [confirmArchive, setConfirmArchive] = useState<ContractRow | null>(null);
 
   const { data, isLoading } = useGetContracts(page, pageSize);
   const { data: fullContract } = useGetContractById(editingContract?.id);
@@ -37,13 +38,15 @@ export default function ContractsPage() {
     setEditingContract(null);
   };
 
-  const handleToggleArchive = (item: ContractRow) => {
-    const newState = !item.isArchived;
+  const handleConfirmArchive = () => {
+    if (!confirmArchive) return;
+    const newState = !confirmArchive.isArchived;
     toggleArchive.mutate(
-      { id: item.id, isArchived: newState },
+      { id: confirmArchive.id, isArchived: newState },
       {
         onSuccess: () => {
           toast.success(newState ? 'Contrat archivé avec succès' : 'Contrat restauré avec succès');
+          setConfirmArchive(null);
         },
         onError: () => {
           toast.error("Une erreur est survenue");
@@ -92,7 +95,7 @@ export default function ContractsPage() {
             Détails
           </button>
           <button
-            onClick={() => handleToggleArchive(item)}
+            onClick={() => setConfirmArchive(item)}
             disabled={toggleArchive.isPending}
             className="cursor-pointer rounded-[6px] px-2.5 py-1 text-xs font-medium transition-colors disabled:opacity-50"
             style={{ backgroundColor: item.isArchived ? '#d1fae5' : '#fef3c7', color: item.isArchived ? '#065f46' : '#92400e' }}
@@ -146,6 +149,36 @@ export default function ContractsPage() {
           onSuccess={handleCloseModal}
         />
       </Modal>
+
+      {confirmArchive && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div className="w-full max-w-sm rounded-[12px] bg-[#ffffff] p-6 shadow-xl">
+            <h2 className="mb-2 text-lg font-semibold text-[#111111]">
+              {confirmArchive.isArchived ? 'Restaurer' : 'Archiver'} le contrat
+            </h2>
+            <p className="mb-6 text-sm text-[#6b7280]">
+              Êtes-vous sûr de vouloir {confirmArchive.isArchived ? 'restaurer' : 'archiver'} ce contrat&nbsp;?
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setConfirmArchive(null)}
+                className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-4 py-2 text-sm text-[#111111] transition-colors hover:bg-[#f3f4f6]"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={handleConfirmArchive}
+                disabled={toggleArchive.isPending}
+                className={`cursor-pointer rounded-[8px] px-4 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-90 disabled:opacity-50 ${
+                  confirmArchive.isArchived ? 'bg-green-600' : 'bg-red-600'
+                }`}
+              >
+                {toggleArchive.isPending ? 'Confirmation...' : 'Confirmer'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
