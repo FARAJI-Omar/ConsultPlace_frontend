@@ -314,11 +314,19 @@ export default function GlobalTrackingPage() {
       {detailRow && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
           <div className="w-full max-w-2xl rounded-[16px] bg-[#ffffff] shadow-xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="sticky top-0 z-10 bg-[#ffffff] border-b border-[#e5e7eb] px-6 py-5 flex items-start justify-between rounded-t-[16px]">
-              <div className="text-center w-full">
+            <div className="sticky top-0 z-10 bg-[#ffffff] border-b border-[#e5e7eb] px-6 py-5 flex items-center justify-between rounded-t-[16px]">
+              <div>
                 <h2 className="text-lg font-semibold text-[#111111]">{detailRow.consultant} <span className="text-[#6b7280]">·</span> {detailRow.timesheet?.month}</h2>
                 <p className="text-sm text-[#6b7280] mt-0.5">{detailRow.client} <span className="text-[#d1d5db]">·</span> {detailRow.timesheet?.mission}</p>
               </div>
+              <button
+                onClick={() => setDetailRow(null)}
+                className="cursor-pointer rounded-[6px] p-1.5 text-[#6b7280] transition-colors hover:bg-[#f3f4f6] hover:text-[#111111]"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
 
             <div className="p-6 space-y-4">
@@ -440,11 +448,6 @@ export default function GlobalTrackingPage() {
                   </div>
                 </div>
               </div>
-            </div>
-            <div className="flex justify-end border-t border-[#e5e7eb] px-6 py-4">
-              <button onClick={() => setDetailRow(null)} className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-4 py-1.5 text-sm text-[#111111] transition-colors hover:bg-[#f3f4f6]">
-                Annuler
-              </button>
             </div>
           </div>
         </div>
