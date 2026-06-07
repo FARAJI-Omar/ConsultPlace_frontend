@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 import { toast } from 'sonner';
 import { DataTable, type Column } from '../../../components/common/DataTable';
@@ -161,6 +161,19 @@ export default function ClientsPage() {
         onPageChange={handlePageChange}
         onPageSizeChange={handlePageSizeChange}
       />
+
+      <div className="flex justify-center">
+        <Link
+          to="/admin/clients/archived"
+          className="inline-flex cursor-pointer items-center gap-2 rounded-[8px] border border-[#e5e7eb] bg-[#ffffff] px-4 py-2 text-sm font-medium text-[#6b7280] transition-colors hover:bg-[#f3f4f6]"
+        >
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 7v10c0 2 1 3 3 3h10c2 0 3-1 3-3V7M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 12v6m-3-3l3 3 3-3" />
+          </svg>
+          Voir archivés
+        </Link>
+      </div>
 
       <Modal
         isOpen={modalOpen}

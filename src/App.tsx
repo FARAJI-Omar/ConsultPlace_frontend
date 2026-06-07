@@ -8,9 +8,11 @@ import AdminLayout from './components/layout/AdminLayout';
 import DashboardPage from './features/admin/dashboard/DashboardPage';
 import ClientsPage from './features/admin/clients/ClientsPage';
 import ClientDetailPage from './features/admin/clients/ClientDetailPage';
+import ArchivedClientsPage from './features/admin/clients/ArchivedClientsPage';
 import ConsultantsPage from './features/admin/consultants/ConsultantsPage';
 import ContractsPage from './features/admin/contracts/ContractsPage';
 import ContractDetailsPage from './features/admin/contracts/ContractDetailsPage';
+import ArchivedContractsPage from './features/admin/contracts/ArchivedContractsPage';
 import MissionsPage from './features/admin/missions/MissionsPage';
 import MissionDetailsPage from './features/admin/missions/MissionDetailsPage';
 import GestionnairesPage from './features/admin/system/GestionnairesPage';
@@ -61,9 +63,11 @@ const router = createBrowserRouter([
         children: [
           { index: true, element: <DashboardPage /> },
           { path: 'clients', element: <ClientsPage /> },
+          { path: 'clients/archived', element: <ArchivedClientsPage /> },
           { path: 'clients/:id', element: <ClientDetailPage /> },
           { path: 'consultants', element: <ConsultantsPage /> },
           { path: 'contracts', element: <ContractsPage /> },
+          { path: 'contracts/archived', element: <ArchivedContractsPage /> },
           { path: 'contracts/:id', element: <ContractDetailsPage /> },
           { path: 'missions', element: <MissionsPage /> },
           { path: 'missions/:id', element: <MissionDetailsPage /> },
