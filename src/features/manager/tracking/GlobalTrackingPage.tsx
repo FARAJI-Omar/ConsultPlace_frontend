@@ -227,7 +227,7 @@ export default function GlobalTrackingPage() {
           <select
             value={statusFilter}
             onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-            className="rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111]"
+            className="rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm bg-white text-[#111111] focus:outline-none focus:border-[#111111]"
           >
             {statusOptions.map((o) => (
               <option key={o.value} value={o.value}>{o.label}</option>
@@ -239,7 +239,7 @@ export default function GlobalTrackingPage() {
           <select
             value={clientFilter}
             onChange={(e) => { setClientFilter(e.target.value); setPage(1); }}
-            className="rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111] min-w-[180px]"
+            className="rounded-[8px] border border-[#e5e7eb] bg-white px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111] min-w-[180px]"
           >
             <option value="">Tous les clients</option>
             {clientOptions.map((name) => (
@@ -252,7 +252,7 @@ export default function GlobalTrackingPage() {
           <select
             value={periodeFilter}
             onChange={(e) => { setPeriodeFilter(e.target.value); setPage(1); }}
-            className="rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111]"
+            className="rounded-[8px] border border-[#e5e7eb] bg-white px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111]"
           >
             {periodeOptions.map((o) => (
               <option key={o.value} value={o.value}>{o.label}</option>
@@ -290,7 +290,7 @@ export default function GlobalTrackingPage() {
           <select
             value={sort}
             onChange={(e) => { setSort(e.target.value as 'asc' | 'desc'); setPage(1); }}
-            className="rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111]"
+            className="rounded-[8px] border border-[#e5e7eb] bg-white px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111]"
           >
             <option value="desc">↓ Mois (récent)</option>
             <option value="asc">↑ Mois (ancien)</option>
@@ -298,7 +298,7 @@ export default function GlobalTrackingPage() {
         </div>
       </div>
 
-      <div className="[&_table]:text-xs [&_th]:!text-xs [&_td]:!text-xs">
+      <div className="[&_table]:text-xs [&_th]:!text-xs [&_td]:!text-sm">
         <DataTable
           columns={columns}
           data={data?.data ?? []}
@@ -339,9 +339,14 @@ export default function GlobalTrackingPage() {
                     <span className="text-[#111111] font-semibold shrink-0">{detailRow.days ?? '—'}</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
-                    <span className="text-[#6b7280] shrink-0">TJM</span>
+                    <span className="text-[#6b7280] shrink-0">TJM Contrat</span>
                     <span className="flex-1 border-b border-dashed border-[#d1d5db] min-w-[8px]" />
-                    <span className="text-[#111111] font-semibold shrink-0">{(detailRow.dailyRate ?? 0).toLocaleString()} DH</span>
+                    <span className="text-[#111111] font-semibold shrink-0">{(detailRow.contractDailyRate ?? 0).toLocaleString()} DH</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="text-[#6b7280] shrink-0">TJM Consultant</span>
+                    <span className="flex-1 border-b border-dashed border-[#d1d5db] min-w-[8px]" />
+                    <span className="text-[#111111] font-semibold shrink-0">{(detailRow.missionDailyRate ?? 0).toLocaleString()} DH</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     <span className="text-[#6b7280] shrink-0">Validation client</span>

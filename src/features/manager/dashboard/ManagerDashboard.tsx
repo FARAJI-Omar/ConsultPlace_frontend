@@ -185,7 +185,7 @@ export default function ManagerDashboard() {
               </div>
               <div className="rounded-[12px] bg-[#f5f5f5] p-6">
                 <p className="text-sm font-medium text-[#6b7280]">CA facturé (HT)</p>
-                <p className="mt-2 text-3xl font-semibold text-[#111111]">{(kpis?.totalRevenue ?? 0).toLocaleString()} DH</p>
+                <p className="mt-2 text-3xl font-semibold text-[#111111]">{(kpis?.totalPaid ?? 0).toLocaleString()} DH</p>
               </div>
               <div className="rounded-[12px] bg-[#f5f5f5] p-6">
                 <p className="text-sm font-medium text-[#6b7280]">Encaissé (TTC)</p>

@@ -1,14 +1,14 @@
 interface KPICardsProps {
   pendingInvoices: number;
   totalPendingInvoices: number;
-  cabinetMargin: number;
+  totalPaid: number;
   isLoading: boolean;
 }
 
 export default function KPICards({
   pendingInvoices,
   totalPendingInvoices,
-  cabinetMargin,
+  totalPaid,
   isLoading,
 }: KPICardsProps) {
   const cards = [
@@ -18,13 +18,13 @@ export default function KPICards({
       suffix: '',
     },
     {
-      label: 'Montant total impayé',
+      label: 'Montant total impayé (TTC)',
       value: totalPendingInvoices,
       suffix: ' DH',
     },
     {
-      label: 'Marge cabinet',
-      value: cabinetMargin,
+      label: 'Montant total payé (TTC)',
+      value: totalPaid,
       suffix: ' DH',
     },
   ];

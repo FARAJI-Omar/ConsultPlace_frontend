@@ -4,7 +4,7 @@ import apiClient from '../lib/apiClient';
 interface DashboardKPIs {
   pendingInvoices: number;
   totalPendingInvoices: number;
-  cabinet_margin: number;
+  totalPaid: number;
 }
 
 interface TrackingRow {

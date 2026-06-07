@@ -88,18 +88,18 @@ export default function PayoutTrackingPage() {
       <h1 className="text-2xl font-semibold text-[#111111]">Paiements consultants</h1>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="rounded-[12px] bg-[#f5f5f5] p-6">
+        <div className="rounded-[12px] bg-[#ffffff] border border-[#e5e7eb] p-6">
           <p className="text-sm text-[#6b7280]">Total à payer</p>
           <p className="mt-1 text-2xl font-semibold text-[#111111]">{(totals?.total_to_be_payed ?? 0).toLocaleString()} DH</p>
         </div>
-        <div className="rounded-[12px] bg-[#f5f5f5] p-6">
+        <div className="rounded-[12px] bg-[#ffffff] border border-[#e5e7eb] p-6">
           <p className="text-sm text-[#6b7280]">Total payé</p>
           <p className="mt-1 text-2xl font-semibold text-[#111111]">{(totals?.total_payed ?? 0).toLocaleString()} DH</p>
         </div>
       </div>
 
       {unpaidConsultants.length > 0 && (
-        <div className="rounded-[12px] bg-[#f5f5f5] p-6">
+        <div className="rounded-[12px] bg-[#ffffff] border border-[#e5e7eb] p-6">
           <h2 className="mb-4 text-lg font-semibold text-[#111111]">Consultants non payés</h2>
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-sm">
@@ -147,7 +147,7 @@ export default function PayoutTrackingPage() {
         </div>
       )}
 
-      <div className="rounded-[12px] bg-[#f5f5f5] p-6">
+      <div className="rounded-[12px] bg-[#ffffff] border border-[#e5e7eb] p-6">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-[#111111]">Historique</h2>
           <button

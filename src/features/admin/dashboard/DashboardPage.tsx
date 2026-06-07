@@ -17,7 +17,7 @@ export default function DashboardPage() {
       <KPICards
         pendingInvoices={kpis?.pendingInvoices ?? 0}
         totalPendingInvoices={kpis?.totalPendingInvoices ?? 0}
-        cabinetMargin={kpis?.cabinet_margin ?? 0}
+        totalPaid={kpis?.totalPaid ?? 0}
         isLoading={kpisLoading}
       />
 

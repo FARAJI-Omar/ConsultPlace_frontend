@@ -1,7 +1,7 @@
 export interface DashboardKPIs {
   pendingInvoices: number;
   totalPendingInvoices: number;
-  totalRevenue: number;
+  totalPaid: number;
   totalReceived: number;
 }
 
@@ -178,7 +178,8 @@ export interface TrackingRow {
   cabinet_margin: number;
   timesheet: { month: string; mission: string };
   days: number;
-  dailyRate: number;
+  contractDailyRate: number;
+  missionDailyRate: number;
   invoiceRef: string;
   consultantStatus: string;
   clientStatus: string;
