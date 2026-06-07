@@ -78,6 +78,7 @@ export function useGenerateInvoice() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
       queryClient.invalidateQueries({ queryKey: ['tracking-dashboard'] });
+      queryClient.invalidateQueries({ queryKey: ['manager-timesheets'] });
     },
   });
 }
