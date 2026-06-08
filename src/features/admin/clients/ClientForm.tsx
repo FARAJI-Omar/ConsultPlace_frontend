@@ -74,9 +74,9 @@ export default function ClientForm({ client, onSuccess }: ClientFormProps) {
     if (Object.keys(newErrors).length > 0) return;
 
     if (client) {
-      const diff: Record<string, string | null> = {};
+      const diff: Record<string, string> = {};
       if (form.raison_sociale !== client.raison_sociale) diff.raison_sociale = form.raison_sociale;
-      if (form.rc !== (client.rc ?? '')) diff.rc = form.rc || null;
+      if (form.rc !== (client.rc ?? '')) diff.rc = form.rc;
       if (form.identifiant_commun !== client.identifiant_commun) diff.identifiant_commun = form.identifiant_commun;
       if (form.identifiant_fiscal !== (client.identifiant_fiscal ?? '')) diff.identifiant_fiscal = form.identifiant_fiscal;
       if (form.contact !== client.contact) diff.contact = form.contact;
@@ -104,7 +104,7 @@ export default function ClientForm({ client, onSuccess }: ClientFormProps) {
       );
     } else {
       mutation.mutate(
-        { id: undefined, data: { ...form, rc: form.rc || null } },
+        { id: undefined, data: form },
         {
           onSuccess: () => {
             toast.success('Client créé avec succès');
