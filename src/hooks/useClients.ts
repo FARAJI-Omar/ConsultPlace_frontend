@@ -21,7 +21,7 @@ interface Client {
 
 interface ClientFormData {
   raison_sociale: string;
-  rc?: string;
+  rc?: string | null;
   identifiant_commun: string;
   identifiant_fiscal?: string;
   contact: string;
