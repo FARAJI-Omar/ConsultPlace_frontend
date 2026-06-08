@@ -4,7 +4,7 @@ import type { Pagination } from '../../types/api';
 export interface Column<T> {
   key: string;
   label: string;
-  render?: (item: T) => React.ReactNode;
+  render?: (item: T, index: number) => React.ReactNode;
 }
 
 interface DataTableProps<T> {
@@ -115,7 +115,7 @@ function DataTableInner<T>({
                 const cellClassName = `whitespace-nowrap px-4 py-3 text-[#111111]${col.key === 'actions' ? ` ${lastColClass} bg-[#f7f8fa] text-center` : isLast ? ` ${lastColClass} text-center` : ''}${col.key !== 'actions' ? (isSelected ? ' bg-yellow-100/50' : ' bg-[#ffffff] hover:bg-[#f9fafb]') : ''}`;
                 return (
                   <td key={col.key} className={cellClassName}>
-                    {col.render ? col.render(item) : String((item as Record<string, unknown>)[col.key] ?? '')}
+                    {col.render ? col.render(item, idx) : String((item as Record<string, unknown>)[col.key] ?? '')}
                   </td>
                 );
               })}

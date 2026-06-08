@@ -114,7 +114,7 @@ export default function GlobalTrackingPage() {
   });
 
   if (data?.data) {
-    data.data.forEach((r) => allClientsRef.current.add(r.client));
+    data.data.forEach((r) => { if (r.client) allClientsRef.current.add(r.client); });
   }
 
   const clientOptions = Array.from(allClientsRef.current).sort((a, b) => a.localeCompare(b, 'fr'));
@@ -142,10 +142,12 @@ export default function GlobalTrackingPage() {
 
   const consultantStatusLabels: Record<string, string> = {
     PAYE: 'Payé',
+    PARTIAL_PAID: 'Partiellement payé',
   };
 
   const consultantStatusBadge: Record<string, string> = {
     PAYE: 'bg-[#d1fae5] text-[#10b981]',
+    PARTIAL_PAID: 'bg-[#ffedd5] text-[#f97316]',
   };
 
   const clientStatusLabels: Record<string, string> = {
@@ -163,20 +165,59 @@ export default function GlobalTrackingPage() {
   };
 
   const columns: Column<TrackingRow>[] = [
-    { key: 'month', label: 'Mois', render: (r) => r.timesheet?.month ?? '—' },
+    { key: '#', label: '#', render: (_item, idx) => String(idx + 1) },
+    { key: 'month', label: 'Mois', render: (r) => Array.isArray(r.month) ? r.month.join(', ') : (r.month ?? '—') },
     { key: 'client', label: 'Client', render: (r) => <span className="inline-block rounded-full px-2.5 py-0.5 text-xs font-medium bg-[#eff6ff] text-[#3b82f6]">{r.client ?? '—'}</span> },
-    { key: 'consultant', label: 'Consultant', render: (r) => <span className="inline-block rounded-full px-2.5 py-0.5 text-xs font-medium bg-[#f5f3ff] text-[#7c3aed]">{r.consultant ?? '—'}</span> },
-    { key: 'mission', label: 'Mission', render: (r) => r.timesheet?.mission ?? '—' },
-    { key: 'days', label: 'Jours', render: (r) => String(r.days ?? '—') },
+    { key: 'consultant', label: 'Consultant', render: (r) => {
+      const names = Array.isArray(r.consultant) ? r.consultant : [r.consultant];
+      return (
+        <div className="flex flex-wrap gap-1">
+          {names.map((n, i) => (
+            <span key={i} className="inline-block rounded-full px-2.5 py-0.5 text-xs font-medium bg-[#f5f3ff] text-[#7c3aed]">{n}</span>
+          ))}
+        </div>
+      );
+    } },
+    { key: 'mission', label: 'Mission', render: (r) => {
+      const missions = Array.isArray(r.mission) ? r.mission : [r.mission];
+      return (
+        <div className="flex flex-wrap gap-1">
+          {missions.map((m, i) => (
+            <span key={i} className="inline-block rounded-full px-2.5 py-0.5 text-xs font-medium text-[#0369a1]">{m}</span>
+          ))}
+        </div>
+      );
+    } },
+    { key: 'days', label: 'Jours', render: (r) => {
+      const daysList = Array.isArray(r.days) ? r.days : [r.days];
+      return (
+        <div className="flex flex-wrap gap-1">
+          {daysList.map((d, i) => (
+            <span key={i} className="inline-block rounded-full px-2.5 py-0.5 text-xs font-medium text-[#15803d]">{d}</span>
+          ))}
+        </div>
+      );
+    } },
     { key: 'invoiceRef', label: 'Facture', render: (r) => r.invoiceRef ?? '—' },
     { key: 'total', label: 'TTC', render: (r) => `${(r.total ?? 0).toLocaleString()} DH` },
     {
       key: 'clientStatus',
       label: 'Statut Client',
       render: (r) => {
-        const isLate = r.clientStatus !== 'PAID' && r.clientStatus !== 'CANCELED' && r.dueDate && new Date(r.dueDate) < new Date();
+        if (r.clientStatus === 'late') {
+          const due = new Date(r.dueDate);
+          const today = new Date();
+          const lateDays = Math.floor((new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime() - new Date(due.getFullYear(), due.getMonth(), due.getDate()).getTime()) / (1000 * 60 * 60 * 24));
+          return <span className="inline-block rounded-full px-2.5 py-0.5 text-xs font-medium bg-[#fef2f2] text-[#ef4444]">En retard (+{lateDays} j)</span>;
+        }
+        const isLate = r.clientStatus !== 'PAID' && r.clientStatus !== 'CANCELED' && r.dueDate && new Date(r.dueDate).toDateString() < new Date().toDateString();
         if (isLate) {
-          return <span className="inline-block rounded-full px-2.5 py-0.5 text-xs font-medium bg-[#fef2f2] text-[#ef4444]">En retard</span>;
+          const due = new Date(r.dueDate);
+          const today = new Date();
+          const lateDays = Math.floor((new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime() - new Date(due.getFullYear(), due.getMonth(), due.getDate()).getTime()) / (1000 * 60 * 60 * 24));
+          if (lateDays >= 15) {
+            return <span className="inline-block rounded-full px-2.5 py-0.5 text-xs font-medium bg-[#fef2f2] text-[#ef4444]">En retard (+{lateDays} j)</span>;
+          }
         }
         return (
           <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${clientStatusBadge[r.clientStatus] || 'bg-[#e5e7eb] text-[#6b7280]'}`}>
@@ -188,11 +229,20 @@ export default function GlobalTrackingPage() {
     {
       key: 'consultantStatus',
       label: 'Statut Consultant',
-      render: (r) => (
-        <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${consultantStatusBadge[r.consultantStatus] || 'bg-[#fef3c7] text-[#f59e0b]'}`}>
-          {consultantStatusLabels[r.consultantStatus] ?? 'Pas encore'}
-        </span>
-      ),
+      render: (r) => {
+        const items = r.grouped
+          ? r.consultants.map((c) => c.consultantStatus)
+          : [r.consultantStatus as string];
+        return (
+          <div className="flex flex-col items-start gap-1">
+            {items.map((s, i) => (
+              <span key={i} className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${consultantStatusBadge[s] || 'bg-[#fef3c7] text-[#f59e0b]'}`}>
+                {consultantStatusLabels[s] ?? 'Pas encore'}
+              </span>
+            ))}
+          </div>
+        );
+      },
     },
     {
       key: 'actions',
@@ -316,8 +366,12 @@ export default function GlobalTrackingPage() {
           <div className="w-full max-w-2xl rounded-[16px] bg-[#ffffff] shadow-xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="sticky top-0 z-10 bg-[#ffffff] border-b border-[#e5e7eb] px-6 py-5 flex items-center justify-between rounded-t-[16px]">
               <div>
-                <h2 className="text-lg font-semibold text-[#111111]">{detailRow.consultant} <span className="text-[#6b7280]">·</span> {detailRow.timesheet?.month}</h2>
-                <p className="text-sm text-[#6b7280] mt-0.5">{detailRow.client} <span className="text-[#d1d5db]">·</span> {detailRow.timesheet?.mission}</p>
+                <h2 className="text-lg font-semibold text-[#111111]">
+                  {detailRow.grouped ? 'Facture groupée' : (Array.isArray(detailRow.consultant) ? detailRow.consultant[0] : detailRow.consultant)}
+                  <span className="text-[#6b7280]"> · </span>
+                  {Array.isArray(detailRow.month) ? detailRow.month.join(', ') : detailRow.month}
+                </h2>
+                <p className="text-sm text-[#6b7280] mt-0.5">{detailRow.client} <span className="text-[#d1d5db]">·</span> {detailRow.ref}</p>
               </div>
               <button
                 onClick={() => setDetailRow(null)}
@@ -330,31 +384,56 @@ export default function GlobalTrackingPage() {
             </div>
 
             <div className="p-6 space-y-4">
-              <div className="rounded-[12px] bg-[#f5f5f5] p-5">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-[#6b7280] mb-3 text-center">Activité</h3>
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2 text-sm">
-                    <span className="text-[#6b7280] shrink-0">Jours</span>
-                    <span className="flex-1 border-b border-dashed border-[#d1d5db] min-w-[8px]" />
-                    <span className="text-[#111111] font-semibold shrink-0">{detailRow.days ?? '—'}</span>
+              {detailRow.grouped ? (
+                detailRow.consultants.map((c) => (
+                  <div key={c.consultantId} className="rounded-[12px] bg-[#f5f5f5] p-5">
+                    <h3 className="text-xs font-semibold uppercase tracking-wider text-[#6b7280] mb-3 text-center">{c.name} · {c.month}</h3>
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2 text-sm">
+                        <span className="text-[#6b7280] shrink-0">Jours</span>
+                        <span className="flex-1 border-b border-dashed border-[#d1d5db] min-w-[8px]" />
+                        <span className="text-[#111111] font-semibold shrink-0">{c.days}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <span className="text-[#6b7280] shrink-0">TJM Contrat</span>
+                        <span className="flex-1 border-b border-dashed border-[#d1d5db] min-w-[8px]" />
+                        <span className="text-[#111111] font-semibold shrink-0">{c.contractDailyRate.toLocaleString()} DH</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <span className="text-[#6b7280] shrink-0">TJM Consultant</span>
+                        <span className="flex-1 border-b border-dashed border-[#d1d5db] min-w-[8px]" />
+                        <span className="text-[#111111] font-semibold shrink-0">{c.missionDailyRate.toLocaleString()} DH</span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <span className="text-[#6b7280] shrink-0">TJM Contrat</span>
-                    <span className="flex-1 border-b border-dashed border-[#d1d5db] min-w-[8px]" />
-                    <span className="text-[#111111] font-semibold shrink-0">{(detailRow.contractDailyRate ?? 0).toLocaleString()} DH</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <span className="text-[#6b7280] shrink-0">TJM Consultant</span>
-                    <span className="flex-1 border-b border-dashed border-[#d1d5db] min-w-[8px]" />
-                    <span className="text-[#111111] font-semibold shrink-0">{(detailRow.missionDailyRate ?? 0).toLocaleString()} DH</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <span className="text-[#6b7280] shrink-0">Validation client</span>
-                    <span className="flex-1 border-b border-dashed border-[#d1d5db] min-w-[8px]" />
-                    <span className="text-[#10b981] font-semibold shrink-0">✓ Validé</span>
+                ))
+              ) : (
+                <div className="rounded-[12px] bg-[#f5f5f5] p-5">
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-[#6b7280] mb-3 text-center">Activité</h3>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="text-[#6b7280] shrink-0">Jours</span>
+                      <span className="flex-1 border-b border-dashed border-[#d1d5db] min-w-[8px]" />
+                      <span className="text-[#111111] font-semibold shrink-0">{detailRow.days ?? '—'}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="text-[#6b7280] shrink-0">TJM Contrat</span>
+                      <span className="flex-1 border-b border-dashed border-[#d1d5db] min-w-[8px]" />
+                      <span className="text-[#111111] font-semibold shrink-0">{(detailRow.contractDailyRate ?? 0).toLocaleString()} DH</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="text-[#6b7280] shrink-0">TJM Consultant</span>
+                      <span className="flex-1 border-b border-dashed border-[#d1d5db] min-w-[8px]" />
+                      <span className="text-[#111111] font-semibold shrink-0">{(detailRow.missionDailyRate ?? 0).toLocaleString()} DH</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="text-[#6b7280] shrink-0">Validation client</span>
+                      <span className="flex-1 border-b border-dashed border-[#d1d5db] min-w-[8px]" />
+                      <span className="text-[#10b981] font-semibold shrink-0">✓ Validé</span>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
               <div className="rounded-[12px] bg-[#f5f5f5] p-5">
                 <h3 className="text-xs font-semibold uppercase tracking-wider text-[#6b7280] mb-3 text-center">Facturation</h3>
@@ -393,9 +472,23 @@ export default function GlobalTrackingPage() {
                     <span className="text-[#6b7280] shrink-0">Statut Client</span>
                     <span className="flex-1 border-b border-dashed border-[#d1d5db] min-w-[8px]" />
                     {(() => {
-                      const isLate = detailRow.clientStatus !== 'PAID' && detailRow.clientStatus !== 'CANCELED' && detailRow.dueDate && new Date(detailRow.dueDate) < new Date();
+                      if (detailRow.clientStatus === 'late') {
+                        const due = new Date(detailRow.dueDate);
+                        const today = new Date();
+                        const lateDays = Math.floor((new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime() - new Date(due.getFullYear(), due.getMonth(), due.getDate()).getTime()) / (1000 * 60 * 60 * 24));
+                        if (lateDays >= 15) {
+                          return <span className="inline-block rounded-full px-2.5 py-0.5 text-xs font-medium bg-[#fef2f2] text-[#ef4444] shrink-0">En retard (+{lateDays} j)</span>;
+                        }
+                        return <span className="inline-block rounded-full px-2.5 py-0.5 text-xs font-medium shrink-0 bg-[#fef2f2] text-[#ef4444]">En retard</span>;
+                      }
+                      const isLate = detailRow.clientStatus !== 'PAID' && detailRow.clientStatus !== 'CANCELED' && detailRow.dueDate && new Date(detailRow.dueDate).toDateString() < new Date().toDateString();
                       if (isLate) {
-                        return <span className="inline-block rounded-full px-2.5 py-0.5 text-xs font-medium bg-[#fef2f2] text-[#ef4444] shrink-0">En retard</span>;
+                        const due = new Date(detailRow.dueDate);
+                        const today = new Date();
+                        const lateDays = Math.floor((new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime() - new Date(due.getFullYear(), due.getMonth(), due.getDate()).getTime()) / (1000 * 60 * 60 * 24));
+                        if (lateDays >= 15) {
+                          return <span className="inline-block rounded-full px-2.5 py-0.5 text-xs font-medium bg-[#fef2f2] text-[#ef4444] shrink-0">En retard (+{lateDays} j)</span>;
+                        }
                       }
                       return (
                         <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium shrink-0 ${clientStatusBadge[detailRow.clientStatus] || 'bg-[#e5e7eb] text-[#6b7280]'}`}>
@@ -414,18 +507,44 @@ export default function GlobalTrackingPage() {
 
               <div className="rounded-[12px] bg-[#f5f5f5] p-5">
                 <h3 className="text-xs font-semibold uppercase tracking-wider text-[#6b7280] mb-3 text-center">Paiement consultant</h3>
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2 text-sm">
-                    <span className="text-[#6b7280] shrink-0">Net</span>
-                    <span className="flex-1 border-b border-dashed border-[#d1d5db] min-w-[8px]" />
-                    <span className="text-[#111111] font-semibold shrink-0">{(detailRow.totalPaid ?? 0).toLocaleString()} DH</span>
+                {detailRow.grouped ? (
+                  detailRow.consultants.map((c) => (
+                    <div key={c.consultantId} className="space-y-3 mb-4 last:mb-0">
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-medium text-[#111111]">{c.name}</p>
+                        <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${consultantStatusBadge[c.consultantStatus] || 'bg-[#fef3c7] text-[#f59e0b]'}`}>{consultantStatusLabels[c.consultantStatus] ?? 'Pas encore'}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <span className="text-[#6b7280] shrink-0">Net</span>
+                        <span className="flex-1 border-b border-dashed border-[#d1d5db] min-w-[8px]" />
+                        <span className="text-[#111111] font-semibold shrink-0">{c.totalPaid.toLocaleString()} DH</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <span className="text-[#6b7280] shrink-0">Versé le</span>
+                        <span className="flex-1 border-b border-dashed border-[#d1d5db] min-w-[8px]" />
+                        <span className="text-[#111111] font-semibold shrink-0">{c.paymentDate ? formatDate(c.paymentDate) : '—'}</span>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="text-[#6b7280] shrink-0">Statut Consultant</span>
+                      <span className="flex-1 border-b border-dashed border-[#d1d5db] min-w-[8px]" />
+                      <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium shrink-0 ${consultantStatusBadge[detailRow.consultantStatus as string] || 'bg-[#fef3c7] text-[#f59e0b]'}`}>{consultantStatusLabels[detailRow.consultantStatus as string] ?? 'Pas encore'}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="text-[#6b7280] shrink-0">Net</span>
+                      <span className="flex-1 border-b border-dashed border-[#d1d5db] min-w-[8px]" />
+                      <span className="text-[#111111] font-semibold shrink-0">{(detailRow.totalPaid ?? 0).toLocaleString()} DH</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="text-[#6b7280] shrink-0">Versé le</span>
+                      <span className="flex-1 border-b border-dashed border-[#d1d5db] min-w-[8px]" />
+                      <span className="text-[#111111] font-semibold shrink-0">{detailRow.consultantPaymentDate ? formatDate(detailRow.consultantPaymentDate as string) : '—'}</span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <span className="text-[#6b7280] shrink-0">Versé le</span>
-                    <span className="flex-1 border-b border-dashed border-[#d1d5db] min-w-[8px]" />
-                    <span className="text-[#111111] font-semibold shrink-0">{detailRow.consultantPaymentDate ? formatDate(detailRow.consultantPaymentDate) : '—'}</span>
-                  </div>
-                </div>
+                )}
               </div>
 
               <div

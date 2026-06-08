@@ -16,6 +16,7 @@ export default function PaymentsHistoryPage() {
   const totalGains = rows.reduce((sum, r) => sum + (r.paymentAmount ?? 0), 0);
 
   const columns: Column<TrackingEntry>[] = [
+    { key: '#', label: '#', render: (_item, idx) => String(idx + 1) },
     {
       key: 'date',
       label: 'Date de Paiement',

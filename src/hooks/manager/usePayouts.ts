@@ -21,11 +21,15 @@ interface PayoutResponse {
   };
 }
 
-export function usePayoutsHistory() {
+export function usePayoutsHistory(consultantId?: number) {
   return useQuery({
-    queryKey: ['payouts-history'],
+    queryKey: ['payouts-history', { consultantId }],
     queryFn: () =>
-      apiClient.get<PayoutHistoryResponse>('/payouts/history').then((res) => res.data),
+      apiClient
+        .get<PayoutHistoryResponse>('/payouts/history', {
+          params: { ...(consultantId ? { consultantId } : {}) },
+        })
+        .then((res) => res.data),
   });
 }
 

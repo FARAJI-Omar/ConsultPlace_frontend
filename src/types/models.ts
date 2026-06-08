@@ -78,6 +78,7 @@ export interface Mission {
   title: string;
   startDate: string;
   endDate?: string;
+  missionDailyRate?: number;
   status: 'ACTIVE' | 'CLOSED';
   createdAt: string;
   updatedAt: string;

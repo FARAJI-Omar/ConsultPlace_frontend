@@ -113,10 +113,16 @@ export default function MissionDetailsPage() {
               </dd>
             </div>
             <div className="flex items-center gap-2">
-              <dt className="shrink-0 text-[#6b7280]">Consultant</dt>
+              <dt className="shrink-0 text-[#6b7280]">Consultant(s)</dt>
               <span className="flex-1 border-b border-dashed border-[#cdcfd1]" />
               <dd className="shrink-0 font-medium text-[#111111]">
-                {mission.consultant?.name ?? '—'}
+                {(() => {
+                  const list = mission.consultants ?? [];
+                  if (list.length > 0) {
+                    return list.map((mc) => mc.consultant.name).join(', ');
+                  }
+                  return mission.consultant?.name ?? '—';
+                })()}
               </dd>
             </div>
             <div className="flex items-center gap-2">

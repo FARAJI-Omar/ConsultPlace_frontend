@@ -124,6 +124,7 @@ export default function AuditLogPage() {
   }, []);
 
   const columns: Column<AuditLogEntry>[] = [
+    { key: '#', label: '#', render: (_item, idx) => String(idx + 1) },
     { key: 'action', label: 'Action' },
     {
       key: 'userEmail',

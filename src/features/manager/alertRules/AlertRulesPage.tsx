@@ -30,6 +30,7 @@ export default function AlertRulesPage() {
   };
 
   const columns: Column<AlertRule>[] = [
+    { key: '#', label: '#', render: (_item, idx) => String(idx + 1) },
     { key: 'type', label: 'Type',
       render: (item) => {
         const typeLabels: Record<string, string> = {

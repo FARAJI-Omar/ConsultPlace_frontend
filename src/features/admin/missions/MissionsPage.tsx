@@ -48,6 +48,7 @@ export default function MissionsPage() {
   };
 
   const columns: Column<Mission>[] = [
+    { key: '#', label: '#', render: (_item, idx) => String(idx + 1) },
     {
       key: 'title',
       label: 'Titre',
@@ -66,11 +67,23 @@ export default function MissionsPage() {
       render: (item) => item.contract?.ref ?? '—',
     },
     {
-      key: 'consultant',
-      label: 'Consultant',
-      render: (item) => (
-        <span className="inline-block rounded-[6px] bg-[#EFF6FF] px-2.5 py-1 text-sm font-medium text-[#111111]">{item.consultant?.name ?? '—'}</span>
-      ),
+      key: 'consultants',
+      label: 'Consultant(s)',
+      render: (item) => {
+        const list = item.consultants ?? [];
+        if (list.length === 0) {
+          return <span className="inline-block rounded-[6px] bg-[#EFF6FF] px-2.5 py-1 text-sm font-medium text-[#111111]">{item.consultant?.name ?? '—'}</span>;
+        }
+        return (
+          <div className="flex flex-wrap gap-1">
+            {list.map((mc) => (
+              <span key={mc.consultantId} className="inline-block rounded-[6px] bg-[#EFF6FF] px-2.5 py-1 text-sm font-medium text-[#111111]">
+                {mc.consultant.name}
+              </span>
+            ))}
+          </div>
+        );
+      },
     },
     { key: 'startDate', label: 'Début', render: (item) => formatDate(item.startDate) },
     {

@@ -157,9 +157,7 @@ function DraftCard({
     }
   };
 
-  const { data: attachments, isLoading: attachmentsLoading } = useGetAttachments(
-    isExpanded ? draft.id : 0,
-  );
+  const { data: attachments, isLoading: attachmentsLoading } = useGetAttachments(draft.id);
 
   const proofAttachments = attachments?.filter((a) => a.type === 'PROOF') ?? [];
   const factureAttachments = attachments?.filter((a) => a.type === 'CONSULTANT_FACTURE') ?? [];

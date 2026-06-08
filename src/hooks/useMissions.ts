@@ -14,6 +14,7 @@ export interface Mission {
   attachments?: { id: number; filename: string; url: string; type: string; createdAt: string }[];
   contract?: { id: number; ref: string; startDate?: string; endDate?: string; profile?: string; dailyRate?: number };
   consultant?: { id: number; name: string };
+  consultants?: { consultantId: number; consultant: { id: number; name: string } }[];
   timesheets?: {
     id: number;
     consultantId: number;
@@ -34,7 +35,7 @@ export interface Mission {
 
 export interface MissionFormData {
   contractId: number;
-  consultantId: number;
+  consultantIds: number[];
   title: string;
   startDate: string;
   endDate?: string;
@@ -92,18 +93,30 @@ export function useMutateMission() {
 
   return useMutation({
     mutationFn: (data: MissionFormData) => {
-      const formData = new FormData();
-      formData.append('contractId', String(data.contractId));
-      formData.append('consultantId', String(data.consultantId));
-      formData.append('title', data.title);
-      formData.append('startDate', data.startDate);
-      if (data.endDate) formData.append('endDate', data.endDate);
-      formData.append('missionDailyRate', String(data.missionDailyRate));
-      if (data.files) {
-        data.files.forEach((file) => formData.append('files', file));
+      const hasFiles = data.files && data.files.length > 0;
+      if (hasFiles) {
+        const formData = new FormData();
+        formData.append('contractId', String(data.contractId));
+        data.consultantIds.forEach((id) => formData.append('consultantIds', String(id)));
+        formData.append('title', data.title);
+        formData.append('startDate', data.startDate);
+        if (data.endDate) formData.append('endDate', data.endDate);
+        formData.append('missionDailyRate', String(data.missionDailyRate));
+        data.files!.forEach((file) => formData.append('files', file));
+        return apiClient
+          .post<{ success: true; data: Mission }>('/missions', formData)
+          .then((res) => res.data.data);
       }
+      const body = {
+        contractId: data.contractId,
+        consultantIds: data.consultantIds,
+        title: data.title,
+        startDate: data.startDate,
+        ...(data.endDate ? { endDate: data.endDate } : {}),
+        missionDailyRate: data.missionDailyRate,
+      };
       return apiClient
-        .post<{ success: true; data: Mission }>('/missions', formData)
+        .post<{ success: true; data: Mission }>('/missions', body)
         .then((res) => res.data.data);
     },
     onSuccess: () => {

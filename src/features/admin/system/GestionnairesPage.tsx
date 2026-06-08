@@ -24,6 +24,7 @@ export default function GestionnairesPage() {
   }, []);
 
   const columns: Column<GestionnaireRow>[] = [
+    { key: '#', label: '#', render: (_item, idx) => String(idx + 1) },
     { key: 'email', label: 'Email' },
     { key: 'role', label: 'Rôle' },
   ];

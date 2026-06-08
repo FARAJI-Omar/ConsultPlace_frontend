@@ -79,13 +79,15 @@ export interface Invoice {
   id: number;
   ref: string;
   timesheetId: number;
+  timesheetIds?: number[];
   clientId: number;
   consultantId: number;
   amount: number;
   vatRate: number;
   vat: number;
   total: number;
-  consultantPayout: number;
+  consultantPayout: number | null;
+  consultantPayouts?: { consultantId: number; payoutAmount: number }[];
   consultantPayoutRest: number;
   status: string;
   issueDate: string;
@@ -105,7 +107,7 @@ export interface Invoice {
   client?: { id: number; raison_sociale: string; email: string };
   consultant?: { id: number; name: string; email: string };
   consultantPayoutStatus?: 'non_paye' | 'paiement_partiel' | 'paye';
-  consultantPayments?: { amount: number; date: string; paid: number; rest: number }[];
+  consultantPayments?: { consultantId?: number; amount: number; date: string; paid: number; rest: number }[];
 }
 
 export interface PaymentRecord {
@@ -137,6 +139,7 @@ export interface GenerateInvoicePayload {
 
 export interface PayoutPayload {
   invoiceId: number;
+  consultantId?: number;
   amount: number;
   comment?: string;
 }
@@ -150,6 +153,7 @@ export interface PayoutHistoryEntry {
   id: number;
   invoiceRef: string;
   invoiceId: number;
+  consultantId?: number;
   amount: number;
   date: string;
   status: string;
@@ -164,9 +168,9 @@ export interface PayoutHistory {
 
 export interface TrackingRow {
   id: number;
+  grouped: boolean;
   ref: string;
-  client: string;
-  consultant: string;
+  client: string | null;
   amount: number;
   vat: number;
   total: number;
@@ -174,16 +178,30 @@ export interface TrackingRow {
   issueDate: string;
   dueDate: string;
   paymentDate: string | null;
+  invoiceRef: string;
+  clientStatus: string;
   totalPaid: number;
   cabinet_margin: number;
-  timesheet: { month: string; mission: string };
-  days: number;
-  contractDailyRate: number;
-  missionDailyRate: number;
-  invoiceRef: string;
-  consultantStatus: string;
-  clientStatus: string;
-  consultantPaymentDate: string | null;
+  consultants: {
+    consultantId: number;
+    name: string;
+    month: string;
+    mission: string;
+    days: number;
+    contractDailyRate: number;
+    missionDailyRate: number;
+    consultantStatus: string;
+    totalPaid: number;
+    paymentDate: string | null;
+  }[];
+  consultant: string | string[];
+  month: string | string[];
+  mission: string | string[];
+  days: number | number[];
+  contractDailyRate: number | number[];
+  missionDailyRate: number | number[];
+  consultantStatus: string | string[];
+  consultantPaymentDate: string | null | (string | null)[];
 }
 
 export interface TurnoverForecast {

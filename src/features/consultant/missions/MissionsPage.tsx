@@ -38,6 +38,7 @@ export default function MissionsPage() {
   };
 
   const columns: Column<ConsultantMission>[] = [
+    { key: '#', label: '#', render: (_item, idx) => String(idx + 1) },
     { key: 'title', label: 'Titre' },
     {
       key: 'status',

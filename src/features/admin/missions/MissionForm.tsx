@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { toast } from 'sonner';
 import { Upload, X } from 'lucide-react';
+import Select from 'react-select';
 import { parseApiError } from '../../../utils/errorParser';
 import { useMutateMission, useUpdateMission } from '../../../hooks/useMissions';
 import type { Mission } from '../../../hooks/useMissions';
@@ -48,12 +49,14 @@ export default function MissionForm({ onSuccess, mission }: MissionFormProps) {
   const isEdit = !!mission;
   const [form, setForm] = useState({
     contractId: mission?.contractId?.toString() ?? '',
-    consultantId: mission?.consultantId?.toString() ?? '',
     title: mission?.title ?? '',
     startDate: mission?.startDate ?? '',
     endDate: mission?.endDate ?? '',
     missionDailyRate: mission?.missionDailyRate?.toString() ?? '',
   });
+  const [selectedConsultants, setSelectedConsultants] = useState<{ value: number; label: string }[]>(
+    mission?.consultants?.map((mc) => ({ value: mc.consultantId, label: mc.consultant.name })) ?? [],
+  );
   const [files, setFiles] = useState<File[]>([]);
   const [deletedAttachmentIds, setDeletedAttachmentIds] = useState<number[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -103,7 +106,7 @@ export default function MissionForm({ onSuccess, mission }: MissionFormProps) {
 
     const newErrors: Record<string, string> = {};
     if (!isEdit && !f.contractId) newErrors.contractId = 'Ce champ est requis';
-    if (!isEdit && !f.consultantId) newErrors.consultantId = 'Ce champ est requis';
+    if (!isEdit && selectedConsultants.length === 0) newErrors.consultantIds = 'Sélectionnez au moins un consultant';
     if (!f.title) newErrors.title = 'Ce champ est requis';
     if (!f.startDate) newErrors.startDate = 'Ce champ est requis';
     if (!f.missionDailyRate || parseFloat(f.missionDailyRate) <= 0) newErrors.missionDailyRate = 'Le taux journalier doit être supérieur à 0';
@@ -162,7 +165,7 @@ export default function MissionForm({ onSuccess, mission }: MissionFormProps) {
       createMutation.mutate(
         {
           contractId: Number(form.contractId),
-          consultantId: Number(form.consultantId),
+          consultantIds: selectedConsultants.map((c) => c.value),
           title: form.title,
           startDate: f.startDate,
           endDate: f.endDate || undefined,
@@ -199,7 +202,6 @@ export default function MissionForm({ onSuccess, mission }: MissionFormProps) {
       ]
     : [
         { key: 'contractId', label: 'Contrat', required: true, type: 'select', options: (contractsData?.data ?? []).map((c) => ({ id: c.id, ref: c.ref })) },
-        { key: 'consultantId', label: 'Consultant', required: true, type: 'select', options: activeConsultants.map((c) => ({ id: c.id, name: c.name })) },
         { key: 'title', label: 'Titre', required: true },
         { key: 'startDate', label: 'Date de début', required: true, type: 'date' },
         { key: 'endDate', label: 'Date de fin', required: false, type: 'date' },
@@ -277,6 +279,36 @@ export default function MissionForm({ onSuccess, mission }: MissionFormProps) {
           )}
           {errors[key] && (
             <p className="mt-1 text-xs text-red-500">{errors[key]}</p>
+          )}
+          {!isEdit && key === 'contractId' && (
+            <div className="mt-4">
+              <label className="mb-1 block text-sm font-medium text-[#111111]">
+                Consultant(s) <span className="text-red-500">*</span>
+              </label>
+              <Select
+                isMulti
+                options={activeConsultants.map((c) => ({ value: c.id, label: c.name }))}
+                value={selectedConsultants}
+                onChange={(newVal) => {
+                  setSelectedConsultants([...newVal]);
+                  setErrors((prev) => { const n = { ...prev }; delete n.consultantIds; return n; });
+                }}
+                placeholder="Sélectionner un ou plusieurs consultants"
+                className="text-sm"
+                styles={{
+                  control: (base, state) => ({
+                    ...base,
+                    borderRadius: '8px',
+                    borderColor: errors.consultantIds ? '#ef4444' : state.isFocused ? '#2451EB' : '#e5e7eb',
+                    boxShadow: state.isFocused ? '0 0 0 1px #2451EB' : 'none',
+                    '&:hover': { borderColor: '#2451EB' },
+                  }),
+                }}
+              />
+              {errors.consultantIds && (
+                <p className="mt-1 text-xs text-red-500">{errors.consultantIds}</p>
+              )}
+            </div>
           )}
         </div>
       ))}

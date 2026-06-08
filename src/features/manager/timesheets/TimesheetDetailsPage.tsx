@@ -97,7 +97,7 @@ export default function TimesheetDetailsPage() {
     );
   }
 
-  const allowedAttachments = ts.attachments?.filter((a) => a.type === 'PROOF' || a.type === 'MISSION_DOC') ?? [];
+  const allowedAttachments = ts.attachments?.filter((a) => a.type === 'PROOF' || a.type === 'CONSULTANT_FACTURE' || a.type === 'MISSION_DOC') ?? [];
 
   const [yearStr, monthStr] = ts.month.split('-');
   const year = Number(yearStr);

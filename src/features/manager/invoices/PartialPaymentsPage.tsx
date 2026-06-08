@@ -79,6 +79,7 @@ export default function PartialPaymentsPage() {
   };
 
   const columns: Column<Invoice>[] = [
+    { key: '#', label: '#', render: (_item, idx) => String(idx + 1) },
     { key: 'ref', label: 'Réf', render: (inv) => <Link to={`/manager/invoices/${inv.id}`} className="text-[#3b82f6] hover:underline">{inv.ref}</Link> },
     { key: 'client', label: 'Client', render: (inv) => inv.client?.raison_sociale ?? '-' },
     { key: 'total', label: 'Total TTC', render: (inv) => `${(inv.total ?? 0).toLocaleString()} DH` },

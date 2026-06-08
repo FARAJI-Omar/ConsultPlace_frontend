@@ -48,6 +48,7 @@ export default function AllInvoicesPage() {
   const [payoutMode, setPayoutMode] = useState<'DH' | '%'>('DH');
   const [payoutAmount, setPayoutAmount] = useState('');
   const [payoutComment, setPayoutComment] = useState('');
+  const [payoutConsultantId, setPayoutConsultantId] = useState<number | ''>('');
   const [reminderModal, setReminderModal] = useState<Invoice | null>(null);
   const [reminderFrequency, setReminderFrequency] = useState<'7' | '15' | '30'>('15');
 
@@ -153,6 +154,10 @@ export default function AllInvoicesPage() {
 
   const payoutRest = payoutModal?.consultantPayoutRest ?? 0;
 
+  const payoutBase = payoutModal?.consultantPayouts && payoutConsultantId
+    ? (payoutModal.consultantPayouts.find((cp) => cp.consultantId === payoutConsultantId)?.payoutAmount ?? payoutRest)
+    : payoutRest;
+
   const handlePayout = () => {
     if (!payoutModal) return;
     const parsed = parseFloat(payoutAmount);
@@ -160,23 +165,27 @@ export default function AllInvoicesPage() {
       toast.error('Le montant doit être supérieur à 0');
       return;
     }
-    if (payoutMode === 'DH' && parsed > payoutRest) {
+    if (payoutMode === 'DH' && parsed > payoutBase) {
       toast.error("Le montant ne peut pas dépasser le restant dû");
       return;
     }
     const dhAmount = payoutMode === '%'
-      ? Math.round(payoutRest * parsed / 100 * 100) / 100
+      ? Math.round(payoutBase * parsed / 100 * 100) / 100
       : parsed;
     payoutMutation.mutate(
-      { invoiceId: payoutModal.id, amount: dhAmount, comment: payoutComment || undefined },
+      { invoiceId: payoutModal.id, consultantId: Number(payoutConsultantId) || undefined, amount: dhAmount, comment: payoutComment || undefined },
       {
         onSuccess: () => {
           toast.success(`Paiement déclenché pour ${payoutModal.ref}`);
           setPayoutModal(null);
           setPayoutAmount('');
           setPayoutComment('');
+          setPayoutConsultantId('');
         },
-        onError: () => toast.error("Erreur lors du paiement"),
+        onError: (err) => {
+          const axiosErr = err as { response?: { data?: { error?: { message?: string } } } };
+          toast.error(axiosErr.response?.data?.error?.message ?? "Erreur lors du paiement");
+        },
       },
     );
   };
@@ -267,13 +276,27 @@ export default function AllInvoicesPage() {
   // const cancelDisabled = (status: string) => status === 'PAID' || status === 'PARTIAL_PAID';
 
   const columns: Column<Invoice>[] = [
+    { key: '#', label: '#', render: (_item, idx) => String(idx + 1) },
     { key: 'ref', label: 'Réf', render: (inv) => <Link to={`/manager/invoices/${inv.id}`} className="text-[#3b82f6] hover:underline">{inv.ref}</Link> },
     { key: 'client', label: 'Client', render: (inv) => (
       <span className="inline-block rounded-[6px] bg-[#EFF6FF] px-2.5 py-1 text-sm font-medium text-[#111111]">{inv.client?.raison_sociale ?? '-'}</span>
     ) },
-    { key: 'consultant', label: 'Consultant', render: (inv) => (
-      <span className="inline-block rounded-[6px] bg-[#ffea002e] px-2.5 py-1 text-sm font-medium text-[#111111]">{inv.consultant?.name ?? '-'}</span>
-    ) },
+    { key: 'consultant', label: 'Consultant', render: (inv) => {
+      if (inv.consultantPayouts && inv.consultantPayouts.length > 0) {
+        return (
+          <div className="flex flex-wrap gap-1">
+            {inv.consultantPayouts.map((cp) => (
+              <span key={cp.consultantId} className="inline-block rounded-[6px] bg-[#ffea002e] px-2.5 py-1 text-sm font-medium text-[#111111]">
+                Consultant #{cp.consultantId}
+              </span>
+            ))}
+          </div>
+        );
+      }
+      return (
+        <span className="inline-block rounded-[6px] bg-[#ffea002e] px-2.5 py-1 text-sm font-medium text-[#111111]">{inv.consultant?.name ?? '-'}</span>
+      );
+    } },
     { key: 'amount', label: 'Montant HT', render: (inv) => `${(inv.amount ?? 0).toLocaleString()} DH` },
     { key: 'vat', label: 'TVA', render: (inv) => `${(inv.vat ?? 0).toLocaleString()} DH (${inv.vatRate ?? 0}%)` },
     { key: 'total', label: 'Total TTC', render: (inv) => `${(inv.total ?? 0).toLocaleString()} DH` },
@@ -512,6 +535,24 @@ export default function AllInvoicesPage() {
               Reste à payer : <span className="font-bold bg-green-500/20 px-4 py-1 rounded text-[#111111]">{(payoutModal.consultantPayoutRest ?? 0).toLocaleString()} DH</span>
             </p>
 
+            {payoutModal.consultantPayouts && payoutModal.consultantPayouts.length > 0 && (
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-[#111111] mb-1">Consultant</label>
+                <select
+                  value={payoutConsultantId}
+                  onChange={(e) => setPayoutConsultantId(e.target.value ? Number(e.target.value) : '')}
+                  className="w-full rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111]"
+                >
+                  <option value="">Sélectionner un consultant</option>
+                  {payoutModal.consultantPayouts.map((cp) => (
+                    <option key={cp.consultantId} value={cp.consultantId}>
+                      Consultant #{cp.consultantId} — {cp.payoutAmount.toLocaleString()} DH
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             <div>
               <label className="block text-sm font-medium text-[#111111] mb-1">
                 {payoutMode === 'DH' ? 'Montant (DH)' : 'Pourcentage (%)'}
@@ -529,7 +570,7 @@ export default function AllInvoicesPage() {
                 <div className="flex rounded-[8px] border border-[#e5e7eb] overflow-hidden shrink-0">
                   <button
                     type="button"
-                    onClick={() => { setPayoutMode('DH'); setPayoutAmount(String((payoutModal.consultantPayoutRest ?? 0))); }}
+                    onClick={() => { setPayoutMode('DH'); setPayoutAmount(String(payoutBase)); }}
                     className={`cursor-pointer px-3 py-2 text-xs font-semibold transition-colors ${payoutMode === 'DH' ? 'bg-[#111111] text-[#ffffff]' : 'bg-[#ffffff] text-[#6b7280] hover:bg-[#f3f4f6]'}`}
                   >
                     DH
@@ -545,7 +586,7 @@ export default function AllInvoicesPage() {
               </div>
               {payoutMode === '%' && payoutAmount && !isNaN(parseFloat(payoutAmount)) && (
                 <p className="mt-1 text-xs text-[#6b7280]">
-                  Montant calculé : {Math.round((payoutModal.consultantPayoutRest ?? 0) * parseFloat(payoutAmount) / 100 * 100) / 100} DH
+                  Montant calculé : {Math.round(payoutBase * parseFloat(payoutAmount) / 100 * 100) / 100} DH
                 </p>
               )}
             </div>
@@ -559,8 +600,8 @@ export default function AllInvoicesPage() {
               />
             </div>
             <div className="mt-6 flex justify-end gap-3">
-              <button onClick={() => { setPayoutModal(null); setPayoutComment(''); }} className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-4 py-2 text-sm text-[#111111] transition-colors hover:bg-[#f3f4f6]">Annuler</button>
-              <button onClick={handlePayout} disabled={payoutMutation.isPending || !payoutAmount || parseFloat(payoutAmount) <= 0 || parseFloat(payoutAmount) > (payoutMode === 'DH' ? (payoutModal.consultantPayoutRest ?? 0) : 100)} className="cursor-pointer rounded-[8px] bg-[#10b981] px-4 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-90 disabled:opacity-50">
+              <button onClick={() => { setPayoutModal(null); setPayoutComment(''); setPayoutConsultantId(''); }} className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-4 py-2 text-sm text-[#111111] transition-colors hover:bg-[#f3f4f6]">Annuler</button>
+              <button onClick={handlePayout} disabled={payoutMutation.isPending || !payoutAmount || parseFloat(payoutAmount) <= 0 || parseFloat(payoutAmount) > (payoutMode === 'DH' ? payoutBase : 100)} className="cursor-pointer rounded-[8px] bg-[#10b981] px-4 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-90 disabled:opacity-50">
                 {payoutMutation.isPending ? 'Traitement...' : 'Confirmer le paiement'}
               </button>
             </div>

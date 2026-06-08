@@ -64,6 +64,7 @@ export default function ConsultantsPage() {
   };
 
   const columns: Column<ConsultantRow>[] = [
+    { key: '#', label: '#', render: (_item, idx) => String(idx + 1) },
     { key: 'name', label: 'Nom complet', render: (item) => (
       <span className="inline-block rounded-[6px] bg-[#EFF6FF] px-2.5 py-1 text-sm font-medium text-[#111111]">{item.name}</span>
     ) },

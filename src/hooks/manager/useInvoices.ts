@@ -83,6 +83,26 @@ export function useGenerateInvoice() {
   });
 }
 
+interface GenerateGroupedPayload {
+  timesheetIds: number[];
+  vatRate?: number;
+}
+
+export function useGenerateGroupedInvoice() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: GenerateGroupedPayload) =>
+      apiClient
+        .post<GenerateInvoiceResponse>('/invoices/generate-grouped', payload)
+        .then((res) => res.data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      queryClient.invalidateQueries({ queryKey: ['tracking-dashboard'] });
+      queryClient.invalidateQueries({ queryKey: ['manager-timesheets'] });
+    },
+  });
+}
+
 export function useCancelInvoice() {
   const queryClient = useQueryClient();
   return useMutation({

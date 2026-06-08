@@ -56,6 +56,7 @@ export default function ContractsPage() {
   };
 
   const columns: Column<ContractRow>[] = [
+    { key: '#', label: '#', render: (_item, idx) => String(idx + 1) },
     { key: 'ref', label: 'Référence', render: (item) => (
       <div className="flex items-center gap-2">
         <span>{item.ref}</span>

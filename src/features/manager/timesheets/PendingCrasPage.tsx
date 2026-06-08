@@ -1,7 +1,9 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { toast } from 'sonner';
 import { DataTable } from '../../../components/common/DataTable';
 import { useManagerTimesheets } from '../../../hooks/manager/useManagerTimesheets';
+import { useGenerateGroupedInvoice } from '../../../hooks/manager/useInvoices';
 import { formatDate } from '../../../lib/utils';
 import ReviewCraModal from './ReviewCraModal';
 import GenerateInvoiceModal from './GenerateInvoiceModal';
@@ -38,6 +40,10 @@ export default function PendingCrasPage() {
   const [statusFilter, setStatusFilter] = useState('');
   const [selectedTimesheetId, setSelectedTimesheetId] = useState<number | null>(null);
   const [invoiceTimesheet, setInvoiceTimesheet] = useState<ManagerTimesheet | null>(null);
+  const [groupedMode, setGroupedMode] = useState(false);
+  const [selectedTsIds, setSelectedTsIds] = useState<number[]>([]);
+  const [showGroupedModal, setShowGroupedModal] = useState(false);
+  const [groupedVatRate, setGroupedVatRate] = useState('20');
   const [showHint, setShowHint] = useState(true);
   const hintRef = useRef<HTMLDivElement>(null);
 
@@ -52,6 +58,13 @@ export default function PendingCrasPage() {
   }, []);
 
   const { data, isLoading } = useManagerTimesheets(page, limit, statusFilter || undefined);
+  const groupedMutation = useGenerateGroupedInvoice();
+
+  const handleToggleSelection = (id: number) => {
+    setSelectedTsIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
 
   const handlePageChange = useCallback((p: number) => {
     setPage(p);
@@ -63,8 +76,27 @@ export default function PendingCrasPage() {
   }, []);
 
   const filteredData = (data?.data ?? []).filter((ts) => ts.status !== 'BROUILLON');
+  const valideCount = filteredData.filter((ts) => ts.status === 'VALIDE').length;
 
   const columns: Column<ManagerTimesheet>[] = [
+    { key: '#', label: '#', render: (_item, idx) => String(idx + 1) },
+    ...(groupedMode
+      ? [
+          {
+            key: 'select' as const,
+            label: '',
+            render: (ts: ManagerTimesheet) => (
+              <input
+                type="checkbox"
+                checked={selectedTsIds.includes(ts.id)}
+                disabled={ts.status !== 'VALIDE'}
+                onChange={() => handleToggleSelection(ts.id)}
+                className="cursor-pointer"
+              />
+            ),
+          } as Column<ManagerTimesheet>,
+        ]
+      : []),
     { key: 'month', label: 'Mois', render: (ts) => formatMonth(ts.month) },
     { key: 'missionTitle', label: 'Mission', render: (ts) => ts.mission.title },
     { key: 'consultantName', label: 'Consultant', render: (ts) => (
@@ -97,7 +129,7 @@ export default function PendingCrasPage() {
               Examiner
             </button>
           )}
-          {ts.status === 'VALIDE' && (
+          {ts.status === 'VALIDE' && !groupedMode && (
             <button
               onClick={() => setInvoiceTimesheet(ts)}
               className="cursor-pointer rounded-[8px] bg-[#10b981] px-3 py-1.5 text-xs font-medium text-[#ffffff] transition-colors hover:bg-[#059669]"
@@ -146,6 +178,35 @@ export default function PendingCrasPage() {
               <option key={opt.value} value={opt.value}>{opt.label}</option>
             ))}
           </select>
+          {!groupedMode && valideCount >= 2 ? (
+            <button
+              onClick={() => { setGroupedMode(true); setSelectedTsIds([]); }}
+              className="cursor-pointer rounded-[8px] bg-[#2451EB] px-3 py-2 text-sm font-medium text-[#ffffff] transition-colors hover:opacity-90 ml-auto"
+            >
+              Générer facture groupée
+            </button>
+          ) : !groupedMode ? (
+            <div className="ml-auto" />
+          ) : (
+            <div className="ml-auto flex items-center gap-2">
+              <span className="text-sm text-[#6b7280]">{selectedTsIds.length} sélectionné(s)</span>
+              <button
+                onClick={() => setShowGroupedModal(true)}
+                disabled={selectedTsIds.length < 2}
+                className={`cursor-pointer rounded-[8px] px-3 py-2 text-sm font-medium text-[#ffffff] transition-colors ${
+                  selectedTsIds.length < 2 ? 'bg-[#9ca3af] cursor-not-allowed' : 'bg-[#10b981] hover:opacity-90'
+                }`}
+              >
+                Générer
+              </button>
+              <button
+                onClick={() => { setGroupedMode(false); setSelectedTsIds([]); }}
+                className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm font-medium text-[#111111] transition-colors hover:bg-[#f3f4f6]"
+              >
+                Annuler
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -176,6 +237,75 @@ export default function PendingCrasPage() {
           onClose={() => setInvoiceTimesheet(null)}
         />
       )}
+
+      {showGroupedModal && (() => {
+        const selected = filteredData.filter((ts) => selectedTsIds.includes(ts.id));
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+            <div className="w-full max-w-lg rounded-[12px] bg-[#ffffff] p-6 shadow-xl">
+              <h2 className="mb-4 text-lg font-semibold text-[#111111]">
+                Générer une facture groupée
+              </h2>
+              <p className="mb-3 text-sm text-[#6b7280]">
+                Vous allez générer une facture unique pour les {selected.length} relevés suivants&nbsp;:
+              </p>
+              <div className="mb-4 max-h-48 overflow-y-auto space-y-2">
+                {selected.map((ts) => (
+                  <div key={ts.id} className="flex items-center justify-between rounded-[8px] bg-[#f9fafb] px-3 py-2 text-sm">
+                    <span className="font-medium text-[#111111]">{ts.consultant.name}</span>
+                    <span className="text-[#6b7280]">{formatMonth(ts.month)} — {ts.mission.title}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="mb-6">
+                <label className="mb-1 block text-sm font-medium text-[#111111]">
+                  TVA (%)
+                </label>
+                <input
+                  type="number"
+                  value={groupedVatRate}
+                  onChange={(e) => setGroupedVatRate(e.target.value)}
+                  min="0"
+                  max="100"
+                  className="w-full rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] outline-none focus:border-primary-blue"
+                />
+              </div>
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => { setShowGroupedModal(false); setGroupedVatRate('20'); }}
+                  className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-4 py-2 text-sm text-[#111111] transition-colors hover:bg-[#f3f4f6]"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={() => {
+                    groupedMutation.mutate(
+                      { timesheetIds: selectedTsIds, vatRate: Number(groupedVatRate) || 20 },
+                      {
+                        onSuccess: () => {
+                          setShowGroupedModal(false);
+                          setGroupedMode(false);
+                          setSelectedTsIds([]);
+                          setGroupedVatRate('20');
+                        },
+                        onError: (err) => {
+                          const axiosErr = err as { response?: { data?: { error?: { message?: string } } } };
+                          toast.error(axiosErr.response?.data?.error?.message ?? "Erreur lors de la génération");
+                          setShowGroupedModal(false);
+                        },
+                      },
+                    );
+                  }}
+                  disabled={groupedMutation.isPending}
+                  className="cursor-pointer rounded-[8px] bg-[#10b981] px-4 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-90 disabled:opacity-50"
+                >
+                  {groupedMutation.isPending ? 'Génération...' : 'Confirmer'}
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }

@@ -54,6 +54,7 @@ export default function ArchivedClientsPage() {
   };
 
   const columns: Column<ClientRow>[] = [
+    { key: '#', label: '#', render: (_item, idx) => String(idx + 1) },
     { key: 'raison_sociale', label: 'Raison sociale', render: (item) => (
       <div className="flex items-center gap-2">
         <span className="inline-block rounded-[6px] bg-gray-100 px-2.5 py-1 text-sm font-medium text-gray-500">{item.raison_sociale}</span>

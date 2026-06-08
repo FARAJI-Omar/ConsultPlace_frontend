@@ -35,6 +35,7 @@ const statusLabels: Record<string, string> = {
 };
 
 const columns: Column<Timesheet>[] = [
+  { key: '#', label: '#', render: (_item, idx) => String(idx + 1) },
   { key: 'month', label: 'Mois', render: (t) => formatMonth(t.month) },
   { key: 'mission', label: 'Mission', render: (t) => t.mission?.title ?? '—' },
   { key: 'totalHours', label: 'Heures', render: (t) => `${t.totalHours}h` },

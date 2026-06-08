@@ -72,6 +72,7 @@ export default function ClientsPage() {
   };
 
   const columns: Column<ClientRow>[] = [
+    { key: '#', label: '#', render: (_item, idx) => String(idx + 1) },
     { key: 'raison_sociale', label: 'Raison sociale', render: (item) => (
       <div className="flex items-center gap-2">
         <span className={`inline-block rounded-[6px] px-2.5 py-1 text-sm font-medium text-[#111111] ${item.isArchived ? 'bg-gray-100 text-gray-500' : 'bg-[#EFF6FF]'}`}>{item.raison_sociale}</span>

@@ -42,6 +42,7 @@ export default function InvoiceDetailsPage() {
   const [payoutMode, setPayoutMode] = useState<'DH' | '%'>('DH');
   const [payoutAmount, setPayoutAmount] = useState('');
   const [payoutComment, setPayoutComment] = useState('');
+  const [payoutConsultantId, setPayoutConsultantId] = useState<number | ''>('');
   const [showReminderModal, setShowReminderModal] = useState(false);
   const [reminderFrequency, setReminderFrequency] = useState<'7' | '15' | '30'>('15');
   const invoice = data?.data;
@@ -206,6 +207,9 @@ export default function InvoiceDetailsPage() {
   };
 
   const payoutRest = invoice.consultantPayoutRest ?? 0;
+  const payoutBase = invoice.consultantPayouts && payoutConsultantId
+    ? (invoice.consultantPayouts.find((cp) => cp.consultantId === payoutConsultantId)?.payoutAmount ?? payoutRest)
+    : payoutRest;
 
   const handlePayout = () => {
     const parsed = parseFloat(payoutAmount);
@@ -213,23 +217,27 @@ export default function InvoiceDetailsPage() {
       toast.error('Le montant doit être supérieur à 0');
       return;
     }
-    if (payoutMode === 'DH' && parsed > payoutRest) {
+    if (payoutMode === 'DH' && parsed > payoutBase) {
       toast.error("Le montant ne peut pas dépasser le restant dû");
       return;
     }
     const dhAmount = payoutMode === '%'
-      ? Math.round(payoutRest * parsed / 100 * 100) / 100
+      ? Math.round(payoutBase * parsed / 100 * 100) / 100
       : parsed;
     payoutMutation.mutate(
-      { invoiceId: invoice.id, amount: dhAmount, comment: payoutComment || undefined },
+      { invoiceId: invoice.id, consultantId: Number(payoutConsultantId) || undefined, amount: dhAmount, comment: payoutComment || undefined },
       {
         onSuccess: () => {
           toast.success('Paiement déclenché');
           setShowPayoutModal(false);
           setPayoutAmount('');
           setPayoutComment('');
+          setPayoutConsultantId('');
         },
-        onError: () => toast.error('Erreur lors du paiement'),
+        onError: (err) => {
+          const axiosErr = err as { response?: { data?: { error?: { message?: string } } } };
+          toast.error(axiosErr.response?.data?.error?.message ?? 'Erreur lors du paiement');
+        },
       },
     );
   };
@@ -347,31 +355,42 @@ export default function InvoiceDetailsPage() {
         </div>
 
         <div className="rounded-[12px] bg-[#ffffff] border border-[#e5e7eb] p-6">
-          <h2 className="mb-4 text-lg font-semibold text-[#111111]">Consultant</h2>
-          <div className="space-y-2 text-sm">
-            <p className="font-medium text-[#111111]">{invoice.consultant?.name}</p>
-            <p className="text-[#6b7280]">{invoice.consultant?.email}</p>
-            <div className="flex justify-between border-t border-[#e5e7eb] pt-2">
-              <span className="text-[#6b7280]">Montant à payer au consultant</span>
-              <span className="font-medium text-[#111111]">{(invoice.consultantPayout ?? 0).toLocaleString()} DH</span>
+          <h2 className="mb-4 text-lg font-semibold text-[#111111]">Consultant{invoice.consultantPayouts && invoice.consultantPayouts.length > 0 ? 's' : ''}</h2>
+          {invoice.consultantPayouts && invoice.consultantPayouts.length > 0 ? (
+            <div className="space-y-3 text-sm">
+              {invoice.consultantPayouts.map((cp) => (
+                <div key={cp.consultantId} className="flex items-center justify-between rounded-[8px] bg-[#f9fafb] px-3 py-2">
+                  <span className="font-medium text-[#111111]">Consultant #{cp.consultantId}</span>
+                  <span className="text-[#111111]">{cp.payoutAmount.toLocaleString()} DH</span>
+                </div>
+              ))}
             </div>
-            <div className="flex justify-between">
-              <span className="text-[#6b7280]">Statut</span>
-              <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                invoice.consultantPayoutStatus === 'paye'
-                  ? 'bg-green-100 text-green-700'
-                  : invoice.consultantPayoutStatus === 'paiement_partiel'
-                    ? 'bg-yellow-100 text-yellow-700'
-                    : 'bg-gray-100 text-gray-500'
-              }`}>
-                {invoice.consultantPayoutStatus === 'paye'
-                  ? 'Payé'
-                  : invoice.consultantPayoutStatus === 'paiement_partiel'
-                    ? 'Paiement partiel'
-                    : 'Non payé'}
-              </span>
+          ) : (
+            <div className="space-y-2 text-sm">
+              <p className="font-medium text-[#111111]">{invoice.consultant?.name}</p>
+              <p className="text-[#6b7280]">{invoice.consultant?.email}</p>
+              <div className="flex justify-between border-t border-[#e5e7eb] pt-2">
+                <span className="text-[#6b7280]">Montant à payer au consultant</span>
+                <span className="font-medium text-[#111111]">{(invoice.consultantPayout ?? 0).toLocaleString()} DH</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[#6b7280]">Statut</span>
+                <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                  invoice.consultantPayoutStatus === 'paye'
+                    ? 'bg-green-100 text-green-700'
+                    : invoice.consultantPayoutStatus === 'paiement_partiel'
+                      ? 'bg-yellow-100 text-yellow-700'
+                      : 'bg-gray-100 text-gray-500'
+                }`}>
+                  {invoice.consultantPayoutStatus === 'paye'
+                    ? 'Payé'
+                    : invoice.consultantPayoutStatus === 'paiement_partiel'
+                      ? 'Paiement partiel'
+                      : 'Non payé'}
+                </span>
+              </div>
             </div>
-          </div>
+          )}
           {invoice.consultantPayments && invoice.consultantPayments.length > 0 && (
             <div className="mt-4 border-t border-[#e5e7eb] pt-4">
               <h3 className="mb-2 text-sm font-semibold text-[#111111]">Historique des paiements Consultant</h3>
@@ -379,6 +398,9 @@ export default function InvoiceDetailsPage() {
                 <thead>
                   <tr className="border-b border-[#e5e7eb]">
                     <th className="px-2 py-1.5 text-left text-xs font-medium text-[#6b7280]">#</th>
+                    {invoice.consultantPayouts && invoice.consultantPayouts.length > 1 && (
+                      <th className="px-2 py-1.5 text-left text-xs font-medium text-[#6b7280]">Consultant</th>
+                    )}
                     <th className="px-2 py-1.5 text-left text-xs font-medium text-[#6b7280]">Montant</th>
                     <th className="px-2 py-1.5 text-left text-xs font-medium text-[#6b7280]">Reste</th>
                     <th className="px-2 py-1.5 text-left text-xs font-medium text-[#6b7280]">Date</th>
@@ -388,6 +410,13 @@ export default function InvoiceDetailsPage() {
                   {invoice.consultantPayments.map((cp, idx) => (
                     <tr key={idx} className="border-b border-[#e5e7eb]">
                       <td className="px-2 py-1.5 text-xs text-[#6b7280]">{idx + 1}</td>
+                      {invoice.consultantPayouts && invoice.consultantPayouts.length > 1 && (
+                        <td className="px-2 py-1.5 text-[#111111]">
+                          {cp.consultantId
+                            ? `#${cp.consultantId}`
+                            : '—'}
+                        </td>
+                      )}
                       <td className="px-2 py-1.5 text-[#111111]">{(cp.amount ?? 0).toLocaleString()} DH</td>
                       <td className="px-2 py-1.5 text-[#111111]">{(cp.rest ?? 0).toLocaleString()} DH</td>
                       <td className="px-2 py-1.5 text-[#6b7280]">{formatDate(cp.date)}</td>
@@ -400,20 +429,9 @@ export default function InvoiceDetailsPage() {
         </div>
       </div>
 
-      {invoice.timesheet && (
-        <div className="rounded-[12px] bg-[#ffffff] border border-[#e5e7eb] p-6">
-          <h2 className="mb-4 text-lg font-semibold text-[#111111]">Relevé associé</h2>
-          <div className="space-y-3 text-sm">
-            <div className="flex justify-between"><span className="text-[#6b7280]">Mission</span><span className="font-medium text-[#111111]">{invoice.timesheet.mission.title}</span></div>
-            <div className="flex justify-between"><span className="text-[#6b7280]">Mois</span><span className="font-medium text-[#111111]">{invoice.timesheet.month}</span></div>
-            <div className="flex justify-between"><span className="text-[#6b7280]">Jours</span><span className="font-medium text-[#111111]">{invoice.timesheet.days}</span></div>
-          </div>
-        </div>
-      )}
-
-      {invoice.documents && invoice.documents.length > 0 && (
-        <div className="rounded-[12px] bg-[#ffffff] border border-[#e5e7eb] p-6">
-          <h2 className="mb-4 text-lg font-semibold text-[#111111]">Documents associés</h2>
+      <div className="rounded-[12px] bg-[#ffffff] border border-[#e5e7eb] p-6">
+        <h2 className="mb-4 text-lg font-semibold text-[#111111]">Documents associés</h2>
+        {invoice.documents && invoice.documents.length > 0 ? (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {invoice.documents.map((url, i) => (
               <a
@@ -433,8 +451,10 @@ export default function InvoiceDetailsPage() {
               </a>
             ))}
           </div>
-        </div>
-      )}
+        ) : (
+          <p className="text-sm text-[#6b7280]">Aucun document trouvé</p>
+        )}
+      </div>
 
       <div className="flex flex-wrap gap-3">
         {(invoice.status === 'PENDING' || invoice.status === 'PARTIAL_PAID') && (
@@ -547,6 +567,24 @@ export default function InvoiceDetailsPage() {
               Reste à payer : <span className="font-bold bg-green-500/20 px-4 py-1 rounded text-[#111111]">{payoutRest.toLocaleString()} DH</span>
             </p>
 
+            {invoice.consultantPayouts && invoice.consultantPayouts.length > 0 && (
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-[#111111] mb-1">Consultant</label>
+                <select
+                  value={payoutConsultantId}
+                  onChange={(e) => setPayoutConsultantId(e.target.value ? Number(e.target.value) : '')}
+                  className="w-full rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111]"
+                >
+                  <option value="">Sélectionner un consultant</option>
+                  {invoice.consultantPayouts.map((cp) => (
+                    <option key={cp.consultantId} value={cp.consultantId}>
+                      Consultant #{cp.consultantId} — {cp.payoutAmount.toLocaleString()} DH
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             <div>
               <label className="block text-sm font-medium text-[#111111] mb-1">
                 {payoutMode === 'DH' ? 'Montant (DH)' : 'Pourcentage (%)'}
@@ -564,7 +602,7 @@ export default function InvoiceDetailsPage() {
                 <div className="flex rounded-[8px] border border-[#e5e7eb] overflow-hidden shrink-0">
                   <button
                     type="button"
-                    onClick={() => { setPayoutMode('DH'); setPayoutAmount(String(payoutRest)); }}
+                    onClick={() => { setPayoutMode('DH'); setPayoutAmount(String(payoutBase)); }}
                     className={`cursor-pointer px-3 py-2 text-xs font-semibold transition-colors ${payoutMode === 'DH' ? 'bg-[#111111] text-[#ffffff]' : 'bg-[#ffffff] text-[#6b7280] hover:bg-[#f3f4f6]'}`}
                   >
                     DH
@@ -580,7 +618,7 @@ export default function InvoiceDetailsPage() {
               </div>
               {payoutMode === '%' && payoutAmount && !isNaN(parseFloat(payoutAmount)) && (
                 <p className="mt-1 text-xs text-[#6b7280]">
-                  Montant calculé : {Math.round(payoutRest * parseFloat(payoutAmount) / 100 * 100) / 100} DH
+                  Montant calculé : {Math.round(payoutBase * parseFloat(payoutAmount) / 100 * 100) / 100} DH
                 </p>
               )}
             </div>
@@ -595,7 +633,7 @@ export default function InvoiceDetailsPage() {
             </div>
             <div className="mt-6 flex justify-end gap-3">
               <button onClick={() => setShowPayoutModal(false)} className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-4 py-2 text-sm text-[#111111] transition-colors hover:bg-[#f3f4f6]">Annuler</button>
-              <button onClick={handlePayout} disabled={payoutMutation.isPending || !payoutAmount || parseFloat(payoutAmount) <= 0 || parseFloat(payoutAmount) > (payoutMode === 'DH' ? payoutRest : 100)} className="cursor-pointer rounded-[8px] bg-[#10b981] px-4 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-90 disabled:opacity-50">
+              <button onClick={handlePayout} disabled={payoutMutation.isPending || !payoutAmount || parseFloat(payoutAmount) <= 0 || parseFloat(payoutAmount) > (payoutMode === 'DH' ? payoutBase : 100)} className="cursor-pointer rounded-[8px] bg-[#10b981] px-4 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-90 disabled:opacity-50">
                 {payoutMutation.isPending ? 'Traitement...' : 'Confirmer le paiement'}
               </button>
             </div>
