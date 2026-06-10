@@ -17,6 +17,8 @@ interface InvoiceDetailResponse {
 interface GenerateInvoicePayload {
   timesheetId: number;
   vatRate?: number;
+  bdc?: string;
+  delai?: number;
 }
 
 interface GenerateInvoiceResponse {
@@ -86,6 +88,8 @@ export function useGenerateInvoice() {
 interface GenerateGroupedPayload {
   timesheetIds: number[];
   vatRate?: number;
+  bdc?: string;
+  delai?: number;
 }
 
 export function useGenerateGroupedInvoice() {

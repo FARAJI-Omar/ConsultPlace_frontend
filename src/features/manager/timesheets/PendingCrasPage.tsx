@@ -44,6 +44,8 @@ export default function PendingCrasPage() {
   const [selectedTsIds, setSelectedTsIds] = useState<number[]>([]);
   const [showGroupedModal, setShowGroupedModal] = useState(false);
   const [groupedVatRate, setGroupedVatRate] = useState('20');
+  const [groupedBdc, setGroupedBdc] = useState('');
+  const [groupedDelai, setGroupedDelai] = useState('');
   const [showHint, setShowHint] = useState(true);
   const hintRef = useRef<HTMLDivElement>(null);
 
@@ -257,7 +259,7 @@ export default function PendingCrasPage() {
                   </div>
                 ))}
               </div>
-              <div className="mb-6">
+              <div className="mb-4">
                 <label className="mb-1 block text-sm font-medium text-[#111111]">
                   TVA (%)
                 </label>
@@ -270,23 +272,50 @@ export default function PendingCrasPage() {
                   className="w-full rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] outline-none focus:border-primary-blue"
                 />
               </div>
+              <div className="mb-4">
+                <label className="mb-1 block text-sm font-medium text-[#111111]">Bon de commande (BDC)</label>
+                <input
+                  type="text"
+                  value={groupedBdc}
+                  onChange={(e) => setGroupedBdc(e.target.value)}
+                  placeholder="Facultatif"
+                  className="w-full rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] outline-none focus:border-primary-blue"
+                />
+              </div>
+              <div className="mb-6">
+                <label className="mb-1 block text-sm font-medium text-[#111111]">Délai (en jours)</label>
+                <input
+                  type="number"
+                  value={groupedDelai}
+                  onChange={(e) => setGroupedDelai(e.target.value)}
+                  min="0"
+                  placeholder="Facultatif"
+                  className="w-full rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] outline-none focus:border-primary-blue"
+                />
+              </div>
               <div className="flex justify-end gap-3">
                 <button
-                  onClick={() => { setShowGroupedModal(false); setGroupedVatRate('20'); }}
+                  onClick={() => { setShowGroupedModal(false); setGroupedVatRate('20'); setGroupedBdc(''); setGroupedDelai(''); }}
                   className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-4 py-2 text-sm text-[#111111] transition-colors hover:bg-[#f3f4f6]"
                 >
                   Annuler
                 </button>
                 <button
                   onClick={() => {
+                    const payload: Record<string, unknown> = { timesheetIds: selectedTsIds, vatRate: Number(groupedVatRate) || 20 };
+                    if (groupedBdc.trim()) payload.bdc = groupedBdc.trim();
+                    const delaiNum = parseInt(groupedDelai, 10);
+                    if (!isNaN(delaiNum) && delaiNum > 0) payload.delai = delaiNum;
                     groupedMutation.mutate(
-                      { timesheetIds: selectedTsIds, vatRate: Number(groupedVatRate) || 20 },
+                      payload as { timesheetIds: number[]; vatRate?: number; bdc?: string; delai?: number },
                       {
                         onSuccess: () => {
                           setShowGroupedModal(false);
                           setGroupedMode(false);
                           setSelectedTsIds([]);
                           setGroupedVatRate('20');
+                          setGroupedBdc('');
+                          setGroupedDelai('');
                         },
                         onError: (err) => {
                           const axiosErr = err as { response?: { data?: { error?: { message?: string } } } };

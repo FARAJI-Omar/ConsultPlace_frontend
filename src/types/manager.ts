@@ -65,6 +65,7 @@ export interface TimesheetHistoryEntry {
 }
 
 export interface ManagerTimesheetDetail extends ManagerTimesheet {
+  dailyRate: number;
   dailyEntries: { day: number; hours: number }[];
   attachments: { id: number; filename: string; url: string; type: string; uploadedAt: string }[];
   history: TimesheetHistoryEntry[];
@@ -117,6 +118,8 @@ export interface Invoice {
     status: 'non_paye' | 'paiement_partiel' | 'paye';
     paymentHistory: { amount: number; date: string; consultantId: number; paid: number; rest: number }[];
   }[];
+  bdc?: string;
+  delai?: number;
 }
 
 export interface PaymentRecord {
@@ -144,6 +147,8 @@ export interface MarkPaidPayload {
 export interface GenerateInvoicePayload {
   timesheetId: number;
   vatRate?: number;
+  bdc?: string;
+  delai?: number;
 }
 
 export interface PayoutPayload {

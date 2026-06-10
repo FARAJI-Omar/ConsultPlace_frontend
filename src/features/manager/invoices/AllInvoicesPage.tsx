@@ -36,6 +36,8 @@ export default function AllInvoicesPage() {
   const [generateModal, setGenerateModal] = useState(false);
   const [generateTimesheetId, setGenerateTimesheetId] = useState('');
   const [vatRate, setVatRate] = useState('20');
+  const [bdc, setBdc] = useState('');
+  const [delai, setDelai] = useState('');
   const [cancelConfirm, setCancelConfirm] = useState<number | null>(null);
   const [confirmMarkPaid, setConfirmMarkPaid] = useState<Invoice | null>(null);
   const [markPaidDate, setMarkPaidDate] = useState(new Date().toISOString().split('T')[0]);
@@ -261,8 +263,12 @@ export default function AllInvoicesPage() {
   const handleGenerateInvoice = () => {
     const id = parseInt(generateTimesheetId, 10);
     if (isNaN(id)) return;
+    const payload: Record<string, unknown> = { timesheetId: id, vatRate: parseFloat(vatRate) || 20 };
+    if (bdc.trim()) payload.bdc = bdc.trim();
+    const delaiNum = parseInt(delai, 10);
+    if (!isNaN(delaiNum) && delaiNum > 0) payload.delai = delaiNum;
     generateMutation.mutate(
-      { timesheetId: id, vatRate: parseFloat(vatRate) || 20 },
+      payload as { timesheetId: number; vatRate?: number; bdc?: string; delai?: number },
       {
         onSuccess: () => {
           toast.success('Facture générée avec succès');
@@ -270,6 +276,8 @@ export default function AllInvoicesPage() {
           setConfirmGenerate(false);
           setGenerateTimesheetId('');
           setVatRate('20');
+          setBdc('');
+          setDelai('');
         },
         onError: () => toast.error("Erreur lors de la génération"),
       },
@@ -500,6 +508,29 @@ export default function AllInvoicesPage() {
                   type="number"
                   value={vatRate}
                   onChange={(e) => setVatRate(e.target.value)}
+                  autoComplete="off"
+                  className="w-full rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111]"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#111111] mb-1">Bon de commande (BDC)</label>
+                <input
+                  type="text"
+                  value={bdc}
+                  onChange={(e) => setBdc(e.target.value)}
+                  placeholder="Facultatif"
+                  autoComplete="off"
+                  className="w-full rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111]"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#111111] mb-1">Délai (en jours)</label>
+                <input
+                  type="number"
+                  value={delai}
+                  onChange={(e) => setDelai(e.target.value)}
+                  min="0"
+                  placeholder="Facultatif"
                   autoComplete="off"
                   className="w-full rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111]"
                 />
@@ -763,7 +794,7 @@ export default function AllInvoicesPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
           <div className="w-full max-w-sm rounded-[12px] bg-[#ffffff] p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
             <h2 className="mb-2 text-lg font-semibold text-[#111111]">Générer la facture</h2>
-            <p className="mb-6 text-sm text-[#6b7280]">Créer une facture pour {selectedTimesheet ? `${selectedTimesheet.month} | ${selectedTimesheet.consultant.name} | ${selectedTimesheet.mission.title}` : `Relevé n°${generateTimesheetId}`} avec TVA à {vatRate}%&nbsp;?</p>
+            <p className="mb-6 text-sm text-[#6b7280]">Créer une facture pour {selectedTimesheet ? `${selectedTimesheet.month} | ${selectedTimesheet.consultant.name} | ${selectedTimesheet.mission.title}` : `Relevé n°${generateTimesheetId}`} avec TVA à {vatRate}%{bdc.trim() ? `, BDC: ${bdc.trim()}` : ''}{delai.trim() ? `, délai: ${delai.trim()} jours` : ''}&nbsp;?</p>
             <div className="flex justify-end gap-3">
               <button onClick={() => setConfirmGenerate(false)} className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-4 py-2 text-sm text-[#111111] transition-colors hover:bg-[#f3f4f6]">Annuler</button>
               <button onClick={handleGenerateInvoice} disabled={generateMutation.isPending} className="cursor-pointer rounded-[8px] bg-[#3b82f6] px-4 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-90 disabled:opacity-50">

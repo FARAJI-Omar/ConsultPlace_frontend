@@ -32,6 +32,8 @@ export default function GenerateInvoiceModal({
   const generateMutation = useGenerateInvoice();
   const [timesheetId, setTimesheetId] = useState(prefilledTimesheetId ?? (validTimesheets[0]?.id ?? 0));
   const [vatRate, setVatRate] = useState('20');
+  const [bdc, setBdc] = useState('');
+  const [delai, setDelai] = useState('');
   const [showConfirm, setShowConfirm] = useState(false);
 
   if (!open) return null;
@@ -41,8 +43,12 @@ export default function GenerateInvoiceModal({
 
   const handleGenerate = () => {
     if (!timesheetId) return;
+    const payload: Record<string, unknown> = { timesheetId, vatRate: parseFloat(vatRate) || 20 };
+    if (bdc.trim()) payload.bdc = bdc.trim();
+    const delaiNum = parseInt(delai, 10);
+    if (!isNaN(delaiNum) && delaiNum > 0) payload.delai = delaiNum;
     generateMutation.mutate(
-      { timesheetId, vatRate: parseFloat(vatRate) || 20 },
+      payload as { timesheetId: number; vatRate?: number; bdc?: string; delai?: number },
       {
         onSuccess: () => {
           toast.success('Facture générée avec succès');
@@ -89,6 +95,27 @@ export default function GenerateInvoiceModal({
                 className="w-full rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111]"
               />
             </div>
+            <div>
+              <label className="block text-sm font-medium text-[#111111] mb-1">Bon de commande (BDC)</label>
+              <input
+                type="text"
+                value={bdc}
+                onChange={(e) => setBdc(e.target.value)}
+                placeholder="Facultatif"
+                className="w-full rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111]"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-[#111111] mb-1">Délai (en jours)</label>
+              <input
+                type="number"
+                value={delai}
+                onChange={(e) => setDelai(e.target.value)}
+                min="0"
+                placeholder="Facultatif"
+                className="w-full rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111]"
+              />
+            </div>
           </div>
           <div className="mt-6 flex justify-end gap-3">
             <button
@@ -113,7 +140,7 @@ export default function GenerateInvoiceModal({
           <div className="w-full max-w-sm rounded-[12px] bg-[#ffffff] p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
             <h2 className="mb-2 text-lg font-semibold text-[#111111]">Générer la facture</h2>
             <p className="mb-6 text-sm text-[#6b7280]">
-              Créer une facture pour {selectedFromList ? `${formatMonth(selectedFromList.month)} | ${selectedFromList.consultant.name} | ${selectedFromList.mission.title}` : `Relevé n°${timesheetId}`} avec TVA à {vatRate}%&nbsp;?
+              Créer une facture pour {selectedFromList ? `${formatMonth(selectedFromList.month)} | ${selectedFromList.consultant.name} | ${selectedFromList.mission.title}` : `Relevé n°${timesheetId}`} avec TVA à {vatRate}%{bdc.trim() ? `, BDC: ${bdc.trim()}` : ''}{delai.trim() ? `, délai: ${delai.trim()} jours` : ''}&nbsp;?
             </p>
             <div className="flex justify-end gap-3">
               <button

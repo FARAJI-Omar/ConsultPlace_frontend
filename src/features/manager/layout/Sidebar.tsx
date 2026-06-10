@@ -13,6 +13,7 @@ import {
   PanelLeftOpen,
   type LucideIcon,
 } from 'lucide-react';
+import { useAlerts } from '../../../hooks/manager/useTracking';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -39,6 +40,8 @@ const NAV_ITEMS: NavItem[] = [
 
 export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }: SidebarProps) {
   const location = useLocation();
+  const { data: alerts } = useAlerts();
+  const alertsCount = (alerts?.critical?.length ?? 0) + (alerts?.warning?.length ?? 0) + (alerts?.info?.length ?? 0);
 
   const getLinkClass = (item: NavItem) => {
     const isActive =
@@ -94,7 +97,16 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
               <div className={collapsed ? 'mx-auto' : ''}>
                 <item.icon className="h-5 w-5 shrink-0" />
               </div>
-              {!collapsed && item.label}
+              {!collapsed && (
+                <span className="flex items-center gap-2">
+                  {item.label}
+                  {item.path === '/manager/alerts' && alertsCount > 0 && (
+                    <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] rounded-full bg-red-500 px-1 text-[10px] font-bold text-white leading-none">
+                      {alertsCount > 99 ? '99+' : alertsCount}
+                    </span>
+                  )}
+                </span>
+              )}
             </NavLink>
           ))}
         </nav>

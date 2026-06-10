@@ -165,6 +165,8 @@ export interface Invoice {
   consultant?: Partial<Consultant>;
   payments?: PaymentRecord[];
   documents?: string[];
+  bdc?: string;
+  delai?: number;
 }
 
 export interface PaymentRecord {
