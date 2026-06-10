@@ -246,31 +246,50 @@ export default function TimesheetDetailsPage() {
         </div>
       </div>
 
-      {allowedAttachments.length > 0 && (
-        <div className="rounded-[12px] bg-[#f5f5f5] p-6">
-          <h2 className="mb-4 text-lg font-semibold text-[#111111]">Pièces jointes</h2>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {allowedAttachments.map((att) => (
-              <a
-                key={att.id}
-                href={att.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-3 rounded-[8px] border border-[#e5e7eb] bg-[#ffffff] px-4 py-3 transition-colors hover:bg-[#f9fafb]"
-              >
-                <div className="flex h-10 w-10 items-center justify-center rounded-[8px] bg-[#eff6ff]">
-                  <FileText className="h-5 w-5 text-[#3b82f6]" />
+      {allowedAttachments.length > 0 && (() => {
+        const consultantDocs = allowedAttachments.filter((a) => a.type === 'PROOF' || a.type === 'CONSULTANT_FACTURE');
+        const missionDocs = allowedAttachments.filter((a) => a.type === 'MISSION_DOC');
+        const typeLabel: Record<string, string> = { PROOF: 'Justificatif', CONSULTANT_FACTURE: 'Facture consultant', MISSION_DOC: 'Document de mission' };
+        const renderCard = (att: (typeof allowedAttachments)[number]) => (
+          <a
+            key={att.id}
+            href={att.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-3 rounded-[8px] border border-[#e5e7eb] bg-[#ffffff] px-4 py-3 transition-colors hover:bg-[#f9fafb]"
+          >
+            <div className="flex h-10 w-10 items-center justify-center rounded-[8px] bg-[#eff6ff]">
+              <FileText className="h-5 w-5 text-[#3b82f6]" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium text-[#111111]">{att.filename}</p>
+              <p className="text-xs text-[#6b7280]">{typeLabel[att.type] ?? att.type}</p>
+            </div>
+            <Download className="h-4 w-4 shrink-0 text-[#6b7280]" />
+          </a>
+        );
+        return (
+          <div className="rounded-[12px] bg-[#f5f5f5] p-6">
+            <h2 className="mb-4 text-lg font-semibold text-[#111111]">Pièces jointes</h2>
+            {consultantDocs.length > 0 && (
+              <div className="mb-6">
+                <h3 className="mb-3 text-sm font-semibold text-[#374151]">Documents du consultant</h3>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {consultantDocs.map(renderCard)}
                 </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-[#111111]">{att.filename}</p>
-                  <p className="text-xs text-[#6b7280]">Justificatif</p>
+              </div>
+            )}
+            {missionDocs.length > 0 && (
+              <div>
+                <h3 className="mb-3 text-sm font-semibold text-[#374151]">Documents de mission</h3>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {missionDocs.map(renderCard)}
                 </div>
-                <Download className="h-4 w-4 shrink-0 text-[#6b7280]" />
-              </a>
-            ))}
+              </div>
+            )}
           </div>
-        </div>
-      )}
+        );
+      })()}
 
 
 

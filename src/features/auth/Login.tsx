@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { useLoginMutation } from './useLoginMutation';
 import newLogo from '../../assets/new-logo.png';
@@ -8,46 +8,65 @@ interface FieldErrors {
   password?: string;
 }
 
+function loadRecaptchaScript(siteKey: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (window.grecaptcha) {
+      resolve();
+      return;
+    }
+    const existingScript = document.querySelector('script[src*="recaptcha/api.js"]');
+    if (existingScript) {
+      existingScript.addEventListener('load', () => resolve());
+      existingScript.addEventListener('error', () => reject(new Error('reCAPTCHA script failed to load')));
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = `https://www.google.com/recaptcha/api.js?render=${siteKey}`;
+    script.async = true;
+    script.defer = true;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error('reCAPTCHA script failed to load'));
+    document.head.appendChild(script);
+  });
+}
+
+function removeRecaptchaScript(): void {
+  const scripts = document.querySelectorAll('script[src*="recaptcha/api.js"]');
+  scripts.forEach((s) => s.remove());
+  // Clean up the badge if it was injected
+  const badge = document.querySelector('.grecaptcha-badge');
+  if (badge) badge.remove();
+  // Clean up global grecaptcha
+  delete (window as any).grecaptcha;
+}
+
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
-  const [captchaToken, setCaptchaToken] = useState('');
   const [captchaError, setCaptchaError] = useState('');
-  const captchaRef = useRef<HTMLDivElement>(null);
-  const widgetIdRef = useRef<number | null>(null);
+  const [recaptchaReady, setRecaptchaReady] = useState(false);
   const loginMutation = useLoginMutation();
 
   useEffect(() => {
-    const renderCaptcha = () => {
-      if (window.grecaptcha?.render && captchaRef.current && widgetIdRef.current === null) {
-        widgetIdRef.current = window.grecaptcha.render(captchaRef.current, {
-          sitekey: import.meta.env.VITE_RECAPTCHA_SITE_KEY,
-          callback: (token: string) => {
-            setCaptchaToken(token);
-            setCaptchaError('');
-          },
-          'expired-callback': () => {
-            setCaptchaToken('');
-          },
-        });
-      }
+    let mounted = true;
+    const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
+    loadRecaptchaScript(siteKey)
+      .then(() => {
+        if (mounted) setRecaptchaReady(true);
+      })
+      .catch(() => {
+        if (mounted) setCaptchaError('Impossible de charger le CAPTCHA');
+      });
+    return () => {
+      mounted = false;
+      removeRecaptchaScript();
+      setRecaptchaReady(false);
     };
-
-    renderCaptcha();
-
-    const interval = setInterval(() => {
-      if (window.grecaptcha?.render) {
-        renderCaptcha();
-        if (widgetIdRef.current !== null) clearInterval(interval);
-      }
-    }, 200);
-
-    return () => clearInterval(interval);
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFieldErrors({});
     setCaptchaError('');
@@ -60,20 +79,19 @@ export default function Login() {
       return;
     }
 
-    if (!captchaToken) {
-      setCaptchaError('Veuillez compléter le CAPTCHA');
+    if (!recaptchaReady || !window.grecaptcha) {
+      setCaptchaError('Veuillez patienter, chargement du CAPTCHA...');
       return;
     }
+
+    const captchaToken = await window.grecaptcha.execute(
+      import.meta.env.VITE_RECAPTCHA_SITE_KEY,
+      { action: 'login' },
+    );
 
     loginMutation.mutate(
       { email, password, captchaToken },
       {
-        onSettled: () => {
-          if (widgetIdRef.current !== null && window.grecaptcha) {
-            window.grecaptcha.reset(widgetIdRef.current);
-          }
-          setCaptchaToken('');
-        },
         onError: (error: unknown) => {
           const err = error as {
             response?: {
@@ -202,17 +220,14 @@ export default function Login() {
             )}
           </div>
 
-          <div>
-            <div ref={captchaRef}></div>
-            {captchaError && (
-              <p className="mt-1 text-sm text-[#ef4444]">{captchaError}</p>
-            )}
-          </div>
+          {captchaError && (
+            <p className="text-sm text-[#ef4444]">{captchaError}</p>
+          )}
 
           <button
             type="submit"
-            disabled={loginMutation.isPending || !captchaToken}
-            className="flex w-full cursor-pointer items-center justify-center rounded-[8px] bg-primary-blue px-5 py-3 text-sm font-semibold leading-none text-[#ffffff] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:bg-[#e5e7eb] disabled:text-[#6b7280]"
+            disabled={loginMutation.isPending}
+            className="flex w-full cursor-pointer items-center justify-center rounded-[8px] bg-primary-blue px-5 py-3 text-sm font-semibold leading-none text-[#ffffff] transition-opacity hover:opacity-90 disabled:bg-[#e5e7eb] disabled:text-[#6b7280]"
           >
             {loginMutation.isPending ? 'Connexion...' : 'Se connecter'}
           </button>

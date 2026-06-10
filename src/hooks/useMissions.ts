@@ -10,11 +10,10 @@ export interface Mission {
   startDate: string;
   endDate: string | null;
   status: 'ACTIVE' | 'CLOSED';
-  missionDailyRate?: number;
   attachments?: { id: number; filename: string; url: string; type: string; createdAt: string }[];
   contract?: { id: number; ref: string; startDate?: string; endDate?: string; profile?: string; dailyRate?: number };
   consultant?: { id: number; name: string };
-  consultants?: { consultantId: number; consultant: { id: number; name: string } }[];
+  consultants?: { consultantId: number; dailyRate: number; consultant: { id: number; name: string } }[];
   timesheets?: {
     id: number;
     consultantId: number;
@@ -35,11 +34,10 @@ export interface Mission {
 
 export interface MissionFormData {
   contractId: number;
-  consultantIds: number[];
+  consultants: { consultantId: number; dailyRate: number }[];
   title: string;
   startDate: string;
   endDate?: string;
-  missionDailyRate: number;
   files?: File[];
 }
 
@@ -47,7 +45,7 @@ export interface UpdateMissionFormData {
   title?: string;
   startDate?: string;
   endDate?: string | null;
-  missionDailyRate?: number;
+  consultantRates?: { consultantId: number; dailyRate: number }[];
   files?: File[];
   deleteAttachmentIds?: number[];
 }
@@ -97,11 +95,10 @@ export function useMutateMission() {
       if (hasFiles) {
         const formData = new FormData();
         formData.append('contractId', String(data.contractId));
-        data.consultantIds.forEach((id) => formData.append('consultantIds', String(id)));
+        formData.append('consultants', JSON.stringify(data.consultants));
         formData.append('title', data.title);
         formData.append('startDate', data.startDate);
         if (data.endDate) formData.append('endDate', data.endDate);
-        formData.append('missionDailyRate', String(data.missionDailyRate));
         data.files!.forEach((file) => formData.append('files', file));
         return apiClient
           .post<{ success: true; data: Mission }>('/missions', formData)
@@ -109,11 +106,10 @@ export function useMutateMission() {
       }
       const body = {
         contractId: data.contractId,
-        consultantIds: data.consultantIds,
+        consultants: data.consultants,
         title: data.title,
         startDate: data.startDate,
         ...(data.endDate ? { endDate: data.endDate } : {}),
-        missionDailyRate: data.missionDailyRate,
       };
       return apiClient
         .post<{ success: true; data: Mission }>('/missions', body)
@@ -136,7 +132,7 @@ export function useUpdateMission() {
         if (data.title !== undefined) formData.append('title', data.title);
         if (data.startDate !== undefined) formData.append('startDate', data.startDate);
         if (data.endDate !== undefined) formData.append('endDate', data.endDate ?? '');
-        if (data.missionDailyRate !== undefined) formData.append('missionDailyRate', String(data.missionDailyRate));
+        if (data.consultantRates !== undefined) formData.append('consultantRates', JSON.stringify(data.consultantRates));
         data.files!.forEach((file) => formData.append('files', file));
         if (data.deleteAttachmentIds && data.deleteAttachmentIds.length > 0)
           formData.append('deleteAttachmentIds', JSON.stringify(data.deleteAttachmentIds));

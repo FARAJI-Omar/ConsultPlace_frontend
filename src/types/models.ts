@@ -71,6 +71,13 @@ export interface DocumentFile {
   uploadedAt?: string;
 }
 
+export interface MissionConsultant {
+  id: number;
+  consultantId: number;
+  dailyRate: number;
+  consultant: Partial<Consultant>;
+}
+
 export interface Mission {
   id: number;
   contractId: number;
@@ -78,12 +85,12 @@ export interface Mission {
   title: string;
   startDate: string;
   endDate?: string;
-  missionDailyRate?: number;
   status: 'ACTIVE' | 'CLOSED';
   createdAt: string;
   updatedAt: string;
   contract?: Partial<Contract>;
   consultant?: Partial<Consultant>;
+  consultants?: MissionConsultant[];
 }
 
 export interface DailyEntry {

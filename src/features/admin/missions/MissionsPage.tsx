@@ -78,7 +78,7 @@ export default function MissionsPage() {
           <div className="flex flex-wrap gap-1">
             {list.map((mc) => (
               <span key={mc.consultantId} className="inline-block rounded-[6px] bg-[#EFF6FF] px-2.5 py-1 text-sm font-medium text-[#111111]">
-                {mc.consultant.name}
+                {mc.consultant.name} <span className="text-[#6b7280]">({mc.dailyRate.toLocaleString()} DH)</span>
               </span>
             ))}
           </div>

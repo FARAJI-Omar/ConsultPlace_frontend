@@ -15,16 +15,8 @@ declare module '*.ico' {
 }
 
 interface Grecaptcha {
-  render: (
-    container: HTMLElement,
-    parameters: {
-      sitekey: string;
-      callback?: (token: string) => void;
-      'expired-callback'?: () => void;
-    },
-  ) => number;
-  getResponse: (widgetId?: number) => string;
-  reset: (widgetId?: number) => void;
+  ready: (callback: () => void) => void;
+  execute: (siteKey: string, options: { action: string }) => Promise<string>;
 }
 
 interface Window {

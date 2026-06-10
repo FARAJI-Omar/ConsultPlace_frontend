@@ -6,6 +6,7 @@ export interface ConsultantEarnings {
 }
 
 export interface ConsultantMission extends Mission {
+  missionDailyRate: number;
   contract: {
     id: number;
     ref: string;

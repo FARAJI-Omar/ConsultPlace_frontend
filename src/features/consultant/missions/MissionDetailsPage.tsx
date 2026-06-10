@@ -125,7 +125,7 @@ export default function MissionDetailsPage() {
             <p className="text-sm text-[#6b7280] mb-1">Taux journalier</p>
             <p className="text-[16px] text-[#111111] font-medium">
               {mission.missionDailyRate
-                ? `${mission.missionDailyRate} DH`
+                ? `${mission.missionDailyRate.toLocaleString()} DH`
                 : '-'}
             </p>
           </div>

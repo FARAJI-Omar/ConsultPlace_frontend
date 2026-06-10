@@ -52,11 +52,15 @@ export default function MissionForm({ onSuccess, mission }: MissionFormProps) {
     title: mission?.title ?? '',
     startDate: mission?.startDate ?? '',
     endDate: mission?.endDate ?? '',
-    missionDailyRate: mission?.missionDailyRate?.toString() ?? '',
   });
   const [selectedConsultants, setSelectedConsultants] = useState<{ value: number; label: string }[]>(
     mission?.consultants?.map((mc) => ({ value: mc.consultantId, label: mc.consultant.name })) ?? [],
   );
+  const [consultantRates, setConsultantRates] = useState<Record<number, string>>(() => {
+    const init: Record<number, string> = {};
+    mission?.consultants?.forEach((mc) => { init[mc.consultantId] = String(mc.dailyRate); });
+    return init;
+  });
   const [files, setFiles] = useState<File[]>([]);
   const [deletedAttachmentIds, setDeletedAttachmentIds] = useState<number[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -109,7 +113,15 @@ export default function MissionForm({ onSuccess, mission }: MissionFormProps) {
     if (!isEdit && selectedConsultants.length === 0) newErrors.consultantIds = 'Sélectionnez au moins un consultant';
     if (!f.title) newErrors.title = 'Ce champ est requis';
     if (!f.startDate) newErrors.startDate = 'Ce champ est requis';
-    if (!f.missionDailyRate || parseFloat(f.missionDailyRate) <= 0) newErrors.missionDailyRate = 'Le taux journalier doit être supérieur à 0';
+    const relevantConsultants = isEdit
+      ? (mission?.consultants ?? []).map((mc) => mc.consultantId)
+      : selectedConsultants.map((c) => c.value);
+    for (const cId of relevantConsultants) {
+      const rate = consultantRates[cId];
+      if (!rate || parseFloat(rate) <= 0) {
+        newErrors[`rate_${cId}`] = 'Le taux journalier doit être supérieur à 0';
+      }
+    }
     if (f.startDate && f.startDate.includes('/') && getDateError(f.startDate)) {
       newErrors.startDate = getDateError(f.startDate);
     }
@@ -134,9 +146,14 @@ export default function MissionForm({ onSuccess, mission }: MissionFormProps) {
       if (curEnd !== origEnd) {
         patchData.endDate = curEnd || null;
       }
-      if (f.missionDailyRate && parseFloat(f.missionDailyRate) !== (mission!.missionDailyRate ?? 0)) {
-        patchData.missionDailyRate = parseFloat(f.missionDailyRate);
+      const changedRates: { consultantId: number; dailyRate: number }[] = [];
+      for (const mc of mission!.consultants ?? []) {
+        const newRate = parseFloat(consultantRates[mc.consultantId] ?? '');
+        if (!isNaN(newRate) && newRate !== mc.dailyRate) {
+          changedRates.push({ consultantId: mc.consultantId, dailyRate: newRate });
+        }
       }
+      if (changedRates.length > 0) patchData.consultantRates = changedRates;
       if (files.length > 0) patchData.files = files;
       if (deletedAttachmentIds.length > 0) patchData.deleteAttachmentIds = deletedAttachmentIds;
       if (Object.keys(patchData).length === 0) {
@@ -165,11 +182,13 @@ export default function MissionForm({ onSuccess, mission }: MissionFormProps) {
       createMutation.mutate(
         {
           contractId: Number(form.contractId),
-          consultantIds: selectedConsultants.map((c) => c.value),
+          consultants: selectedConsultants.map((c) => ({
+            consultantId: c.value,
+            dailyRate: parseFloat(consultantRates[c.value] ?? '0'),
+          })),
           title: form.title,
           startDate: f.startDate,
           endDate: f.endDate || undefined,
-          missionDailyRate: parseFloat(form.missionDailyRate),
           files: files.length > 0 ? files : undefined,
         },
         {
@@ -198,14 +217,12 @@ export default function MissionForm({ onSuccess, mission }: MissionFormProps) {
         { key: 'title', label: 'Titre', required: true },
         { key: 'startDate', label: 'Date de début', required: true, type: 'date' },
         { key: 'endDate', label: 'Date de fin', required: false, type: 'date' },
-        { key: 'missionDailyRate', label: 'Taux journalier consultant (DH)', required: true },
       ]
     : [
         { key: 'contractId', label: 'Contrat', required: true, type: 'select', options: (contractsData?.data ?? []).map((c) => ({ id: c.id, ref: c.ref })) },
         { key: 'title', label: 'Titre', required: true },
         { key: 'startDate', label: 'Date de début', required: true, type: 'date' },
         { key: 'endDate', label: 'Date de fin', required: false, type: 'date' },
-        { key: 'missionDailyRate', label: 'Taux journalier consultant (DH)', required: true },
       ];
 
   return (
@@ -290,7 +307,15 @@ export default function MissionForm({ onSuccess, mission }: MissionFormProps) {
                 options={activeConsultants.map((c) => ({ value: c.id, label: c.name }))}
                 value={selectedConsultants}
                 onChange={(newVal) => {
-                  setSelectedConsultants([...newVal]);
+                  const next = [...newVal];
+                  setSelectedConsultants(next);
+                  setConsultantRates((prev) => {
+                    const updated = { ...prev };
+                    for (const c of next) {
+                      if (!(c.value in updated)) updated[c.value] = '';
+                    }
+                    return updated;
+                  });
                   setErrors((prev) => { const n = { ...prev }; delete n.consultantIds; return n; });
                 }}
                 placeholder="Sélectionner un ou plusieurs consultants"
@@ -308,6 +333,56 @@ export default function MissionForm({ onSuccess, mission }: MissionFormProps) {
               {errors.consultantIds && (
                 <p className="mt-1 text-xs text-red-500">{errors.consultantIds}</p>
               )}
+              {selectedConsultants.length > 0 && (
+                <div className="mt-3 space-y-2 p-2 rounded bg-gray-100/60">
+                  <p className="text-sm font-medium text-[#111111]">Taux journalier par consultant <span className="text-red-500">*</span></p>
+                  {selectedConsultants.map((c) => (
+                    <div key={c.value} className="flex items-center gap-3">
+                      <span className="min-w-[140px] text-sm text-[#111111]">{c.label}</span>
+                      <input
+                        type="number"
+                        min="0"
+                        step="any"
+                        placeholder="Taux (DH)"
+                        value={consultantRates[c.value] ?? ''}
+                        onChange={(e) => {
+                          setConsultantRates((prev) => ({ ...prev, [c.value]: e.target.value }));
+                          setErrors((prev) => { const n = { ...prev }; delete n[`rate_${c.value}`]; return n; });
+                        }}
+                        className={`w-32 rounded-[8px] border px-3 py-1.5 text-sm text-[#111111] bg-white outline-none transition-colors focus:border-primary-blue ${
+                          errors[`rate_${c.value}`] ? 'border-red-500' : 'border-[#e5e7eb]'
+                        }`}
+                      />
+                      <span className="text-sm text-[#6b7280]">DH</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+          {isEdit && key === 'endDate' && (mission?.consultants?.length ?? 0) > 0 && (
+            <div className="mt-3 space-y-2">
+              <p className="text-sm font-medium text-[#111111]">Taux journalier par consultant <span className="text-red-500">*</span></p>
+              {mission!.consultants!.map((mc) => (
+                <div key={mc.consultantId} className="flex items-center gap-3">
+                  <span className="min-w-[140px] text-sm text-[#111111]">{mc.consultant.name}</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="any"
+                    placeholder="Taux (DH)"
+                    value={consultantRates[mc.consultantId] ?? ''}
+                    onChange={(e) => {
+                      setConsultantRates((prev) => ({ ...prev, [mc.consultantId]: e.target.value }));
+                      setErrors((prev) => { const n = { ...prev }; delete n[`rate_${mc.consultantId}`]; return n; });
+                    }}
+                    className={`w-32 rounded-[8px] border px-3 py-1.5 text-sm text-[#111111] outline-none transition-colors focus:border-primary-blue ${
+                      errors[`rate_${mc.consultantId}`] ? 'border-red-500' : 'border-[#e5e7eb]'
+                    }`}
+                  />
+                  <span className="text-sm text-[#6b7280]">DH</span>
+                </div>
+              ))}
             </div>
           )}
         </div>
