@@ -15,10 +15,14 @@ function toDisplayDate(val: string): string {
   return val;
 }
 
-function toStorageDate(ddmm: string): string {
+function toStorageDate(ddmm: string, endOfDay = false): string {
   const parts = ddmm.split('/');
   if (parts.length !== 3) return ddmm;
-  return `${parts[2]}-${parts[1]}-${parts[0]}`;
+  const dateStr = `${parts[2]}-${parts[1]}-${parts[0]}`;
+  if (endOfDay) {
+    return `${dateStr}T23:59:59.999Z`;
+  }
+  return `${dateStr}T00:00:00.000Z`;
 }
 
 function getDateError(val: string): string {
@@ -129,7 +133,7 @@ export default function AuditLogPage() {
     {
       key: 'userEmail',
       label: 'Utilisateur',
-      render: (item) => item.userEmail.split('@')[0],
+      render: (item) => item.details?.userName ? item.details.userName as string : item.userEmail.split('@')[0],
     },
     {
       key: 'userRole',
@@ -200,7 +204,7 @@ export default function AuditLogPage() {
               type="text"
               value={userFilter}
               onChange={handleUserChange}
-              placeholder="Rechercher par email..."
+              placeholder="Email ou nom"
               autoComplete="off"
               className="h-10 w-56 rounded-[8px] border border-[#e5e7eb] bg-[#ffffff] px-3 text-sm text-[#111111] placeholder:text-[#9ca3af] focus:outline-none focus:border-[#111111]"
             />
@@ -222,7 +226,7 @@ export default function AuditLogPage() {
                   return;
                 }
                 debounceTimer.current = setTimeout(() => {
-                  setDebouncedStartDate(raw ? toStorageDate(raw) : '');
+                  setDebouncedStartDate(raw ? toStorageDate(raw, false) : '');
                   setPage(1);
                 }, 400);
               }}
@@ -248,7 +252,7 @@ export default function AuditLogPage() {
                   return;
                 }
                 debounceTimer.current = setTimeout(() => {
-                  setDebouncedEndDate(raw ? toStorageDate(raw) : '');
+                  setDebouncedEndDate(raw ? toStorageDate(raw, true) : '');
                   setPage(1);
                 }, 400);
               }}
@@ -294,7 +298,12 @@ export default function AuditLogPage() {
         {selectedEntry && (
           <div className="space-y-5">
             <div className="grid grid-cols-2 gap-4">
-              <InfoItem label="Utilisateur" value={selectedEntry.userEmail} />
+              <InfoItem
+                label="Utilisateur"
+                value={selectedEntry.details?.userName
+                  ? `${selectedEntry.details.userName} (${selectedEntry.userEmail})`
+                  : selectedEntry.userEmail}
+              />
               <InfoItem
                 label="Rôle"
                 value={
