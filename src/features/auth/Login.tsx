@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { useLoginMutation } from './useLoginMutation';
 import newLogo from '../../assets/new-logo.png';
@@ -13,11 +13,44 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const [captchaToken, setCaptchaToken] = useState('');
+  const [captchaError, setCaptchaError] = useState('');
+  const captchaRef = useRef<HTMLDivElement>(null);
+  const widgetIdRef = useRef<number | null>(null);
   const loginMutation = useLoginMutation();
+
+  useEffect(() => {
+    const renderCaptcha = () => {
+      if (window.grecaptcha?.render && captchaRef.current && widgetIdRef.current === null) {
+        widgetIdRef.current = window.grecaptcha.render(captchaRef.current, {
+          sitekey: import.meta.env.VITE_RECAPTCHA_SITE_KEY,
+          callback: (token: string) => {
+            setCaptchaToken(token);
+            setCaptchaError('');
+          },
+          'expired-callback': () => {
+            setCaptchaToken('');
+          },
+        });
+      }
+    };
+
+    renderCaptcha();
+
+    const interval = setInterval(() => {
+      if (window.grecaptcha?.render) {
+        renderCaptcha();
+        if (widgetIdRef.current !== null) clearInterval(interval);
+      }
+    }, 200);
+
+    return () => clearInterval(interval);
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setFieldErrors({});
+    setCaptchaError('');
 
     if (!email || !password) {
       const errors: FieldErrors = {};
@@ -27,21 +60,38 @@ export default function Login() {
       return;
     }
 
+    if (!captchaToken) {
+      setCaptchaError('Veuillez compléter le CAPTCHA');
+      return;
+    }
+
     loginMutation.mutate(
-      { email, password },
+      { email, password, captchaToken },
       {
+        onSettled: () => {
+          if (widgetIdRef.current !== null && window.grecaptcha) {
+            window.grecaptcha.reset(widgetIdRef.current);
+          }
+          setCaptchaToken('');
+        },
         onError: (error: unknown) => {
           const err = error as {
             response?: {
               data?: {
                 error?: {
+                  code?: string;
                   message?: string;
                   details?: { field: string; message: string }[];
                 };
               };
             };
           };
-          const details = err.response?.data?.error?.details;
+          const apiError = err.response?.data?.error;
+          if (apiError?.code === 'CAPTCHA_FAILED') {
+            setCaptchaError(apiError.message || 'Vérification CAPTCHA échouée');
+            return;
+          }
+          const details = apiError?.details;
           if (details && details.length > 0) {
             const mapped: FieldErrors = {};
             for (const d of details) {
@@ -61,12 +111,13 @@ export default function Login() {
       const err = loginMutation.error as {
         response?: {
           data?: {
-            error?: { message?: string; details?: unknown[] };
+            error?: { code?: string; message?: string; details?: unknown[] };
           };
         };
       };
       const apiError = err.response?.data?.error;
       if (!apiError) return 'Une erreur est survenue. Veuillez réessayer.';
+      if (apiError.code === 'CAPTCHA_FAILED') return null;
       if (apiError.details && apiError.details.length > 0) return null;
       return apiError.message || 'Une erreur est survenue. Veuillez réessayer.';
     })();
@@ -151,10 +202,17 @@ export default function Login() {
             )}
           </div>
 
+          <div>
+            <div ref={captchaRef}></div>
+            {captchaError && (
+              <p className="mt-1 text-sm text-[#ef4444]">{captchaError}</p>
+            )}
+          </div>
+
           <button
             type="submit"
-            disabled={loginMutation.isPending}
-            className="flex w-full cursor-pointer items-center justify-center rounded-[8px] bg-primary-blue px-5 py-3 text-sm font-semibold leading-none text-[#ffffff] transition-opacity hover:opacity-90 disabled:bg-[#e5e7eb] disabled:text-[#6b7280]"
+            disabled={loginMutation.isPending || !captchaToken}
+            className="flex w-full cursor-pointer items-center justify-center rounded-[8px] bg-primary-blue px-5 py-3 text-sm font-semibold leading-none text-[#ffffff] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:bg-[#e5e7eb] disabled:text-[#6b7280]"
           >
             {loginMutation.isPending ? 'Connexion...' : 'Se connecter'}
           </button>

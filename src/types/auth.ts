@@ -3,6 +3,7 @@ export type UserRole = 'ADMIN' | 'GESTIONNAIRE' | 'CONSULTANT';
 export interface LoginPayload {
   email: string;
   password: string;
+  captchaToken: string;
 }
 
 export interface LoginResponse {
