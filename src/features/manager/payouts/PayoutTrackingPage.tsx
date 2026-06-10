@@ -11,7 +11,15 @@ export default function PayoutTrackingPage() {
   const { data, isLoading } = usePayoutsHistory();
   const paidInvoicesQuery = useInvoices(1, 1000, 'PAID');
   const payoutMutation = useTriggerPayout();
-  const [payoutModal, setPayoutModal] = useState<{ id: number; ref: string; consultantPayoutRest: number; consultantPayouts?: { consultantId: number; payoutAmount: number }[] } | null>(null);
+  const [payoutModal, setPayoutModal] = useState<{
+    id: number;
+    ref: string;
+    consultantPayoutRest: number;
+    consultant?: { id: number; name: string };
+    consultants?: { id: number; name: string; email: string }[];
+    consultantPayouts?: { consultantId: number; payoutAmount: number }[];
+    consultantsPayouts?: { consultantId: number; payoutAmount: number; paid: number; rest: number; status: string }[];
+  } | null>(null);
   const [payoutMode, setPayoutMode] = useState<'DH' | '%'>('DH');
   const [payoutAmount, setPayoutAmount] = useState('');
   const [payoutComment, setPayoutComment] = useState('');
@@ -30,9 +38,11 @@ export default function PayoutTrackingPage() {
   );
 
   const payoutRest = payoutModal?.consultantPayoutRest ?? 0;
-  const payoutBase = payoutModal?.consultantPayouts && payoutConsultantId
-    ? (payoutModal.consultantPayouts.find((cp) => cp.consultantId === payoutConsultantId)?.payoutAmount ?? payoutRest)
-    : payoutRest;
+  const payoutBase = payoutModal?.consultantsPayouts && payoutConsultantId
+    ? (payoutModal.consultantsPayouts.find((cp) => cp.consultantId === payoutConsultantId)?.rest ?? payoutRest)
+    : payoutModal?.consultantPayouts && payoutConsultantId
+      ? (payoutModal.consultantPayouts.find((cp) => cp.consultantId === payoutConsultantId)?.payoutAmount ?? payoutRest)
+      : payoutRest;
 
   const handlePayout = () => {
     if (!payoutModal) return;
@@ -134,12 +144,12 @@ export default function PayoutTrackingPage() {
                       <Link to={`/manager/invoices/${inv.id}`} className="text-[#3b82f6] hover:underline">{inv.ref}</Link>
                     </td>
                     <td className="px-3 py-2 text-[#6b7280]">{inv.timesheet?.month ?? '-'}</td>
-                    <td className="px-3 py-2 text-[#111111]">{inv.consultant?.name ?? '-'}</td>
+                    <td className="px-3 py-2 text-[#111111]">{inv.consultants?.map((c) => c.name).join(', ') ?? inv.consultant?.name ?? '-'}</td>
                     {/* <td className="px-3 py-2 text-[#6b7280]">{inv.timesheet?.mission?.title ?? '-'}</td> */}
                     <td className="px-3 py-2">
                       <button
                         onClick={() => {
-                          setPayoutModal({ id: inv.id, ref: inv.ref, consultantPayoutRest: inv.consultantPayoutRest ?? 0, consultantPayouts: inv.consultantPayouts });
+                          setPayoutModal({ id: inv.id, ref: inv.ref, consultantPayoutRest: inv.consultantPayoutRest ?? 0, consultant: inv.consultants?.[0], consultants: inv.consultants, consultantPayouts: inv.consultantPayouts, consultantsPayouts: inv.consultantsPayouts });
                           setPayoutMode('DH');
                           setPayoutAmount(String(inv.consultantPayoutRest ?? 0));
                           setPayoutComment('');
@@ -254,7 +264,7 @@ export default function PayoutTrackingPage() {
               Reste à payer : <span className="font-bold bg-green-500/20 px-4 py-1 rounded text-[#111111]">{(payoutModal.consultantPayoutRest ?? 0).toLocaleString()} DH</span>
             </p>
 
-            {payoutModal.consultantPayouts && payoutModal.consultantPayouts.length > 0 && (
+            {(payoutModal.consultantsPayouts && payoutModal.consultantsPayouts.length > 0 || payoutModal.consultantPayouts && payoutModal.consultantPayouts.length > 0) && (
               <div className="mb-4">
                 <label className="block text-sm font-medium text-[#111111] mb-1">Consultant</label>
                 <select
@@ -263,11 +273,26 @@ export default function PayoutTrackingPage() {
                   className="w-full rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111]"
                 >
                   <option value="">Sélectionner un consultant</option>
-                  {(payoutModal.consultantPayouts ?? []).map((cp) => (
-                    <option key={cp.consultantId} value={cp.consultantId}>
-                      Consultant #{cp.consultantId} — {cp.payoutAmount.toLocaleString()} DH
-                    </option>
-                  ))}
+                  {payoutModal.consultantsPayouts && payoutModal.consultantsPayouts.length > 0
+                    ? payoutModal.consultantsPayouts.filter((cp) => cp.rest > 0).map((cp) => {
+                        const consultant = payoutModal.consultants?.find((c) => c.id === cp.consultantId);
+                        const name = consultant?.name ?? `Consultant #${cp.consultantId}`;
+                        return (
+                          <option key={cp.consultantId} value={cp.consultantId}>
+                            {name} — reste {cp.rest.toLocaleString()} DH
+                          </option>
+                        );
+                      })
+                    : (payoutModal.consultantPayouts ?? []).map((cp) => {
+                        const consultant = payoutModal.consultants?.find((c) => c.id === cp.consultantId);
+                        const name = consultant?.name ?? `Consultant #${cp.consultantId}`;
+                        return (
+                          <option key={cp.consultantId} value={cp.consultantId}>
+                            {name} — {cp.payoutAmount.toLocaleString()} DH
+                          </option>
+                        );
+                      })
+                  }
                 </select>
               </div>
             )}

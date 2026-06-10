@@ -105,9 +105,18 @@ export interface Invoice {
   documents?: string[];
   timesheet?: { id: number; month: string; days: number; status: string; mission: { id: number; title: string; contractId: number } };
   client?: { id: number; raison_sociale: string; email: string };
+  consultants?: { id: number; name: string; email: string }[];
   consultant?: { id: number; name: string; email: string };
   consultantPayoutStatus?: 'non_paye' | 'paiement_partiel' | 'paye';
   consultantPayments?: { consultantId?: number; amount: number; date: string; paid: number; rest: number }[];
+  consultantsPayouts?: {
+    consultantId: number;
+    payoutAmount: number;
+    paid: number;
+    rest: number;
+    status: 'non_paye' | 'paiement_partiel' | 'paye';
+    paymentHistory: { amount: number; date: string; consultantId: number; paid: number; rest: number }[];
+  }[];
 }
 
 export interface PaymentRecord {

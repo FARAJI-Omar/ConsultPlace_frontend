@@ -207,9 +207,11 @@ export default function InvoiceDetailsPage() {
   };
 
   const payoutRest = invoice.consultantPayoutRest ?? 0;
-  const payoutBase = invoice.consultantPayouts && payoutConsultantId
-    ? (invoice.consultantPayouts.find((cp) => cp.consultantId === payoutConsultantId)?.payoutAmount ?? payoutRest)
-    : payoutRest;
+  const payoutBase = invoice.consultantsPayouts && payoutConsultantId
+    ? (invoice.consultantsPayouts.find((cp) => cp.consultantId === payoutConsultantId)?.rest ?? payoutRest)
+    : invoice.consultantPayouts && payoutConsultantId
+      ? (invoice.consultantPayouts.find((cp) => cp.consultantId === payoutConsultantId)?.payoutAmount ?? payoutRest)
+      : payoutRest;
 
   const handlePayout = () => {
     const parsed = parseFloat(payoutAmount);
@@ -355,20 +357,77 @@ export default function InvoiceDetailsPage() {
         </div>
 
         <div className="rounded-[12px] bg-[#ffffff] border border-[#e5e7eb] p-6">
-          <h2 className="mb-4 text-lg font-semibold text-[#111111]">Consultant{invoice.consultantPayouts && invoice.consultantPayouts.length > 0 ? 's' : ''}</h2>
-          {invoice.consultantPayouts && invoice.consultantPayouts.length > 0 ? (
-            <div className="space-y-3 text-sm">
-              {invoice.consultantPayouts.map((cp) => (
-                <div key={cp.consultantId} className="flex items-center justify-between rounded-[8px] bg-[#f9fafb] px-3 py-2">
-                  <span className="font-medium text-[#111111]">Consultant #{cp.consultantId}</span>
-                  <span className="text-[#111111]">{cp.payoutAmount.toLocaleString()} DH</span>
-                </div>
-              ))}
+          <h2 className="mb-4 text-lg font-semibold text-[#111111]">Consultant{invoice.consultantsPayouts && invoice.consultantsPayouts.length > 1 ? 's' : ''}</h2>
+          {invoice.consultantsPayouts && invoice.consultantsPayouts.length > 0 ? (
+            <div className="space-y-4 text-sm">
+              {invoice.consultantsPayouts.map((cp) => {
+                const consultant = invoice.consultants?.find((c) => c.id === cp.consultantId);
+                const name = consultant?.name ?? `Consultant #${cp.consultantId}`;
+                return (
+                  <div key={cp.consultantId} className="rounded-[8px] border border-[#e5e7eb] p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-medium text-[#111111]">{name}</span>
+                      <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                        cp.status === 'paye'
+                          ? 'bg-green-100 text-green-700'
+                          : cp.status === 'paiement_partiel'
+                            ? 'bg-yellow-100 text-yellow-700'
+                            : 'bg-gray-100 text-gray-500'
+                      }`}>
+                        {cp.status === 'paye' ? 'Payé' : cp.status === 'paiement_partiel' ? 'Paiement partiel' : 'Non payé'}
+                      </span>
+                    </div>
+                    <div className="space-y-1 text-sm">
+                      <div className="flex justify-between"><span className="text-[#6b7280]">Montant à payer</span><span className="text-[#111111]">{cp.payoutAmount.toLocaleString()} DH</span></div>
+                      <div className="flex justify-between"><span className="text-[#6b7280]">Payé</span><span className="text-[#111111]">{cp.paid.toLocaleString()} DH</span></div>
+                      <div className="flex justify-between"><span className="text-[#6b7280]">Reste</span><span className={`font-medium ${cp.rest > 0 ? 'text-[#ef4444]' : 'text-[#111111]'}`}>{cp.rest.toLocaleString()} DH</span></div>
+                    </div>
+                    {cp.paymentHistory && cp.paymentHistory.length > 0 && (
+                      <div className="mt-3 border-t border-[#e5e7eb] pt-3">
+                        <p className="mb-1.5 text-xs font-semibold text-[#6b7280]">Historique des paiements</p>
+                        <table className="w-full border-collapse text-xs">
+                          <thead>
+                            <tr className="border-b border-[#e5e7eb]">
+                              <th className="px-1.5 py-1 text-left font-medium text-[#6b7280]">#</th>
+                              <th className="px-1.5 py-1 text-left font-medium text-[#6b7280]">Montant</th>
+                              <th className="px-1.5 py-1 text-left font-medium text-[#6b7280]">Reste</th>
+                              <th className="px-1.5 py-1 text-left font-medium text-[#6b7280]">Date</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {cp.paymentHistory.map((ph, idx) => (
+                              <tr key={idx} className="border-b border-[#e5e7eb]">
+                                <td className="px-1.5 py-1 text-[#6b7280]">{idx + 1}</td>
+                                <td className="px-1.5 py-1 text-[#111111]">{(ph.amount ?? 0).toLocaleString()} DH</td>
+                                <td className="px-1.5 py-1 text-[#111111]">{(ph.rest ?? 0).toLocaleString()} DH</td>
+                                <td className="px-1.5 py-1 text-[#6b7280]">{formatDate(ph.date)}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           ) : (
             <div className="space-y-2 text-sm">
-              <p className="font-medium text-[#111111]">{invoice.consultant?.name}</p>
-              <p className="text-[#6b7280]">{invoice.consultant?.email}</p>
+              {invoice.consultants && invoice.consultants.length > 0 ? (
+                <div>
+                  {invoice.consultants.map((c, idx) => (
+                    <div key={idx} className="flex items-center gap-2">
+                      <p className="font-medium text-[#111111]">{c.name}</p>
+                      <p className="text-[#6b7280]">{c.email}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <>
+                  <p className="font-medium text-[#111111]">{invoice.consultant?.name}</p>
+                  <p className="text-[#6b7280]">{invoice.consultant?.email}</p>
+                </>
+              )}
               <div className="flex justify-between border-t border-[#e5e7eb] pt-2">
                 <span className="text-[#6b7280]">Montant à payer au consultant</span>
                 <span className="font-medium text-[#111111]">{(invoice.consultantPayout ?? 0).toLocaleString()} DH</span>
@@ -391,16 +450,13 @@ export default function InvoiceDetailsPage() {
               </div>
             </div>
           )}
-          {invoice.consultantPayments && invoice.consultantPayments.length > 0 && (
+          {!invoice.consultantsPayouts && invoice.consultantPayments && invoice.consultantPayments.length > 0 && (
             <div className="mt-4 border-t border-[#e5e7eb] pt-4">
               <h3 className="mb-2 text-sm font-semibold text-[#111111]">Historique des paiements Consultant</h3>
               <table className="w-full border-collapse text-sm">
                 <thead>
                   <tr className="border-b border-[#e5e7eb]">
                     <th className="px-2 py-1.5 text-left text-xs font-medium text-[#6b7280]">#</th>
-                    {invoice.consultantPayouts && invoice.consultantPayouts.length > 1 && (
-                      <th className="px-2 py-1.5 text-left text-xs font-medium text-[#6b7280]">Consultant</th>
-                    )}
                     <th className="px-2 py-1.5 text-left text-xs font-medium text-[#6b7280]">Montant</th>
                     <th className="px-2 py-1.5 text-left text-xs font-medium text-[#6b7280]">Reste</th>
                     <th className="px-2 py-1.5 text-left text-xs font-medium text-[#6b7280]">Date</th>
@@ -410,13 +466,6 @@ export default function InvoiceDetailsPage() {
                   {invoice.consultantPayments.map((cp, idx) => (
                     <tr key={idx} className="border-b border-[#e5e7eb]">
                       <td className="px-2 py-1.5 text-xs text-[#6b7280]">{idx + 1}</td>
-                      {invoice.consultantPayouts && invoice.consultantPayouts.length > 1 && (
-                        <td className="px-2 py-1.5 text-[#111111]">
-                          {cp.consultantId
-                            ? `#${cp.consultantId}`
-                            : '—'}
-                        </td>
-                      )}
                       <td className="px-2 py-1.5 text-[#111111]">{(cp.amount ?? 0).toLocaleString()} DH</td>
                       <td className="px-2 py-1.5 text-[#111111]">{(cp.rest ?? 0).toLocaleString()} DH</td>
                       <td className="px-2 py-1.5 text-[#6b7280]">{formatDate(cp.date)}</td>
@@ -567,7 +616,7 @@ export default function InvoiceDetailsPage() {
               Reste à payer : <span className="font-bold bg-green-500/20 px-4 py-1 rounded text-[#111111]">{payoutRest.toLocaleString()} DH</span>
             </p>
 
-            {invoice.consultantPayouts && invoice.consultantPayouts.length > 0 && (
+            {(invoice.consultantsPayouts && invoice.consultantsPayouts.length > 0 || invoice.consultantPayouts && invoice.consultantPayouts.length > 0) && (
               <div className="mb-4">
                 <label className="block text-sm font-medium text-[#111111] mb-1">Consultant</label>
                 <select
@@ -576,11 +625,26 @@ export default function InvoiceDetailsPage() {
                   className="w-full rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111]"
                 >
                   <option value="">Sélectionner un consultant</option>
-                  {invoice.consultantPayouts.map((cp) => (
-                    <option key={cp.consultantId} value={cp.consultantId}>
-                      Consultant #{cp.consultantId} — {cp.payoutAmount.toLocaleString()} DH
-                    </option>
-                  ))}
+                  {invoice.consultantsPayouts && invoice.consultantsPayouts.length > 0
+                    ? invoice.consultantsPayouts.filter((cp) => cp.rest > 0).map((cp) => {
+                        const consultant = invoice.consultants?.find((c) => c.id === cp.consultantId);
+                        const name = consultant?.name ?? `Consultant #${cp.consultantId}`;
+                        return (
+                          <option key={cp.consultantId} value={cp.consultantId}>
+                            {name} — reste {cp.rest.toLocaleString()} DH
+                          </option>
+                        );
+                      })
+                    : invoice.consultantPayouts?.map((cp) => {
+                        const consultant = invoice.consultants?.find((c) => c.id === cp.consultantId);
+                        const name = consultant?.name ?? `Consultant #${cp.consultantId}`;
+                        return (
+                          <option key={cp.consultantId} value={cp.consultantId}>
+                            {name} — {cp.payoutAmount.toLocaleString()} DH
+                          </option>
+                        );
+                      })
+                  }
                 </select>
               </div>
             )}
