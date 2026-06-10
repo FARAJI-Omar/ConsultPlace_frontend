@@ -115,7 +115,7 @@ export default function CalendarGrid({ year, month, entries, holidays, touchedDa
                 {holidayName && (
                   <span className="text-[10px] leading-tight text-center text-[#6b7280] line-clamp-2">{holidayName}</span>
                 )}
-                <div className="relative w-full">
+                <div className="w-full">
                   <input
                     type="number"
                     min={0}
@@ -126,9 +126,8 @@ export default function CalendarGrid({ year, month, entries, holidays, touchedDa
                       const v = parseFloat(e.target.value);
                       onChange(dayKey, isNaN(v) || v < 0 ? 0 : Math.min(v, 24));
                     }}
-                    className="w-full rounded-[4px] border border-[#e5e7eb] bg-[#ffffff] px-5 py-1.5 text-center text-[12px] font-bold text-black focus:border-[#111111] focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                    className="w-full rounded-[4px] border border-[#e5e7eb] bg-[#ffffff] px-1.5 py-1.5 text-center text-[12px] font-bold text-black focus:border-[#111111] focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                   />
-                  <span className="absolute right-12 top-1/2 -translate-y-1/2 text-[11px] text-[#6b7280] font-medium pointer-events-none">H</span>
                 </div>
               </div>
             );
