@@ -301,7 +301,7 @@ export default function InvoiceDetailsPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <div className="rounded-[12px] bg-[#ffffff] border border-[#e5e7eb] p-6">
+        <div className="rounded-[12px] bg-[#0051ff09] border border-[#e5e7eb] p-6">
           <h2 className="mb-4 text-lg font-semibold text-[#111111]">Informations</h2>
           <div className="space-y-3 text-sm">
             <div className="flex justify-between"><span className="text-[#6b7280]">Référence</span><span className="font-medium text-[#111111]">{invoice.ref}</span></div>
@@ -311,7 +311,7 @@ export default function InvoiceDetailsPage() {
           </div>
         </div>
 
-        <div className="rounded-[12px] bg-[#ffffff] border border-[#e5e7eb] p-6">
+        <div className="rounded-[12px] bg-[#0051ff09] border border-[#e5e7eb] p-6">
           <h2 className="mb-4 text-lg font-semibold text-[#111111]">Montants</h2>
           <div className="space-y-3 text-sm">
             <div className="flex justify-between"><span className="text-[#6b7280]">Montant HT</span><span className="font-medium text-[#111111]">{(invoice.amount ?? 0).toLocaleString()} DH</span></div>
