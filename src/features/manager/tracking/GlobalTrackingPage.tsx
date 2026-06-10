@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { formatDate } from '../../../lib/utils';
 import { DataTable } from '../../../components/common/DataTable';
 import { useGlobalTracking, exportTrackingCSV } from '../../../hooks/manager/useAdvancedTracking';
@@ -188,6 +189,18 @@ export default function GlobalTrackingPage() {
         </div>
       );
     } },
+    { key: 'timesheetIds', label: 'Relevé ID', render: (r) => {
+      const ids = r.timesheetIds ?? [];
+      return (
+        <div className="flex flex-wrap gap-1">
+          {ids.map((id) => (
+            <Link key={id} to={`/manager/timesheets/${id}`} className="inline-block rounded-[6px] border border-[#e5e7eb] px-2.5 py-1 text-xs font-medium text-[#3b82f6] hover:bg-[#f3f4f6]">
+              #{id}
+            </Link>
+          ))}
+        </div>
+      );
+    } },
     { key: 'days', label: 'Jours', render: (r) => {
       const daysList = Array.isArray(r.days) ? r.days : [r.days];
       return (
@@ -198,7 +211,7 @@ export default function GlobalTrackingPage() {
         </div>
       );
     } },
-    { key: 'invoiceRef', label: 'Facture', render: (r) => r.invoiceRef ?? '—' },
+    { key: 'invoiceRef', label: 'Facture', render: (r) => r.invoiceRef ? <Link to={`/manager/invoices/${r.id}`} className="text-[#3b82f6] hover:underline">{r.invoiceRef}</Link> : '—' },
     { key: 'total', label: 'TTC', render: (r) => `${(r.total ?? 0).toLocaleString()} DH` },
     {
       key: 'clientStatus',

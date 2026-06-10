@@ -212,14 +212,14 @@ export default function MissionForm({ onSuccess, mission }: MissionFormProps) {
 
   const existingDocs = isEdit ? (mission?.attachments ?? []) : [];
 
-  const FIELDS: { key: string; label: string; required: boolean; type?: string; options?: { id: number; ref?: string; name?: string }[] }[] = isEdit
+  const FIELDS: { key: string; label: string; required: boolean; type?: string; options?: { id: number; ref?: string; name?: string; profile?: string }[] }[] = isEdit
     ? [
         { key: 'title', label: 'Titre', required: true },
         { key: 'startDate', label: 'Date de début', required: true, type: 'date' },
         { key: 'endDate', label: 'Date de fin', required: false, type: 'date' },
       ]
     : [
-        { key: 'contractId', label: 'Contrat', required: true, type: 'select', options: (contractsData?.data ?? []).map((c) => ({ id: c.id, ref: c.ref })) },
+        { key: 'contractId', label: 'Contrat', required: true, type: 'select', options: (contractsData?.data ?? []).map((c) => ({ id: c.id, ref: c.ref, profile: c.profile })) },
         { key: 'title', label: 'Titre', required: true },
         { key: 'startDate', label: 'Date de début', required: true, type: 'date' },
         { key: 'endDate', label: 'Date de fin', required: false, type: 'date' },
@@ -247,7 +247,7 @@ export default function MissionForm({ onSuccess, mission }: MissionFormProps) {
               <option value="">Sélectionner</option>
               {(options ?? []).map((opt) => (
                 <option key={opt.id} value={opt.id}>
-                  {opt.ref ?? opt.name ?? String(opt.id)}
+                  {opt.ref && opt.profile ? `${opt.ref}\u00A0\u00A0\u00A0____\u00A0\u00A0\u00A0Profil Consultant: ${opt.profile}` : opt.ref ?? opt.name ?? String(opt.id)}
                 </option>
               ))}
             </select>
@@ -361,7 +361,7 @@ export default function MissionForm({ onSuccess, mission }: MissionFormProps) {
             </div>
           )}
           {isEdit && key === 'endDate' && (mission?.consultants?.length ?? 0) > 0 && (
-            <div className="mt-3 space-y-2">
+            <div className="mt-3 space-y-2 p-2 rounded bg-gray-100/60">
               <p className="text-sm font-medium text-[#111111]">Taux journalier par consultant <span className="text-red-500">*</span></p>
               {mission!.consultants!.map((mc) => (
                 <div key={mc.consultantId} className="flex items-center gap-3">

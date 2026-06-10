@@ -160,7 +160,7 @@ export default function TimesheetDetailsPage() {
         )}
       </div>
 
-      <div className="rounded-[12px] bg-[#f5f5f5] p-6">
+      <div className="rounded-[12px] bg-white border border-[#e5e7eb] p-6">
         <h2 className="mb-6 text-lg font-semibold text-[#111111]">Suivi du statut</h2>
         <HorizontalStepper
           steps={(ts.history ?? []).map((e) => ({
@@ -172,7 +172,7 @@ export default function TimesheetDetailsPage() {
         />
       </div>
 
-      <div className="rounded-[12px] bg-[#f5f5f5] p-6">
+      <div className="rounded-[12px] bg-white border border-[#e5e7eb] p-6">
         <div className="grid grid-cols-2 gap-6 text-sm">
           <div>
             <p className="text-[#6b7280]">Mission</p>
@@ -217,7 +217,7 @@ export default function TimesheetDetailsPage() {
         </div>
       </div>
 
-      <div className="rounded-[12px] bg-[#f5f5f5] p-6">
+      <div className="rounded-[12px] bg-white border border-[#e5e7eb] p-6">
         <h2 className="mb-4 text-lg font-semibold text-[#111111]">Saisie journalière</h2>
         <div className="grid grid-cols-7 gap-1 text-center text-sm ">
           {DAY_LABELS.map((label) => (
@@ -269,7 +269,7 @@ export default function TimesheetDetailsPage() {
           </a>
         );
         return (
-          <div className="rounded-[12px] bg-[#f5f5f5] p-6">
+          <div className="rounded-[12px] bg-white border border-[#e5e7eb] p-6">
             <h2 className="mb-4 text-lg font-semibold text-[#111111]">Pièces jointes</h2>
             {consultantDocs.length > 0 && (
               <div className="mb-6">

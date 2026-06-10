@@ -211,6 +211,7 @@ export interface TrackingRow {
   missionDailyRate: number | number[];
   consultantStatus: string | string[];
   consultantPaymentDate: string | null | (string | null)[];
+  timesheetIds?: number[];
 }
 
 export interface TurnoverForecast {
