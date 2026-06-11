@@ -118,6 +118,7 @@ export interface Invoice {
     status: 'non_paye' | 'paiement_partiel' | 'paye';
     paymentHistory: { amount: number; date: string; consultantId: number; paid: number; rest: number }[];
   }[];
+  months?: string[];
   bdc?: string;
   delai?: number;
 }

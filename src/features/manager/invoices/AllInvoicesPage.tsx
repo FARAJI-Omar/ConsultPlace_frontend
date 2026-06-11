@@ -289,7 +289,9 @@ export default function AllInvoicesPage() {
   const columns: Column<Invoice>[] = [
     { key: '#', label: '#', render: (_item, idx) => String(idx + 1) },
     { key: 'ref', label: 'Réf', render: (inv) => <Link to={`/manager/invoices/${inv.id}`} className="text-[#3b82f6] hover:underline">{inv.ref}</Link> },
-    { key: 'month', label: 'Mois', render: (inv) => formatMonth(inv.timesheet?.month) },
+    { key: 'month', label: 'Mois', render: (inv) => inv.months ? (
+      <div className="flex flex-col text-gray-600 ">{inv.months.map((m) => <span key={m}>{m}</span>)}</div>
+    ) : (inv.timesheet?.month ?? '-') },
     { key: 'client', label: 'Client', render: (inv) => (
       <span className="inline-block rounded-[6px] bg-[#EFF6FF] px-2.5 py-1 text-sm font-medium text-[#111111]">{inv.client?.raison_sociale ?? '-'}</span>
     ) },
