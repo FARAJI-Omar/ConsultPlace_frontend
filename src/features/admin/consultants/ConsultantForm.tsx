@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { parseApiError } from '../../../utils/errorParser';
 import { useMutateConsultant, useUpdateConsultant } from '../../../hooks/useConsultants';
@@ -11,21 +10,11 @@ interface ConsultantFormProps {
   consultant?: Consultant;
 }
 
-const CREATE_FIELDS: { key: string; label: string; required: boolean; type?: string }[] = [
+const FIELDS: { key: string; label: string; required: boolean; type?: string }[] = [
   { key: 'name', label: 'Nom complet', required: true },
   { key: 'email', label: 'Email', required: true, type: 'email' },
   { key: 'profile', label: 'Profil', required: true },
   { key: 'dailyRate', label: 'Taux journalier (DH)', required: true, type: 'number' },
-  { key: 'password', label: 'Mot de passe', required: true, type: 'password' },
-  { key: 'confirmPassword', label: 'Confirmer le mot de passe', required: true, type: 'password' },
-];
-
-const EDIT_FIELDS: { key: string; label: string; required: boolean; type?: string }[] = [
-  { key: 'name', label: 'Nom complet', required: true },
-  { key: 'email', label: 'Email', required: true, type: 'email' },
-  { key: 'profile', label: 'Profil', required: true },
-  { key: 'dailyRate', label: 'Taux journalier (DH)', required: true, type: 'number' },
-  { key: 'password', label: 'Mot de passe', required: false, type: 'password' },
 ];
 
 export default function ConsultantForm({ onSuccess, consultant }: ConsultantFormProps) {
@@ -35,12 +24,8 @@ export default function ConsultantForm({ onSuccess, consultant }: ConsultantForm
     email: consultant?.email ?? '',
     profile: consultant?.profile ?? '',
     dailyRate: consultant?.dailyRate.toString() ?? '',
-    password: '',
-    confirmPassword: '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const createMutation = useMutateConsultant();
   const updateMutation = useUpdateConsultant();
@@ -72,14 +57,6 @@ export default function ConsultantForm({ onSuccess, consultant }: ConsultantForm
     } else if (Number(form.dailyRate) <= 0) {
       newErrors.dailyRate = 'Le taux journalier doit être un nombre positif';
     }
-    if (!isEdit && !form.password) {
-      newErrors.password = 'Ce champ est requis';
-    } else if (form.password && form.password.length < 6) {
-      newErrors.password = 'Le mot de passe doit contenir au moins 6 caractères';
-    }
-    if (!isEdit && form.password !== form.confirmPassword) {
-      newErrors.confirmPassword = 'Les mots de passe ne correspondent pas';
-    }
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) return;
 
@@ -90,7 +67,6 @@ export default function ConsultantForm({ onSuccess, consultant }: ConsultantForm
           if (form.email !== consultant!.email) payload.email = form.email;
           if (form.profile !== consultant!.profile) payload.profile = form.profile;
           if (Number(form.dailyRate) !== consultant!.dailyRate) payload.dailyRate = Number(form.dailyRate);
-          if (form.password) payload.password = form.password;
           return updateMutation.mutateAsync({ id: consultant!.id, data: payload });
         })()
       : createMutation.mutateAsync({
@@ -98,11 +74,10 @@ export default function ConsultantForm({ onSuccess, consultant }: ConsultantForm
           email: form.email,
           profile: form.profile,
           dailyRate: Number(form.dailyRate),
-          password: form.password,
         });
 
     mutateFn.then(() => {
-      toast.success(isEdit ? 'Consultant modifié avec succès' : 'Consultant créé avec succès');
+      toast.success(isEdit ? 'Consultant modifié avec succès' : 'Consultant créé avec succès. Un email d\'invitation lui a été envoyé.');
       onSuccess();
     }).catch((err: unknown) => {
       const fieldErrors = parseApiError(err);
@@ -119,47 +94,23 @@ export default function ConsultantForm({ onSuccess, consultant }: ConsultantForm
     <LoadingOverlay isLoading={mutation.isPending}>
     <form onSubmit={handleSubmit} className="space-y-4">
       <p className="text-xs text-red-500">(*) Champ obligatoire</p>
-      {(isEdit ? EDIT_FIELDS : CREATE_FIELDS).map(({ key, label, required, type }) => (
+      {FIELDS.map(({ key, label, required, type }) => (
         <div key={key}>
           <label className="mb-1 block text-sm font-medium text-[#111111]">
             {label}
             {required && <span className="text-red-500 ml-0.5">*</span>}
           </label>
-          {type === 'password' ? (
-            <div className="relative">
-              <input
-                type={key === 'confirmPassword' ? (showConfirmPassword ? 'text' : 'password') : (showPassword ? 'text' : 'password')}
-                value={(form as Record<string, string>)[key]}
-                onChange={(e) => handleChange(key, e.target.value)}
-                autoComplete="new-password"
-                className={`w-full rounded-[8px] border px-3 py-2 pr-10 text-sm text-[#111111] outline-none transition-colors focus:border-primary-blue ${
-                  errors[key] ? 'border-red-500' : 'border-[#e5e7eb]'
-                }`}
-              />
-              <button
-                type="button"
-                onClick={() => key === 'confirmPassword' ? setShowConfirmPassword(!showConfirmPassword) : setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-[#6b7280] hover:text-[#111111]"
-              >
-                {(key === 'confirmPassword' ? showConfirmPassword : showPassword) ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
-            </div>
-          ) : (
-            <input
-              type={type ?? 'text'}
-              value={(form as Record<string, string>)[key]}
-              onChange={(e) => handleChange(key, e.target.value)}
-              autoComplete="new-password"
-              className={`w-full rounded-[8px] border px-3 py-2 text-sm text-[#111111] outline-none transition-colors focus:border-primary-blue ${
-                errors[key] ? 'border-red-500' : 'border-[#e5e7eb]'
-              }`}
-            />
-          )}
+          <input
+            type={type ?? 'text'}
+            value={(form as Record<string, string>)[key]}
+            onChange={(e) => handleChange(key, e.target.value)}
+            autoComplete="new-password"
+            className={`w-full rounded-[8px] border px-3 py-2 text-sm text-[#111111] outline-none transition-colors focus:border-primary-blue ${
+              errors[key] ? 'border-red-500' : 'border-[#e5e7eb]'
+            }`}
+          />
           {errors[key] && (
             <p className="mt-1 text-xs text-red-500">{errors[key]}</p>
-          )}
-          {!isEdit && key === 'confirmPassword' && form.confirmPassword && form.password !== form.confirmPassword && (
-            <p className="mt-1 text-xs text-red-500">Les mots de passe ne correspondent pas</p>
           )}
         </div>
       ))}
@@ -174,7 +125,7 @@ export default function ConsultantForm({ onSuccess, consultant }: ConsultantForm
         </button>
         <button
           type="submit"
-          disabled={mutation.isPending || (!isEdit && form.password !== form.confirmPassword)}
+          disabled={mutation.isPending}
           className="cursor-pointer rounded-[8px] bg-primary-blue px-6 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-90 disabled:opacity-50"
         >
           {mutation.isPending ? 'Enregistrement...' : isEdit ? 'Modifier' : 'Créer'}

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 import { useLoginMutation } from './useLoginMutation';
 import newLogo from '../../assets/new-logo.png';
@@ -41,13 +42,23 @@ function removeRecaptchaScript(): void {
 }
 
 export default function Login() {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [captchaError, setCaptchaError] = useState('');
   const [recaptchaReady, setRecaptchaReady] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const loginMutation = useLoginMutation();
+
+  useEffect(() => {
+    if (location.state?.registrationSuccess) {
+      setSuccessMessage('Inscription terminée, vous pouvez vous connecter');
+      navigate('/login', { replace: true, state: {} });
+    }
+  }, [location, navigate]);
 
   useEffect(() => {
     let mounted = true;
@@ -151,6 +162,11 @@ export default function Login() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
+          {successMessage && (
+            <div className="rounded-[8px] bg-[#d1fae5] px-4 py-3 text-sm text-[#10b981]">
+              {successMessage}
+            </div>
+          )}
           {generalError && (
             <div className="rounded-[8px] bg-[#fef2f2] px-4 py-3 text-sm text-[#ef4444]">
               {generalError}

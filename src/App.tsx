@@ -1,5 +1,6 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import Login from './features/auth/Login';
+import CompleteRegistrationPage from './features/auth/CompleteRegistrationPage';
 import GuestGuard from './components/common/Guards/GuestGuard';
 import AdminRoute from './components/common/Guards/AdminRoute';
 import ManagerRoute from './components/common/Guards/ManagerRoute';
@@ -53,6 +54,10 @@ const router = createBrowserRouter([
   {
     path: '/login',
     element: <GuestGuard><Login /></GuestGuard>,
+  },
+  {
+    path: '/complete-registration',
+    element: <CompleteRegistrationPage />,
   },
   {
     path: '/admin',

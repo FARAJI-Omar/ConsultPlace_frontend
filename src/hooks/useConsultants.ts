@@ -18,7 +18,6 @@ interface ConsultantFormData {
   email: string;
   profile: string;
   dailyRate: number;
-  password?: string;
 }
 
 interface UpdateConsultantFormData {
@@ -26,7 +25,6 @@ interface UpdateConsultantFormData {
   email?: string;
   profile?: string;
   dailyRate?: number;
-  password?: string;
 }
 
 export function useGetConsultants(page = 1, limit = 10) {

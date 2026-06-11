@@ -31,7 +31,12 @@ export function useLoginMutation() {
           },
         }),
       );
-      navigate(`/${decoded.role.toLowerCase()}`, { replace: true });
+      const rolePaths: Record<string, string> = {
+        ADMIN: 'admin',
+        GESTIONNAIRE: 'manager',
+        CONSULTANT: 'consultant',
+      };
+      navigate(`/${rolePaths[decoded.role] ?? 'login'}`, { replace: true });
     },
   });
 }

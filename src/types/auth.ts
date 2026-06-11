@@ -28,6 +28,17 @@ export interface AuthUser {
   consultantId: number | null;
 }
 
+export interface CompleteRegistrationPayload {
+  token: string;
+  password: string;
+  confirmPassword: string;
+}
+
+export interface CompleteRegistrationResponse {
+  success: boolean;
+  data: { consultantName: string; email: string };
+}
+
 export interface AuthState {
   token: string | null;
   user: AuthUser | null;
