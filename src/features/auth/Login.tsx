@@ -9,38 +9,6 @@ interface FieldErrors {
   password?: string;
 }
 
-function loadRecaptchaScript(siteKey: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    if (window.grecaptcha) {
-      resolve();
-      return;
-    }
-    const existingScript = document.querySelector('script[src*="recaptcha/api.js"]');
-    if (existingScript) {
-      existingScript.addEventListener('load', () => resolve());
-      existingScript.addEventListener('error', () => reject(new Error('reCAPTCHA script failed to load')));
-      return;
-    }
-    const script = document.createElement('script');
-    script.src = `https://www.google.com/recaptcha/api.js?render=${siteKey}`;
-    script.async = true;
-    script.defer = true;
-    script.onload = () => resolve();
-    script.onerror = () => reject(new Error('reCAPTCHA script failed to load'));
-    document.head.appendChild(script);
-  });
-}
-
-function removeRecaptchaScript(): void {
-  const scripts = document.querySelectorAll('script[src*="recaptcha/api.js"]');
-  scripts.forEach((s) => s.remove());
-  // Clean up the badge if it was injected
-  const badge = document.querySelector('.grecaptcha-badge');
-  if (badge) badge.remove();
-  // Clean up global grecaptcha
-  delete (window as any).grecaptcha;
-}
-
 export default function Login() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -49,7 +17,6 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [captchaError, setCaptchaError] = useState('');
-  const [recaptchaReady, setRecaptchaReady] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const loginMutation = useLoginMutation();
 
@@ -61,20 +28,8 @@ export default function Login() {
   }, [location, navigate]);
 
   useEffect(() => {
-    let mounted = true;
-    const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
-    loadRecaptchaScript(siteKey)
-      .then(() => {
-        if (mounted) setRecaptchaReady(true);
-      })
-      .catch(() => {
-        if (mounted) setCaptchaError('Impossible de charger le CAPTCHA');
-      });
-    return () => {
-      mounted = false;
-      removeRecaptchaScript();
-      setRecaptchaReady(false);
-    };
+    document.body.classList.add('recaptcha-visible');
+    return () => document.body.classList.remove('recaptcha-visible');
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -90,7 +45,7 @@ export default function Login() {
       return;
     }
 
-    if (!recaptchaReady || !window.grecaptcha) {
+    if (!window.grecaptcha) {
       setCaptchaError('Veuillez patienter, chargement du CAPTCHA...');
       return;
     }

@@ -136,3 +136,14 @@
     @apply font-sans;
   }
 }
+
+.grecaptcha-badge {
+  visibility: hidden;
+  opacity: 0;
+  transition: visibility 0s, opacity 0.2s ease-in-out;
+}
+
+body.recaptcha-visible .grecaptcha-badge {
+  visibility: visible;
+  opacity: 1;
+}
