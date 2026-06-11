@@ -197,7 +197,7 @@ export default function TimesheetDetailsPage() {
             <p className="font-medium text-[#111111]">{ts.days} jours</p>
           </div>
           <div>
-            <p className="text-[#6b7280]">Taux journalier</p>
+            <p className="text-[#6b7280]">Taux journalier consultant</p>
             <p className="font-medium text-[#111111]">{ts.dailyRate.toLocaleString('fr-FR')} DH</p>
           </div>
           <div>
