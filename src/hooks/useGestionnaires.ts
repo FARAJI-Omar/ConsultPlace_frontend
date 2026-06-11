@@ -16,6 +16,10 @@ export interface GestionnaireFormData {
   password: string;
 }
 
+export interface DeleteMessage {
+  message: string;
+}
+
 export function useGetGestionnaires(page = 1, limit = 10) {
   return useQuery({
     queryKey: ['gestionnaires', { page, limit }],
@@ -35,6 +39,20 @@ export function useCreateGestionnaire() {
     mutationFn: (data: GestionnaireFormData) =>
       apiClient
         .post<{ success: true; data: Gestionnaire }>('/gestionnaires', data)
+        .then((res) => res.data.data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['gestionnaires'] });
+    },
+  });
+}
+
+export function useDeleteGestionnaire() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) =>
+      apiClient
+        .delete<{ success: true; data: DeleteMessage }>(`/gestionnaires/${id}`)
         .then((res) => res.data.data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['gestionnaires'] });

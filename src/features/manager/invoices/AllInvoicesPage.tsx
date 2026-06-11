@@ -11,7 +11,6 @@ import { useQueryClient } from '@tanstack/react-query';
 import LoadingOverlay from '../../../components/common/LoadingOverlay';
 import { validateInvoiceEmail, storeJob, clearJob } from '../../../utils/email';
 import type { StoredJob } from '../../../utils/email';
-import { formatMonth } from '../../../lib/utils';
 import type { Column } from '../../../components/common/DataTable';
 import type { Invoice } from '../../../types/manager';
 
