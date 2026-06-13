@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { parseApiError } from '../../../utils/errorParser';
 import { useCreateGestionnaire } from '../../../hooks/useGestionnaires';
 import LoadingOverlay from '../../../components/common/LoadingOverlay';
+import PasswordStrengthIndicator from '../../../components/ui/PasswordStrengthIndicator';
 
 interface GestionnaireFormProps {
   onSuccess: () => void;
@@ -38,7 +39,11 @@ export default function GestionnaireForm({ onSuccess }: GestionnaireFormProps) {
     if (!form.password) {
       newErrors.password = 'Ce champ est requis';
     } else if (form.password.length < 6) {
-      newErrors.password = 'Le mot de passe doit contenir au moins 6 caractères';
+      newErrors.password = 'Le mot de passe doit contenir au moins 6 caract\u00e8res';
+    } else if (!/[A-Z]/.test(form.password)) {
+      newErrors.password = 'Doit contenir une majuscule';
+    } else if (!/[^a-zA-Z]/.test(form.password)) {
+      newErrors.password = 'Doit contenir un chiffre ou un caract\u00e8re sp\u00e9cial';
     }
     if (form.password !== form.confirmPassword) {
       newErrors.confirmPassword = 'Les mots de passe ne correspondent pas';
@@ -112,6 +117,7 @@ export default function GestionnaireForm({ onSuccess }: GestionnaireFormProps) {
           {errors[key] && (
             <p className="mt-1 text-xs text-red-500">{errors[key]}</p>
           )}
+          {key === 'password' && <PasswordStrengthIndicator password={form.password} />}
           {key === 'confirmPassword' && form.confirmPassword && form.password !== form.confirmPassword && (
             <p className="mt-1 text-xs text-red-500">Les mots de passe ne correspondent pas</p>
           )}

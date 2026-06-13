@@ -2,9 +2,12 @@ import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
+import { useDispatch } from 'react-redux';
+import { clearCredentials } from '../../store/authSlice';
 import apiClient from '../../lib/apiClient';
 import newLogo from '../../assets/new-logo.png';
 import type { CompleteRegistrationPayload, CompleteRegistrationResponse } from '../../types/auth';
+import PasswordStrengthIndicator from '../../components/ui/PasswordStrengthIndicator';
 
 interface FieldErrors {
   password?: string;
@@ -24,6 +27,7 @@ function getErrorMessage(message: string): string {
 export default function CompleteRegistrationPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -74,8 +78,14 @@ export default function CompleteRegistrationPage() {
       }
 
       const errors: FieldErrors = {};
-      if (!password || password.length < 6) {
-        errors.password = 'Mot de passe requis (min 6 caractères)';
+      if (!password) {
+        errors.password = 'Mot de passe requis';
+      } else if (password.length < 6) {
+        errors.password = 'Le mot de passe doit contenir au moins 6 caract\u00e8res';
+      } else if (!/[A-Z]/.test(password)) {
+        errors.password = 'Doit contenir une majuscule';
+      } else if (!/[^a-zA-Z]/.test(password)) {
+        errors.password = 'Doit contenir un chiffre ou un caract\u00e8re sp\u00e9cial';
       }
       if (password !== confirmPassword) {
         errors.confirmPassword = 'Les mots de passe ne correspondent pas';
@@ -85,9 +95,10 @@ export default function CompleteRegistrationPage() {
         return;
       }
 
+      dispatch(clearCredentials());
       mutation.mutate({ token: currentToken, password, confirmPassword });
     },
-    [searchParams, password, confirmPassword, mutation],
+    [searchParams, password, confirmPassword, mutation, dispatch],
   );
 
   return (
@@ -138,6 +149,7 @@ export default function CompleteRegistrationPage() {
               {fieldErrors.password && (
                 <p className="mt-1 text-sm text-[#ef4444]">{fieldErrors.password}</p>
               )}
+              <PasswordStrengthIndicator password={password} />
             </div>
 
             <div>

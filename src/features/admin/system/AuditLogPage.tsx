@@ -300,9 +300,15 @@ export default function AuditLogPage() {
             <div className="grid grid-cols-2 gap-4">
               <InfoItem
                 label="Utilisateur"
-                value={selectedEntry.details?.userName
-                  ? `${selectedEntry.details.userName} (${selectedEntry.userEmail})`
-                  : selectedEntry.userEmail}
+                value={
+                  <span className="space-y-0.5">
+                    <div><span className="text-[#8b92a1]">Email</span> {selectedEntry.userEmail}</div>
+                    {!!selectedEntry.details?.userName && (
+                      <div><span className="text-[#8b92a1]">Nom</span> {String(selectedEntry.details.userName)}</div>
+                    )}
+                    {selectedEntry.userIp && <div><span className="text-[#8b92a1]">IP</span> {selectedEntry.userIp}</div>}
+                  </span>
+                }
               />
               <InfoItem
                 label="Rôle"
@@ -368,7 +374,7 @@ function InfoItem({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div>
       <p className="text-xs font-medium text-[#6b7280]">{label}</p>
-      <p className="mt-0.5 text-sm text-[#111111]">{value}</p>
+      <div className="mt-0.5 text-sm text-[#111111]">{value}</div>
     </div>
   );
 }

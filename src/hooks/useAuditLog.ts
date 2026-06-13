@@ -7,6 +7,7 @@ export interface AuditLogEntry {
   userId: number;
   userEmail: string;
   userRole: string;
+  userIp?: string;
   action: string;
   entityType: string;
   entityId: number;
