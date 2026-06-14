@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { FileText, Eye } from 'lucide-react';
+import { FileText, Eye, Download } from 'lucide-react';
 import { useGetClientById } from '../../../hooks/useClients';
 import { formatDate } from '../../../lib/utils';
 import Modal from '../../../components/common/Modal';
 import ClientForm from './ClientForm';
+import { downloadFile } from '../../../utils/downloadFile';
 
 export default function ClientDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -138,16 +139,28 @@ export default function ClientDetailPage() {
                   {contract.attachments && contract.attachments.length > 0 && (
                     <div className="mt-2 flex flex-wrap gap-2">
                       {contract.attachments.map((doc) => (
-                        <a
+                        <span
                           key={doc.id}
-                          href={doc.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 rounded bg-[#EFF6FF] px-2 py-0.5 text-xs text-primary-blue hover:underline"
+                          className="inline-flex items-center gap-1 rounded bg-[#EFF6FF] px-2 py-0.5 text-xs"
                         >
-                          <FileText className="h-3 w-3" />
-                          {doc.filename}
-                        </a>
+                          <FileText className="h-3 w-3 shrink-0 text-primary-blue" />
+                          <a
+                            href={doc.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary-blue hover:underline"
+                          >
+                            {doc.filename}
+                          </a>
+                          <button
+                            type="button"
+                            onClick={() => downloadFile(doc.url, doc.filename)}
+                            title="Telecharger"
+                            className="cursor-pointer rounded p-2 text-[#016c11] transition-colors hover:text-[#111111] hover:bg-green-300"
+                          >
+                            <Download className="h-3 w-3" />
+                          </button>
+                        </span>
                       ))}
                     </div>
                   )}

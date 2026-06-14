@@ -5,6 +5,7 @@ import { useGetMissionById } from '../../../hooks/useMissions';
 import { formatDate } from '../../../lib/utils';
 import Modal from '../../../components/common/Modal';
 import MissionForm from './MissionForm';
+import { downloadFile } from '../../../utils/downloadFile';
 
 const statusBadge: Record<string, string> = {
   BROUILLON: 'bg-[#e5e7eb] text-[#6b7280]',
@@ -162,22 +163,33 @@ export default function MissionDetailsPage() {
           </h2>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {mission.attachments.map((att) => (
-              <a
+              <div
                 key={att.id}
-                href={att.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-3 rounded-[8px] border border-[#e5e7eb] bg-[#ffffff] px-4 py-3 transition-colors hover:bg-[#f9fafb]"
+                className="flex items-center gap-3 rounded-[8px] border border-[#e5e7eb] bg-[#ffffff] px-4 py-3"
               >
                 <div className="flex h-10 w-10 items-center justify-center rounded-[8px] bg-[#eff6ff]">
                   <FileText className="h-5 w-5 text-[#3b82f6]" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-[#111111]">{att.filename}</p>
+                  <a
+                    href={att.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="truncate text-sm font-medium text-[#111111] hover:underline"
+                  >
+                    {att.filename}
+                  </a>
                   <p className="text-xs text-[#6b7280]">Document</p>
                 </div>
-                <Download className="h-4 w-4 shrink-0 text-[#6b7280]" />
-              </a>
+                <button
+                  type="button"
+                  onClick={() => downloadFile(att.url, att.filename)}
+                  title="Telecharger"
+                  className="cursor-pointer rounded p-2 text-[#6b7280] transition-colors hover:bg-[#4cd64e4d] hover:text-[#111111]"
+                >
+                  <Download className="h-4 w-4" />
+                </button>
+              </div>
             ))}
           </div>
         </div>

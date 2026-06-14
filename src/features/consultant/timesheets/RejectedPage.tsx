@@ -9,6 +9,7 @@ import {
 import { useSubmitTimesheet } from '../../../hooks/consultant/useTimesheets';
 import { formatDate } from '../../../lib/utils';
 import EditCraModal from './EditCraModal';
+import { downloadFile } from '../../../utils/downloadFile';
 import type { Timesheet } from '../../../types/models';
 
 const monthNames = [
@@ -244,7 +245,7 @@ function RejectedCard({
                           {att.filename.split('.').pop()?.toUpperCase() ?? 'FICHIER'}
                         </span>
                         <div className="flex flex-col">
-                          <a href={att.url} target="_blank" rel="noopener noreferrer" className="text-sm text-[#111111] underline underline-offset-2 hover:text-[#6b7280] transition-colors">{att.filename}</a>
+                          <button type="button" onClick={() => downloadFile(att.url, att.filename)} className="cursor-pointer text-sm text-[#111111] underline underline-offset-2 hover:text-[#6b7280] transition-colors">{att.filename}</button>
                           {att.uploadedAt && (
                             <span className="text-xs text-[#6b7280] mt-0.5">Ajouté le {formatDate(att.uploadedAt)}</span>
                           )}
@@ -274,7 +275,7 @@ function RejectedCard({
                           {att.filename.split('.').pop()?.toUpperCase() ?? 'FICHIER'}
                         </span>
                         <div className="flex flex-col">
-                          <a href={att.url} target="_blank" rel="noopener noreferrer" className="text-sm text-[#111111] underline underline-offset-2 hover:text-[#6b7280] transition-colors">{att.filename}</a>
+                          <button type="button" onClick={() => downloadFile(att.url, att.filename)} className="cursor-pointer text-sm text-[#111111] underline underline-offset-2 hover:text-[#6b7280] transition-colors">{att.filename}</button>
                           {att.uploadedAt && (
                             <span className="text-xs text-[#6b7280] mt-0.5">Ajouté le {formatDate(att.uploadedAt)}</span>
                           )}

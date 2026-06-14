@@ -2,6 +2,7 @@ import { useParams, Link } from 'react-router-dom';
 import { FileText, Download } from 'lucide-react';
 import { useTimesheetById } from '../../../hooks/consultant/useTimesheets';
 import HorizontalStepper from '../../../components/common/HorizontalStepper';
+import { downloadFile } from '../../../utils/downloadFile';
 
 const monthNames = [
   'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
@@ -142,22 +143,21 @@ export default function TimesheetDetailPage() {
             <h2 className="mb-4 text-lg font-semibold text-[#111111]">Pièces jointes</h2>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {filtered.map((att) => (
-                <a
+                <button
                   key={att.id}
-                  href={att.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-3 rounded-[8px] border border-[#e5e7eb] bg-[#ffffff] px-4 py-3 transition-colors hover:bg-[#f9fafb]"
+                  type="button"
+                  onClick={() => downloadFile(att.url, att.filename)}
+                  className="flex w-full cursor-pointer items-center gap-3 rounded-[8px] border border-[#e5e7eb] bg-[#ffffff] px-4 py-3 text-left transition-colors hover:bg-[#13bc0312]"
                 >
                   <div className="flex h-10 w-10 items-center justify-center rounded-[8px] bg-[#eff6ff]">
                     <FileText className="h-5 w-5 text-[#3b82f6]" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-[#111111]">{att.filename}</p>
-                    <p className="text-xs text-[#6b7280]">Justificatif</p>
+                    <p className="text-xs text-[#6b7280]">Telecharger</p>
                   </div>
                   <Download className="h-4 w-4 shrink-0 text-[#6b7280]" />
-                </a>
+                </button>
               ))}
             </div>
           </div>

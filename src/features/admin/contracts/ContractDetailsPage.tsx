@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Eye, FileText } from 'lucide-react';
+import { Eye, FileText, Download } from 'lucide-react';
 import { useGetContractById } from '../../../hooks/useContracts';
 import { useGetMissionsByContract } from '../../../hooks/useMissions';
 import { formatDate } from '../../../lib/utils';
 import Modal from '../../../components/common/Modal';
 import ContractForm from './ContractForm';
+import { downloadFile } from '../../../utils/downloadFile';
 
 export default function ContractDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -106,15 +107,25 @@ export default function ContractDetailsPage() {
               <ul className="space-y-2">
                 {contract.attachments.map((doc) => (
                   <li key={doc.id}>
-                    <a
-                      href={doc.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex cursor-pointer items-center gap-2 rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] transition-colors hover:bg-light-blue"
-                    >
-                      <FileText className="h-4 w-4 text-primary-blue" />
-                      <span className="truncate">{doc.filename}</span>
-                    </a>
+                    <div className="flex items-center gap-2 rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111]">
+                      <FileText className="h-4 w-4 shrink-0 text-primary-blue" />
+                      <a
+                        href={doc.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="min-w-0 flex-1 truncate hover:underline"
+                      >
+                        {doc.filename}
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => downloadFile(doc.url, doc.filename)}
+                        title="Telecharger"
+                        className="cursor-pointer rounded p-2 text-[#016c11] transition-colors hover:bg-green-500 hover:text-[#111111]"
+                      >
+                        <Download className="h-4 w-4" />
+                      </button>
+                    </div>
                   </li>
                 ))}
               </ul>
