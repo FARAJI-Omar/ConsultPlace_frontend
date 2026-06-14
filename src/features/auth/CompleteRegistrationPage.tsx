@@ -36,13 +36,29 @@ export default function CompleteRegistrationPage() {
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  function getToken(): string | null {
+    const stored = sessionStorage.getItem('invitationToken');
+    if (stored) return stored;
+    const urlToken = searchParams.get('token');
+    if (urlToken) {
+      sessionStorage.setItem('invitationToken', urlToken);
+      return urlToken;
+    }
+    return null;
+  }
+
   useEffect(() => {
-    if (!searchParams.get('token')) {
+    const token = searchParams.get('token');
+    if (token) {
+      sessionStorage.setItem('invitationToken', token);
+      window.history.replaceState(null, '', '/complete-registration');
+    }
+    if (!getToken()) {
       setErrorMessage('Lien d\'invitation invalide');
     } else {
       setErrorMessage(null);
     }
-  }, [searchParams]);
+  }, []);
 
   const mutation = useMutation({
     mutationFn: (payload: CompleteRegistrationPayload) =>
@@ -71,7 +87,7 @@ export default function CompleteRegistrationPage() {
       setFieldErrors({});
       setErrorMessage(null);
 
-      const currentToken = searchParams.get('token');
+      const currentToken = getToken();
       if (!currentToken) {
         setErrorMessage('Lien d\'invitation invalide');
         return;
@@ -115,7 +131,7 @@ export default function CompleteRegistrationPage() {
           </div>
         )}
 
-        {searchParams.get('token') && (
+        {getToken() && (
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-[#374151]">
