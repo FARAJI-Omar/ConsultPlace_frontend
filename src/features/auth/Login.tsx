@@ -29,6 +29,11 @@ export default function Login() {
 
   useEffect(() => {
     document.body.classList.add('recaptcha-visible');
+    if (!window.grecaptcha) {
+      const script = document.createElement('script');
+      script.src = `https://www.google.com/recaptcha/api.js?render=${import.meta.env.VITE_RECAPTCHA_SITE_KEY}`;
+      document.body.appendChild(script);
+    }
     return () => document.body.classList.remove('recaptcha-visible');
   }, []);
 
