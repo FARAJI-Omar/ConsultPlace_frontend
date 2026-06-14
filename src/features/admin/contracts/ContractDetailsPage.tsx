@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { Eye, FileText, Download } from 'lucide-react';
 import { useGetContractById } from '../../../hooks/useContracts';
 import { useGetMissionsByContract } from '../../../hooks/useMissions';
-import { formatDate } from '../../../lib/utils';
+import { formatDate, cleanFilename } from '../../../lib/utils';
 import Modal from '../../../components/common/Modal';
 import ContractForm from './ContractForm';
 import { downloadFile } from '../../../utils/downloadFile';
@@ -115,7 +115,7 @@ export default function ContractDetailsPage() {
                         rel="noopener noreferrer"
                         className="min-w-0 flex-1 truncate hover:underline"
                       >
-                        {doc.filename}
+                        {cleanFilename(doc.filename)}
                       </a>
                       <button
                         type="button"

@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { FileText, Download, Mail /*, XCircle */ } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { formatDate } from '../../../lib/utils';
+import { formatDate, cleanFilename } from '../../../lib/utils';
 import { Skeleton } from '../../../components/ui/skeleton';
 import LoadingOverlay from '../../../components/common/LoadingOverlay';
 import { downloadFile } from '../../../utils/downloadFile';
@@ -500,7 +500,7 @@ export default function InvoiceDetailsPage() {
                       rel="noopener noreferrer"
                       className="truncate text-sm font-medium text-[#111111] hover:underline"
                     >
-                      {filename}
+                      {cleanFilename(filename)}
                     </a>
                   </div>
                   <button

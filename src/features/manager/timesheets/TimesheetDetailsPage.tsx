@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { FileText, Download } from 'lucide-react';
 import { useManagerTimesheetDetail, useReviewTimesheet } from '../../../hooks/manager/useManagerTimesheets';
-import { formatDate } from '../../../lib/utils';
+import { formatDate, cleanFilename } from '../../../lib/utils';
 import { Skeleton } from '../../../components/ui/skeleton';
 import HorizontalStepper from '../../../components/common/HorizontalStepper';
 import { toast } from 'sonner';
@@ -270,7 +270,7 @@ export default function TimesheetDetailsPage() {
                 rel="noopener noreferrer"
                 className="truncate text-sm font-medium text-[#111111] hover:underline"
               >
-                {att.filename}
+                {cleanFilename(att.filename)}
               </a>
               <p className="text-xs text-[#6b7280]">{typeLabel[att.type] ?? att.type}</p>
             </div>

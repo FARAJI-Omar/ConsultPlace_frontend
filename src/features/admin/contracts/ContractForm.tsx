@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import { toast } from 'sonner';
 import { Upload, X } from 'lucide-react';
 import { parseApiError } from '../../../utils/errorParser';
+import { cleanFilename } from '../../../lib/utils';
 import { useMutateContract, useUpdateContract } from '../../../hooks/useContracts';
 import type { Contract } from '../../../hooks/useContracts';
 import { useGetClients } from '../../../hooks/useClients';
@@ -278,7 +279,7 @@ export default function ContractForm({ onSuccess, contract }: ContractFormProps)
                     rel="noopener noreferrer"
                     className="truncate hover:underline"
                   >
-                    {att.filename}
+                    {cleanFilename(att.filename)}
                   </a>
                   {!isDeleted ? (
                     <button

@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 import { Upload, X } from 'lucide-react';
 import Select from 'react-select';
 import { parseApiError } from '../../../utils/errorParser';
+import { cleanFilename } from '../../../lib/utils';
 import { useMutateMission, useUpdateMission } from '../../../hooks/useMissions';
 import type { Mission } from '../../../hooks/useMissions';
 import { useGetContracts } from '../../../hooks/useContracts';
@@ -404,7 +405,7 @@ export default function MissionForm({ onSuccess, mission }: MissionFormProps) {
                     rel="noopener noreferrer"
                     className="truncate hover:underline"
                   >
-                    {att.filename}
+                    {cleanFilename(att.filename)}
                   </a>
                   {!isDeleted ? (
                     <button

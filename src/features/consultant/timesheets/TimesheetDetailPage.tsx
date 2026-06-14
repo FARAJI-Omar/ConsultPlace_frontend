@@ -3,6 +3,7 @@ import { FileText, Download } from 'lucide-react';
 import { useTimesheetById } from '../../../hooks/consultant/useTimesheets';
 import HorizontalStepper from '../../../components/common/HorizontalStepper';
 import { downloadFile } from '../../../utils/downloadFile';
+import { cleanFilename } from '../../../lib/utils';
 
 const monthNames = [
   'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
@@ -125,7 +126,7 @@ export default function TimesheetDetailPage() {
                 className={`rounded-[6px] py-2 text-sm ${
                   hasEntry
                     ? 'bg-[#3b82f6] font-medium text-[#ffffff]'
-                    : 'text-[#6b7280]'
+                    : 'bg-[#ffffff] text-[#6b7280]'
                 }`}
               >
                 <div>{day}</div>
@@ -153,7 +154,7 @@ export default function TimesheetDetailPage() {
                     <FileText className="h-5 w-5 text-[#3b82f6]" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-[#111111]">{att.filename}</p>
+                    <p className="truncate text-sm font-medium text-[#111111]">{cleanFilename(att.filename)}</p>
                     <p className="text-xs text-[#6b7280]">Telecharger</p>
                   </div>
                   <Download className="h-4 w-4 shrink-0 text-[#6b7280]" />

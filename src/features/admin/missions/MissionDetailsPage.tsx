@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { FileText, Download } from 'lucide-react';
 import { useGetMissionById } from '../../../hooks/useMissions';
-import { formatDate } from '../../../lib/utils';
+import { formatDate, cleanFilename } from '../../../lib/utils';
 import Modal from '../../../components/common/Modal';
 import MissionForm from './MissionForm';
 import { downloadFile } from '../../../utils/downloadFile';
@@ -26,7 +26,6 @@ const statusLabels: Record<string, string> = {
 };
 
 export default function MissionDetailsPage() {
-  const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const missionId = Number(id);
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -177,7 +176,7 @@ export default function MissionDetailsPage() {
                     rel="noopener noreferrer"
                     className="truncate text-sm font-medium text-[#111111] hover:underline"
                   >
-                    {att.filename}
+                    {cleanFilename(att.filename)}
                   </a>
                   <p className="text-xs text-[#6b7280]">Document</p>
                 </div>
@@ -209,7 +208,6 @@ export default function MissionDetailsPage() {
                   <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[#6b7280]">Heures</th>
                   <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[#6b7280]">Statut</th>
                   <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[#6b7280]">Soumis le</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[#6b7280]"></th>
                 </tr>
               </thead>
               <tbody>
@@ -224,14 +222,6 @@ export default function MissionDetailsPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-[#111111]">{formatDate(ts.submittedAt)}</td>
-                    <td className="px-4 py-3">
-                      <button
-                        onClick={() => navigate(`/manager/timesheets/${ts.id}`)}
-                        className="cursor-pointer rounded-[6px] bg-[#EFF6FF] px-2 py-0.5 text-xs font-medium text-primary-blue transition-colors hover:bg-blue-100"
-                      >
-                        Voir
-                      </button>
-                    </td>
                   </tr>
                 ))}
               </tbody>

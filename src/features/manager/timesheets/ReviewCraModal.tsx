@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useManagerTimesheetDetail, useReviewTimesheet } from '../../../hooks/manager/useManagerTimesheets';
 import { toast } from 'sonner';
+import { cleanFilename } from '../../../lib/utils';
 
 interface ReviewCraModalProps {
   timesheetId: number;
@@ -57,9 +58,7 @@ export default function ReviewCraModal({ timesheetId, open, onClose }: ReviewCra
     );
   };
 
-  const attachments = timesheet?.attachments?.filter(
-    (a) => a.type === 'PROOF' || a.type === 'MISSION_DOC',
-  ) ?? [];
+  const attachments = timesheet?.attachments ?? [];
 
   return (
     <>
@@ -143,7 +142,7 @@ export default function ReviewCraModal({ timesheetId, open, onClose }: ReviewCra
                         rel="noopener noreferrer"
                         className="inline-block rounded-full bg-[#f3f4f6] px-3 py-1 text-xs text-[#3b82f6] hover:underline"
                       >
-                        {att.filename}
+                        {cleanFilename(att.filename)}
                       </a>
                     ))}
                   </div>

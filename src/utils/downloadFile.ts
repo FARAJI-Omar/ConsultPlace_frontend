@@ -1,6 +1,4 @@
-function cleanFilename(name: string): string {
-  return name.replace(/^[a-f0-9]{8}-/i, '');
-}
+import { cleanFilename } from '../lib/utils';
 
 export async function downloadFile(url: string, filename: string): Promise<void> {
   const response = await fetch(url);

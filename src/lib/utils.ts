@@ -10,6 +10,10 @@ export function formatDate(value: string | null | undefined): string {
   return value.slice(0, 10);
 }
 
+export function cleanFilename(name: string): string {
+  return name.replace(/^[a-f0-9]{8}-/i, '');
+}
+
 export function formatMonth(value: string | null | undefined): string {
   if (!value) return '—';
   const [year, month] = value.split('-');

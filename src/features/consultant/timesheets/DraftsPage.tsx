@@ -7,7 +7,7 @@ import {
   useUploadAttachments,
 } from '../../../hooks/consultant/useAttachments';
 import { useSubmitTimesheet } from '../../../hooks/consultant/useTimesheets';
-import { formatDate } from '../../../lib/utils';
+import { formatDate, cleanFilename } from '../../../lib/utils';
 import EditCraModal from './EditCraModal';
 import { downloadFile } from '../../../utils/downloadFile';
 import type { Timesheet } from '../../../types/models';
@@ -258,7 +258,7 @@ function DraftCard({
                             {att.filename.split('.').pop()?.toUpperCase() ?? 'FICHIER'}
                           </span>
                           <div className="flex flex-col">
-                            <button type="button" onClick={() => downloadFile(att.url, att.filename)} className="cursor-pointer text-sm text-[#111111] underline underline-offset-2 hover:text-[#6b7280] transition-colors">{att.filename}</button>
+                            <button type="button" onClick={() => downloadFile(att.url, att.filename)} className="cursor-pointer text-sm text-[#111111] underline underline-offset-2 hover:text-[#6b7280] transition-colors">{cleanFilename(att.filename)}</button>
                             {att.uploadedAt && (
                               <span className="text-xs text-[#6b7280] mt-0.5">Ajouté le {formatDate(att.uploadedAt)}</span>
                             )}
@@ -288,7 +288,7 @@ function DraftCard({
                             {att.filename.split('.').pop()?.toUpperCase() ?? 'FICHIER'}
                           </span>
                           <div className="flex flex-col">
-                            <button type="button" onClick={() => downloadFile(att.url, att.filename)} className="cursor-pointer text-sm text-[#111111] underline underline-offset-2 hover:text-[#6b7280] transition-colors">{att.filename}</button>
+                            <button type="button" onClick={() => downloadFile(att.url, att.filename)} className="cursor-pointer text-sm text-[#111111] underline underline-offset-2 hover:text-[#6b7280] transition-colors">{cleanFilename(att.filename)}</button>
                             {att.uploadedAt && (
                               <span className="text-xs text-[#6b7280] mt-0.5">Ajouté le {formatDate(att.uploadedAt)}</span>
                             )}
