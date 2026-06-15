@@ -26,7 +26,8 @@ export default function ConsultantLayout() {
 
   const displayName = profileData?.profile.name ?? user?.email?.split('@')[0];
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await apiClient.post('/logout').catch(() => {});
     dispatch(clearCredentials());
     navigate('/login', { replace: true });
   };

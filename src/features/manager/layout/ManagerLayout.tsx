@@ -3,6 +3,7 @@ import { Outlet, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { clearCredentials } from '../../../store/authSlice';
 import type { RootState } from '../../../store';
+import apiClient from '../../../lib/apiClient';
 import Sidebar from './Sidebar';
 
 export default function ManagerLayout() {
@@ -12,7 +13,8 @@ export default function ManagerLayout() {
   const navigate = useNavigate();
   const user = useSelector((state: RootState) => state.auth.user);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await apiClient.post('/logout').catch(() => {});
     dispatch(clearCredentials());
     navigate('/login', { replace: true });
   };
