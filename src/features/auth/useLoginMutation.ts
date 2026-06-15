@@ -13,24 +13,14 @@ export function useLoginMutation() {
   return useMutation({
     mutationFn: (payload: LoginPayload) =>
       apiClient
-        .post<{ success: true; data: { token: string; user: { id: number; email: string; consultantId: number | null } } }>(
+        .post<{ success: true; data: { accessToken: string } }>(
           '/login',
           payload,
         )
         .then((res) => res.data.data),
     onSuccess: (data) => {
-      const decoded = jwtDecode<JwtPayload>(data.token);
-      dispatch(
-        setCredentials({
-          token: data.token,
-          user: {
-            id: data.user.id,
-            email: data.user.email,
-            role: decoded.role,
-            consultantId: decoded.consultantId,
-          },
-        }),
-      );
+      dispatch(setCredentials({ accessToken: data.accessToken }));
+      const decoded = jwtDecode<JwtPayload>(data.accessToken);
       const rolePaths: Record<string, string> = {
         ADMIN: 'admin',
         GESTIONNAIRE: 'manager',

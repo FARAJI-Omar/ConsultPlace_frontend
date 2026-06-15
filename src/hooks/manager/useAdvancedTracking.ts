@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import apiClient from '../../lib/apiClient';
+import { store } from '../../store';
 import type {
   TrackingRow,
   TurnoverForecast,
@@ -73,7 +74,7 @@ export function exportTrackingCSV(filters: TrackingFilters) {
   if (filters.startDate) params.set('startDate', filters.startDate);
   if (filters.endDate) params.set('endDate', filters.endDate);
 
-  const token = localStorage.getItem('token');
+  const token = store.getState().auth.token;
   const query = params.toString();
   const url = `${import.meta.env.VITE_API_BASE_URL}/tracking/global/export${query ? `?${query}` : ''}`;
 

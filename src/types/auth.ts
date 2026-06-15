@@ -4,19 +4,16 @@ export interface LoginPayload {
   email: string;
   password: string;
   captchaToken: string;
+  rememberMe?: boolean;
 }
 
 export interface LoginResponse {
-  token: string;
-  user: {
-    id: number;
-    email: string;
-    consultantId: number | null;
-  };
+  accessToken: string;
 }
 
 export interface JwtPayload {
   id: number;
+  email: string;
   role: UserRole;
   consultantId: number | null;
 }

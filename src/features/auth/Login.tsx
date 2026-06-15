@@ -15,6 +15,7 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [captchaError, setCaptchaError] = useState('');
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -61,7 +62,7 @@ export default function Login() {
     );
 
     loginMutation.mutate(
-      { email, password, captchaToken },
+      { email, password, captchaToken, rememberMe },
       {
         onError: (error: unknown) => {
           const err = error as {
@@ -199,6 +200,16 @@ export default function Login() {
           {captchaError && (
             <p className="text-sm text-[#ef4444]">{captchaError}</p>
           )}
+
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+              className="h-4 w-4 rounded border-[#e5e7eb] text-primary-blue focus:ring-primary-blue"
+            />
+            <span className="text-sm text-[#374151]">Se souvenir de moi</span>
+          </label>
 
           <button
             type="submit"
