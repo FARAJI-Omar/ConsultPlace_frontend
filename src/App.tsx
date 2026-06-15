@@ -16,6 +16,8 @@ import ContractDetailsPage from './features/admin/contracts/ContractDetailsPage'
 import ArchivedContractsPage from './features/admin/contracts/ArchivedContractsPage';
 import MissionsPage from './features/admin/missions/MissionsPage';
 import MissionDetailsPage from './features/admin/missions/MissionDetailsPage';
+import BdcPage from './features/admin/bdc/BdcPage';
+import BdcDetailPage from './features/admin/bdc/BdcDetailPage';
 import GestionnairesPage from './features/admin/system/GestionnairesPage';
 import AlertRulesPage from './features/admin/system/AlertRulesPage';
 import AuditLogPage from './features/admin/system/AuditLogPage';
@@ -76,6 +78,8 @@ const router = createBrowserRouter([
           { path: 'contracts/:id', element: <ContractDetailsPage /> },
           { path: 'missions', element: <MissionsPage /> },
           { path: 'missions/:id', element: <MissionDetailsPage /> },
+          { path: 'bons-de-commande', element: <BdcPage /> },
+          { path: 'bons-de-commande/:id', element: <BdcDetailPage /> },
           { path: 'gestionnaires', element: <GestionnairesPage /> },
           { path: 'alertrules', element: <AlertRulesPage /> },
           { path: 'auditlog', element: <AuditLogPage /> },

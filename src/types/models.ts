@@ -65,9 +65,10 @@ export interface DocumentFile {
   id: number;
   timesheetId?: number | null;
   contractId?: number | null;
+  bdcId?: number | null;
   filename: string;
   url: string;
-  type: 'CONTRACT_DOC' | 'PROOF' | 'CRA' | 'INVOICE' | 'MISSION_DOC' | 'CONSULTANT_FACTURE';
+  type: 'CONTRACT_DOC' | 'PROOF' | 'CRA' | 'INVOICE' | 'MISSION_DOC' | 'CONSULTANT_FACTURE' | 'BDC_DOC';
   uploadedAt?: string;
 }
 
@@ -76,6 +77,33 @@ export interface MissionConsultant {
   consultantId: number;
   dailyRate: number;
   consultant: Partial<Consultant>;
+}
+
+export interface BonDeCommande {
+  id: number;
+  bdc: string;
+  contractId: number;
+  missionId: number | null;
+  totalDays: number;
+  daysLeft: number;
+  isActive: boolean;
+  startDate: string;
+  endDate?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  contract?: Partial<Contract & { client?: Partial<Client> }>;
+  mission?: Partial<Mission>;
+  attachments?: DocumentFile[];
+  consumedBy?: { invoiceId: number; invoiceRef: string; daysConsumed: number; timesheetId: number }[];
+}
+
+export interface BdcConsumption {
+  id: number;
+  invoiceId: number;
+  timesheetId: number;
+  bdcId: number;
+  daysConsumed: number;
+  bdc?: Partial<BonDeCommande>;
 }
 
 export interface Mission {
@@ -91,6 +119,7 @@ export interface Mission {
   contract?: Partial<Contract>;
   consultant?: Partial<Consultant>;
   consultants?: MissionConsultant[];
+  bdcs?: BonDeCommande[];
 }
 
 export interface DailyEntry {
@@ -167,8 +196,8 @@ export interface Invoice {
   documents?: string[];
   timesheetIds?: number[];
   months?: string[];
-  bdc?: string;
   delai?: number;
+  bdcConsumptions?: BdcConsumption[];
 }
 
 export interface PaymentRecord {

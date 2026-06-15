@@ -1,6 +1,6 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { toast } from 'sonner';
-import { Upload, X } from 'lucide-react';
+import { Upload, X, ChevronRight, ChevronLeft } from 'lucide-react';
 import Select from 'react-select';
 import { parseApiError } from '../../../utils/errorParser';
 import { cleanFilename } from '../../../lib/utils';
@@ -8,6 +8,7 @@ import { useMutateMission, useUpdateMission } from '../../../hooks/useMissions';
 import type { Mission } from '../../../hooks/useMissions';
 import { useGetContracts } from '../../../hooks/useContracts';
 import { useGetConsultants } from '../../../hooks/useConsultants';
+import { useGetBdcsByContract } from '../../../hooks/useBdc';
 import LoadingOverlay from '../../../components/common/LoadingOverlay';
 
 function toDisplayDate(val: string): string {
@@ -48,6 +49,7 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 export default function MissionForm({ onSuccess, mission }: MissionFormProps) {
   const isEdit = !!mission;
+  const [step, setStep] = useState(1);
   const [form, setForm] = useState({
     contractId: mission?.contractId?.toString() ?? '',
     title: mission?.title ?? '',
@@ -62,6 +64,9 @@ export default function MissionForm({ onSuccess, mission }: MissionFormProps) {
     mission?.consultants?.forEach((mc) => { init[mc.consultantId] = String(mc.dailyRate); });
     return init;
   });
+  const [selectedBdcIds, setSelectedBdcIds] = useState<number[]>(
+    mission?.bdcs?.map((b) => b.id) ?? [],
+  );
   const [files, setFiles] = useState<File[]>([]);
   const [deletedAttachmentIds, setDeletedAttachmentIds] = useState<number[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -73,6 +78,16 @@ export default function MissionForm({ onSuccess, mission }: MissionFormProps) {
   const createMutation = useMutateMission();
   const updateMutation = useUpdateMission();
   const mutation = isEdit ? updateMutation : createMutation;
+
+  const contractIdNum = Number(form.contractId);
+  const { data: bdcsData } = useGetBdcsByContract(isEdit ? mission?.contractId : contractIdNum);
+  const availableBdcs = (bdcsData ?? []).filter((b) => b.isActive || selectedBdcIds.includes(b.id));
+
+  useEffect(() => {
+    if (!isEdit && form.contractId) {
+      setSelectedBdcIds([]);
+    }
+  }, [form.contractId, isEdit]);
 
   const handleChange = (key: string, value: string) => {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -102,10 +117,8 @@ export default function MissionForm({ onSuccess, mission }: MissionFormProps) {
     setFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const validateStep1 = (): boolean => {
     setErrors({});
-
     const conv = (v: string) => v && v.includes('/') ? toStorageDate(v) : v;
     const f = { ...form, startDate: conv(form.startDate), endDate: conv(form.endDate ?? '') };
 
@@ -133,7 +146,22 @@ export default function MissionForm({ onSuccess, mission }: MissionFormProps) {
       newErrors.endDate = 'La date de fin doit être postérieure à la date de début';
     }
     setErrors(newErrors);
-    if (Object.keys(newErrors).length > 0) return;
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleNext = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (validateStep1()) {
+      setStep(2);
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrors({});
+
+    const conv = (v: string) => v && v.includes('/') ? toStorageDate(v) : v;
+    const f = { ...form, startDate: conv(form.startDate), endDate: conv(form.endDate ?? '') };
 
     if (isEdit) {
       const normalize = (d: string) => d ? d.slice(0, 10) : '';
@@ -157,12 +185,17 @@ export default function MissionForm({ onSuccess, mission }: MissionFormProps) {
       if (changedRates.length > 0) patchData.consultantRates = changedRates;
       if (files.length > 0) patchData.files = files;
       if (deletedAttachmentIds.length > 0) patchData.deleteAttachmentIds = deletedAttachmentIds;
+      const origBdcIds = (mission!.bdcs ?? []).map((b) => b.id).sort();
+      const newBdcIds = [...selectedBdcIds].sort();
+      if (JSON.stringify(origBdcIds) !== JSON.stringify(newBdcIds)) {
+        patchData.bdcIds = newBdcIds;
+      }
       if (Object.keys(patchData).length === 0) {
         toast.error('Aucune modification détectée');
         return;
       }
       updateMutation.mutate(
-        { id: mission!.id, data: patchData },
+        { id: mission!.id, data: patchData as Parameters<typeof updateMutation.mutate>[0]['data'] },
         {
           onSuccess: () => {
             toast.success('Mission modifiée avec succès');
@@ -191,6 +224,7 @@ export default function MissionForm({ onSuccess, mission }: MissionFormProps) {
           startDate: f.startDate,
           endDate: f.endDate || undefined,
           files: files.length > 0 ? files : undefined,
+          bdcIds: selectedBdcIds.length > 0 ? selectedBdcIds : undefined,
         },
         {
           onSuccess: () => {
@@ -226,9 +260,8 @@ export default function MissionForm({ onSuccess, mission }: MissionFormProps) {
         { key: 'endDate', label: 'Date de fin', required: false, type: 'date' },
       ];
 
-  return (
-    <LoadingOverlay isLoading={mutation.isPending}>
-    <form onSubmit={handleSubmit} className="space-y-4">
+  const renderStep1 = () => (
+    <div className="space-y-4">
       <p className="text-xs text-red-500">(*) Champ obligatoire</p>
       {FIELDS.map(({ key, label, required, type, options }) => (
         <div key={key}>
@@ -477,24 +510,130 @@ export default function MissionForm({ onSuccess, mission }: MissionFormProps) {
           </ul>
         )}
       </div>
+    </div>
+  );
 
-      <div className="flex justify-end gap-3 pt-2">
-        <button
-          type="button"
-          onClick={onSuccess}
-          className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-6 py-2 text-sm font-medium text-[#111111] transition-colors hover:bg-[#f3f4f6]"
-        >
-          Annuler
-        </button>
-        <button
-          type="submit"
-          disabled={mutation.isPending || Object.keys(errors).length > 0}
-          className="cursor-pointer rounded-[8px] bg-primary-blue px-6 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {mutation.isPending ? 'Enregistrement...' : isEdit ? 'Modifier' : 'Créer'}
-        </button>
+  const renderStep2 = () => (
+    <div className="space-y-4">
+      <div className="flex items-center gap-2 text-sm text-[#6b7280]">
+        <ChevronRight className="h-4 w-4" />
+        <span>Sélectionnez les bons de commande à associer à cette mission</span>
       </div>
-    </form>
+
+      {availableBdcs.length === 0 ? (
+        <div className="rounded-[8px] border border-[#e5e7eb] bg-[#f9fafb] p-4 text-center">
+          <p className="text-sm text-[#6b7280]">Aucun bon de commande disponible pour ce contrat</p>
+          <p className="text-xs text-[#6b7280] mt-1">Vous pouvez créer un BDC depuis la page Bons de commande</p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {availableBdcs.map((bdc) => {
+            const isSelected = selectedBdcIds.includes(bdc.id);
+            const remainingPct = bdc.totalDays > 0 ? Math.round((bdc.daysLeft / bdc.totalDays) * 100) : 0;
+            return (
+              <div
+                key={bdc.id}
+                onClick={() => {
+                  setSelectedBdcIds((prev) =>
+                    isSelected ? prev.filter((id) => id !== bdc.id) : [...prev, bdc.id],
+                  );
+                }}
+                className={`cursor-pointer rounded-[8px] border p-3 transition-colors ${
+                  isSelected
+                    ? 'border-primary-blue bg-[#EFF6FF]'
+                    : 'border-[#e5e7eb] bg-[#ffffff] hover:bg-[#f9fafb]'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => {}}
+                      className="h-4 w-4 cursor-pointer accent-primary-blue"
+                    />
+                    <div>
+                      <p className="text-sm font-medium text-[#111111]">{bdc.bdc}</p>
+                      <p className="text-xs text-[#6b7280]">
+                        {bdc.daysLeft} / {bdc.totalDays} jours restants
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="h-2 w-16 rounded-full bg-[#e5e7eb]">
+                      <div
+                        className={`h-2 rounded-full ${
+                          remainingPct > 50 ? 'bg-[#10b981]' : remainingPct > 20 ? 'bg-[#f59e0b]' : 'bg-[#ef4444]'
+                        }`}
+                        style={{ width: `${remainingPct}%` }}
+                      />
+                    </div>
+                    <span
+                      className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
+                        bdc.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
+                      }`}
+                    >
+                      {bdc.isActive ? 'Actif' : 'Inactif'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      <div className="flex items-center justify-between rounded-[8px] bg-[#f9fafb] p-3">
+        <span className="text-sm text-[#6b7280]">BDCs sélectionnés</span>
+        <span className="text-sm font-medium text-[#111111]">{selectedBdcIds.length}</span>
+      </div>
+    </div>
+  );
+
+  return (
+    <LoadingOverlay isLoading={mutation.isPending}>
+      <form onSubmit={handleSubmit} onKeyDown={(e) => { if (e.key === 'Enter' && step === 1) e.preventDefault(); }} className="space-y-4">
+        {step === 1 && renderStep1()}
+        {step === 2 && renderStep2()}
+
+        <div className="flex justify-end gap-3 pt-2">
+          {step === 2 && (
+            <button
+              type="button"
+              onClick={() => setStep(1)}
+              className="inline-flex cursor-pointer items-center gap-2 rounded-[8px] border border-[#e5e7eb] px-6 py-2 text-sm font-medium text-[#111111] transition-colors hover:bg-[#f3f4f6]"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Précédent
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={onSuccess}
+            className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-6 py-2 text-sm font-medium text-[#111111] transition-colors hover:bg-[#f3f4f6]"
+          >
+            Annuler
+          </button>
+          {step === 1 ? (
+            <button
+              type="button"
+              onClick={handleNext}
+              className="inline-flex cursor-pointer items-center gap-2 rounded-[8px] bg-primary-blue px-6 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-90"
+            >
+              Suivant
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          ) : (
+            <button
+              type="submit"
+              disabled={mutation.isPending}
+              className="cursor-pointer rounded-[8px] bg-primary-blue px-6 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {mutation.isPending ? 'Enregistrement...' : isEdit ? 'Modifier' : 'Créer la mission'}
+            </button>
+          )}
+        </div>
+      </form>
     </LoadingOverlay>
   );
 }

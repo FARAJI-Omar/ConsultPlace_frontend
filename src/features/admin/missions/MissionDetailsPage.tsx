@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { FileText, Download } from 'lucide-react';
+import { FileText, Download, ClipboardList } from 'lucide-react';
 import { useGetMissionById } from '../../../hooks/useMissions';
 import { formatDate, cleanFilename } from '../../../lib/utils';
 import Modal from '../../../components/common/Modal';
@@ -153,6 +153,62 @@ export default function MissionDetailsPage() {
             </div>
           </dl>
         </div>
+      </div>
+
+      <div className="rounded-[12px] border border-[#e5e7eb] bg-[#ffffff] p-6">
+        <h2 className="mb-4 text-lg font-semibold text-[#111111]">
+          Bons de commande ({mission.bdcs?.length ?? 0})
+        </h2>
+        {(!mission.bdcs || mission.bdcs.length === 0) ? (
+          <p className="text-sm text-[#6b7280]">Aucun bon de commande associé</p>
+        ) : (
+          <div className="space-y-3">
+            {mission.bdcs.map((bdc) => {
+              const remainingPct = bdc.totalDays > 0 ? Math.round((bdc.daysLeft / bdc.totalDays) * 100) : 0;
+              return (
+                <div
+                  key={bdc.id}
+                  className="flex items-center justify-between rounded-[8px] border border-[#e5e7eb] p-4"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-[8px] bg-[#eff6ff]">
+                      <ClipboardList className="h-5 w-5 text-[#3b82f6]" />
+                    </div>
+                    <div>
+                      <Link
+                        to={`/admin/bons-de-commande/${bdc.id}`}
+                        className="text-sm font-medium text-primary-blue hover:underline"
+                      >
+                        {bdc.bdc}
+                      </Link>
+                      <div className="flex items-center gap-2 text-xs text-[#6b7280]">
+                        <span>{bdc.daysLeft} / {bdc.totalDays} jours</span>
+                        <span
+                          className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
+                            bdc.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
+                          }`}
+                        >
+                          {bdc.isActive ? 'Actif' : 'Inactif'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="h-2 w-16 rounded-full bg-[#e5e7eb]">
+                      <div
+                        className={`h-2 rounded-full ${
+                          remainingPct > 50 ? 'bg-[#10b981]' : remainingPct > 20 ? 'bg-[#f59e0b]' : 'bg-[#ef4444]'
+                        }`}
+                        style={{ width: `${remainingPct}%` }}
+                      />
+                    </div>
+                    <span className="text-xs text-[#6b7280]">{remainingPct}%</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {mission.attachments && mission.attachments.length > 0 && (

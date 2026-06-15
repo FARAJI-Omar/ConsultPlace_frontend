@@ -4,7 +4,7 @@ import { useTriggerPayout } from '../../../hooks/manager/usePayouts';
 import { useSendReminder, useSetAutoReminder, useStopAutoReminder } from '../../../hooks/manager/useReminders';
 import { useJobStatus } from '../../../hooks/manager/useJobStatus';
 import { toast } from 'sonner';
-import { FileText, Download, Mail /*, XCircle */ } from 'lucide-react';
+import { FileText, Download, Mail, ClipboardList /*, XCircle */ } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { formatDate, cleanFilename } from '../../../lib/utils';
@@ -355,6 +355,30 @@ export default function InvoiceDetailsPage() {
               </table>
             </div>
           )}
+
+          <div className="mt-4 border-t border-[#e5e7eb] pt-4">
+            <h3 className="mb-2 text-sm font-semibold text-[#111111]">Bons de commande consommés</h3>
+            {(!invoice.bdcConsumptions || invoice.bdcConsumptions.length === 0) ? (
+              <p className="text-sm text-[#6b7280]">Aucun bon de commande consommé</p>
+            ) : (
+              <div className="space-y-2">
+                {invoice.bdcConsumptions.map((c) => (
+                  <div
+                    key={c.id}
+                    className="flex items-center justify-between rounded-[6px] bg-[#f9fafb] px-3 py-2"
+                  >
+                    <div className="flex items-center gap-2">
+                      <ClipboardList className="h-4 w-4 text-[#3b82f6]" />
+                      <span className="text-sm font-medium text-[#111111]">
+                        {c.bdc?.bdc ?? 'BDC'}
+                      </span>
+                    </div>
+                    <span className="text-sm text-[#6b7280]">{c.daysConsumed} jours</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="rounded-[12px] bg-[#ffffff] border border-[#e5e7eb] p-6">
@@ -479,46 +503,71 @@ export default function InvoiceDetailsPage() {
         </div>
       </div>
 
-      <div className="rounded-[12px] bg-[#ffffff] border border-[#e5e7eb] p-6">
-        <h2 className="mb-4 text-lg font-semibold text-[#111111]">Documents associés</h2>
-        {invoice.documents && invoice.documents.length > 0 ? (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {invoice.documents.map((url, i) => {
-              const filename = url.split('/').pop() || `Document ${i + 1}`;
-              return (
-                <div
-                  key={i}
-                  className="flex items-center gap-3 rounded-[8px] border border-[#e5e7eb] bg-[#ffffff] px-4 py-3"
-                >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-[8px] bg-[#eff6ff]">
-                    <FileText className="h-5 w-5 text-[#3b82f6]" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <a
-                      href={url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="truncate text-sm font-medium text-[#111111] hover:underline"
-                    >
-                      {cleanFilename(filename)}
-                    </a>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => downloadFile(url, filename)}
-                    title="Telecharger"
-                    className="cursor-pointer rounded p-2 text-[#6b7280] transition-colors hover:bg-[#4cd64e4d] hover:text-[#111111]"
-                  >
-                    <Download className="h-4 w-4" />
-                  </button>
-                </div>
-              );
-            })}
+      {(() => {
+        const docGroups: { label: string; types: string[] }[] = [
+          { label: 'Facture PDF', types: ['INVOICE', 'INVOICE_PDF'] },
+          { label: 'Documents BDC & Mission', types: ['BDC_DOC', 'MISSION_DOC'] },
+          { label: 'Pièces justificatives Consultant', types: ['CONSULTANT_FACTURE', 'PROOF'] },
+        ];
+        const docs = invoice.documents ?? [];
+        const others = docs.filter((d) => !docGroups.some((g) => g.types.includes(d.type)));
+        const grouped = docGroups.map((g) => ({
+          label: g.label,
+          items: docs.filter((d) => g.types.includes(d.type)),
+        })).concat(others.length > 0 ? [{ label: 'Autres', items: others }] : []);
+        const hasAny = grouped.some((g) => g.items.length > 0);
+        return (
+          <div className="rounded-[12px] bg-[#ffffff] border border-[#e5e7eb] p-6">
+            <h2 className="mb-4 text-lg font-semibold text-[#111111]">Documents associés</h2>
+            {!hasAny ? (
+              <p className="text-sm text-[#6b7280]">Aucun document trouvé</p>
+            ) : (
+              <div className="space-y-6">
+                {grouped.map((group) =>
+                  group.items.length > 0 ? (
+                    <div key={group.label}>
+                      <h3 className="mb-3 text-sm font-semibold text-[#111111]">{group.label}</h3>
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        {group.items.map((doc, i) => {
+                          const filename = doc.url.split('/').pop() || `Document ${i + 1}`;
+                          return (
+                            <div
+                              key={i}
+                              className="flex items-center gap-3 rounded-[8px] border border-[#e5e7eb] bg-[#ffffff] px-4 py-3"
+                            >
+                              <div className="flex h-10 w-10 items-center justify-center rounded-[8px] bg-[#eff6ff]">
+                                <FileText className="h-5 w-5 text-[#3b82f6]" />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <a
+                                  href={doc.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="truncate text-sm font-medium text-[#111111] hover:underline"
+                                >
+                                  {cleanFilename(filename)}
+                                </a>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => downloadFile(doc.url, filename)}
+                                title="Telecharger"
+                                className="cursor-pointer rounded p-2 text-[#6b7280] transition-colors hover:bg-[#4cd64e4d] hover:text-[#111111]"
+                              >
+                                <Download className="h-4 w-4" />
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ) : null
+                )}
+              </div>
+            )}
           </div>
-        ) : (
-          <p className="text-sm text-[#6b7280]">Aucun document trouvé</p>
-        )}
-      </div>
+        );
+      })()}
 
       <div className="flex flex-wrap gap-3">
         {(invoice.status === 'PENDING' || invoice.status === 'PARTIAL_PAID') && (

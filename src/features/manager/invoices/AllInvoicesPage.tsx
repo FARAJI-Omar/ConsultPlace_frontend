@@ -6,6 +6,7 @@ import { useTriggerPayout } from '../../../hooks/manager/usePayouts';
 import { useSendReminder, useSetAutoReminder, useStopAutoReminder } from '../../../hooks/manager/useReminders';
 import { useJobStatus } from '../../../hooks/manager/useJobStatus';
 import { useManagerTimesheets } from '../../../hooks/manager/useManagerTimesheets';
+import { useGetBdcsByMission } from '../../../hooks/useBdc';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import LoadingOverlay from '../../../components/common/LoadingOverlay';
@@ -35,7 +36,7 @@ export default function AllInvoicesPage() {
   const [generateModal, setGenerateModal] = useState(false);
   const [generateTimesheetId, setGenerateTimesheetId] = useState('');
   const [vatRate, setVatRate] = useState('20');
-  const [bdc, setBdc] = useState('');
+  const [selectedBdcIds, setSelectedBdcIds] = useState<number[]>([]);
   const [delai, setDelai] = useState('');
   const [cancelConfirm, setCancelConfirm] = useState<number | null>(null);
   const [confirmMarkPaid, setConfirmMarkPaid] = useState<Invoice | null>(null);
@@ -68,6 +69,17 @@ export default function AllInvoicesPage() {
 
   const validTimesheets = validTimesheetsQuery.data?.data ?? [];
   const selectedTimesheet = validTimesheets.find(ts => ts.id === parseInt(generateTimesheetId, 10));
+  const missionId = selectedTimesheet?.mission.id;
+  const timesheetDays = selectedTimesheet?.days ?? 0;
+
+  const { data: bdcsData } = useGetBdcsByMission(missionId);
+  const availableBdcs = (bdcsData ?? []).filter((b) => b.isActive || selectedBdcIds.includes(b.id));
+  const selectedBdcTotalDays = availableBdcs
+    .filter((b) => selectedBdcIds.includes(b.id))
+    .reduce((sum, b) => sum + b.daysLeft, 0);
+  const bdcWarning = selectedBdcIds.length > 0 && selectedBdcTotalDays < timesheetDays
+    ? `Jours insuffisants : ${selectedBdcTotalDays} disponible(s) vs ${timesheetDays} requis`
+    : '';
 
   const queryClient = useQueryClient();
   const [pendingJob, setPendingJob] = useState<StoredJob | null>(null);
@@ -263,11 +275,13 @@ export default function AllInvoicesPage() {
     const id = parseInt(generateTimesheetId, 10);
     if (isNaN(id)) return;
     const payload: Record<string, unknown> = { timesheetId: id, vatRate: parseFloat(vatRate) || 20 };
-    if (bdc.trim()) payload.bdc = bdc.trim();
     const delaiNum = parseInt(delai, 10);
     if (!isNaN(delaiNum) && delaiNum > 0) payload.delai = delaiNum;
+    if (selectedBdcIds.length > 0) {
+      payload.bdcAssignments = selectedBdcIds.map((bdcId) => ({ timesheetId: id, bdcId }));
+    }
     generateMutation.mutate(
-      payload as { timesheetId: number; vatRate?: number; bdc?: string; delai?: number },
+      payload as unknown as Parameters<typeof generateMutation.mutate>[0],
       {
         onSuccess: () => {
           toast.success('Facture générée avec succès');
@@ -275,10 +289,13 @@ export default function AllInvoicesPage() {
           setConfirmGenerate(false);
           setGenerateTimesheetId('');
           setVatRate('20');
-          setBdc('');
+          setSelectedBdcIds([]);
           setDelai('');
         },
-        onError: () => toast.error("Erreur lors de la génération"),
+        onError: (err: unknown) => {
+          const axiosErr = err as { response?: { data?: { error?: { message?: string } } } };
+          toast.error(axiosErr.response?.data?.error?.message ?? 'Erreur lors de la génération');
+        },
       },
     );
   };
@@ -485,14 +502,17 @@ export default function AllInvoicesPage() {
 
       {generateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
-          <div className="w-full max-w-sm rounded-[12px] bg-[#ffffff] p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+          <div className="w-full max-w-xl rounded-[12px] bg-[#ffffff] p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
             <h2 className="mb-4 text-lg font-semibold text-[#111111]">Générer une facture</h2>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-[#111111] mb-1">Relevé validé <span className='text-gray-400 text-xs'>(mois | consultant | mission)</span></label>
                 <select
                   value={generateTimesheetId}
-                  onChange={(e) => setGenerateTimesheetId(e.target.value)}
+                  onChange={(e) => {
+                    setGenerateTimesheetId(e.target.value);
+                    setSelectedBdcIds([]);
+                  }}
                   className="w-full rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111]"
                 >
                   <option value="">Sélectionner un Relevé</option>
@@ -514,17 +534,6 @@ export default function AllInvoicesPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-[#111111] mb-1">Bon de commande (BDC)</label>
-                <input
-                  type="text"
-                  value={bdc}
-                  onChange={(e) => setBdc(e.target.value)}
-                  placeholder="Facultatif"
-                  autoComplete="off"
-                  className="w-full rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111]"
-                />
-              </div>
-              <div>
                 <label className="block text-sm font-medium text-[#111111] mb-1">Délai (en jours)</label>
                 <input
                   type="number"
@@ -536,6 +545,63 @@ export default function AllInvoicesPage() {
                   className="w-full rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111]"
                 />
               </div>
+              {generateTimesheetId && (
+                <div>
+                  <label className="block text-sm font-medium text-[#111111] mb-1">Bons de commande (facultatif)</label>
+                  {availableBdcs.length === 0 ? (
+                    <p className="text-xs text-[#6b7280]">Aucun BDC disponible pour cette mission</p>
+                  ) : (
+                    <div className="space-y-2 max-h-40 overflow-y-auto">
+                      {availableBdcs.map((bdc) => {
+                        const isSelected = selectedBdcIds.includes(bdc.id);
+                        const remainingPct = bdc.totalDays > 0 ? Math.round((bdc.daysLeft / bdc.totalDays) * 100) : 0;
+                        return (
+                          <div
+                            key={bdc.id}
+                            onClick={() => {
+                              setSelectedBdcIds((prev) =>
+                                isSelected ? prev.filter((id) => id !== bdc.id) : [...prev, bdc.id],
+                              );
+                            }}
+                            className={`cursor-pointer rounded-[6px] border p-2 transition-colors ${
+                              isSelected ? 'border-primary-blue bg-[#EFF6FF]' : 'border-[#e5e7eb] bg-[#ffffff] hover:bg-[#f9fafb]'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={() => {}}
+                                className="h-4 w-4 cursor-pointer accent-primary-blue"
+                              />
+                              <div className="flex-1">
+                                <p className="text-sm font-medium text-[#111111]">{bdc.bdc}</p>
+                                <p className="text-xs text-[#6b7280]">{bdc.daysLeft} / {bdc.totalDays} jours restants</p>
+                              </div>
+                              <div className="h-1.5 w-12 rounded-full bg-[#e5e7eb]">
+                                <div
+                                  className={`h-1.5 rounded-full ${
+                                    remainingPct > 50 ? 'bg-[#10b981]' : remainingPct > 20 ? 'bg-[#f59e0b]' : 'bg-[#ef4444]'
+                                  }`}
+                                  style={{ width: `${remainingPct}%` }}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                  {bdcWarning && (
+                    <p className="mt-2 text-xs text-[#f59e0b]">{bdcWarning}</p>
+                  )}
+                  {selectedBdcIds.length > 0 && !bdcWarning && (
+                    <p className="mt-2 text-xs text-[#10b981]">
+                      {selectedBdcTotalDays} jours disponibles sur {timesheetDays} requis
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
             <div className="mt-6 flex justify-end gap-3">
               <button
@@ -546,7 +612,7 @@ export default function AllInvoicesPage() {
               </button>
               <button
                 onClick={() => setConfirmGenerate(true)}
-                disabled={generateMutation.isPending || !generateTimesheetId}
+                disabled={generateMutation.isPending || !generateTimesheetId || !!bdcWarning}
                 className="cursor-pointer rounded-[8px] bg-[#3b82f6] px-4 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-90 disabled:opacity-50"
               >
                 Générer
@@ -795,7 +861,7 @@ export default function AllInvoicesPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
           <div className="w-full max-w-sm rounded-[12px] bg-[#ffffff] p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
             <h2 className="mb-2 text-lg font-semibold text-[#111111]">Générer la facture</h2>
-            <p className="mb-6 text-sm text-[#6b7280]">Créer une facture pour {selectedTimesheet ? `${selectedTimesheet.month} | ${selectedTimesheet.consultant.name} | ${selectedTimesheet.mission.title}` : `Relevé n°${generateTimesheetId}`} avec TVA à {vatRate}%{bdc.trim() ? `, BDC: ${bdc.trim()}` : ''}{delai.trim() ? `, délai: ${delai.trim()} jours` : ''}&nbsp;?</p>
+            <p className="mb-6 text-sm text-[#6b7280]">Créer une facture pour {selectedTimesheet ? `${selectedTimesheet.month} | ${selectedTimesheet.consultant.name} | ${selectedTimesheet.mission.title}` : `Relevé n°${generateTimesheetId}`} avec TVA à {vatRate}%{selectedBdcIds.length > 0 ? `, BDCs: ${selectedBdcIds.length} sélectionné(s)` : ''}{delai.trim() ? `, délai: ${delai.trim()} jours` : ''}&nbsp;?</p>
             <div className="flex justify-end gap-3">
               <button onClick={() => setConfirmGenerate(false)} className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-4 py-2 text-sm text-[#111111] transition-colors hover:bg-[#f3f4f6]">Annuler</button>
               <button onClick={handleGenerateInvoice} disabled={generateMutation.isPending} className="cursor-pointer rounded-[8px] bg-[#3b82f6] px-4 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-90 disabled:opacity-50">

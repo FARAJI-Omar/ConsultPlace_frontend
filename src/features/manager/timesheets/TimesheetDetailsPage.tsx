@@ -396,7 +396,7 @@ export default function TimesheetDetailsPage() {
 
       {showGenerate && ts && (
         <GenerateInvoiceModal
-          validTimesheets={[{ id: ts.id, month: ts.month, mission: { title: ts.mission.title }, consultant: { name: ts.consultant.name }, totalHours: ts.totalHours }]}
+          validTimesheets={[{ id: ts.id, month: ts.month, mission: { id: ts.mission.id, title: ts.mission.title }, consultant: { name: ts.consultant.name }, totalHours: ts.totalHours, days: ts.days }]}
           prefilledTimesheetId={ts.id}
           open={showGenerate}
           onClose={() => setShowGenerate(false)}

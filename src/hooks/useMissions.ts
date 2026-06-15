@@ -14,6 +14,7 @@ export interface Mission {
   contract?: { id: number; ref: string; startDate?: string; endDate?: string; profile?: string; dailyRate?: number };
   consultant?: { id: number; name: string };
   consultants?: { consultantId: number; dailyRate: number; consultant: { id: number; name: string } }[];
+  bdcs?: { id: number; bdc: string; totalDays: number; daysLeft: number; isActive: boolean; startDate?: string; endDate?: string | null; attachments?: { id: number; filename: string; url: string; type: string }[] }[];
   timesheets?: {
     id: number;
     consultantId: number;
@@ -39,6 +40,7 @@ export interface MissionFormData {
   startDate: string;
   endDate?: string;
   files?: File[];
+  bdcIds?: number[];
 }
 
 export interface UpdateMissionFormData {
@@ -48,6 +50,7 @@ export interface UpdateMissionFormData {
   consultantRates?: { consultantId: number; dailyRate: number }[];
   files?: File[];
   deleteAttachmentIds?: number[];
+  bdcIds?: number[];
 }
 
 export function useGetMissions(page = 1, limit = 10) {
@@ -99,17 +102,19 @@ export function useMutateMission() {
         formData.append('title', data.title);
         formData.append('startDate', data.startDate);
         if (data.endDate) formData.append('endDate', data.endDate);
+        if (data.bdcIds && data.bdcIds.length > 0) formData.append('bdcIds', JSON.stringify(data.bdcIds));
         data.files!.forEach((file) => formData.append('files', file));
         return apiClient
           .post<{ success: true; data: Mission }>('/missions', formData)
           .then((res) => res.data.data);
       }
-      const body = {
+      const body: Record<string, unknown> = {
         contractId: data.contractId,
         consultants: data.consultants,
         title: data.title,
         startDate: data.startDate,
         ...(data.endDate ? { endDate: data.endDate } : {}),
+        ...(data.bdcIds && data.bdcIds.length > 0 ? { bdcIds: data.bdcIds } : {}),
       };
       return apiClient
         .post<{ success: true; data: Mission }>('/missions', body)
@@ -133,6 +138,7 @@ export function useUpdateMission() {
         if (data.startDate !== undefined) formData.append('startDate', data.startDate);
         if (data.endDate !== undefined) formData.append('endDate', data.endDate ?? '');
         if (data.consultantRates !== undefined) formData.append('consultantRates', JSON.stringify(data.consultantRates));
+        if (data.bdcIds !== undefined) formData.append('bdcIds', JSON.stringify(data.bdcIds));
         data.files!.forEach((file) => formData.append('files', file));
         if (data.deleteAttachmentIds && data.deleteAttachmentIds.length > 0)
           formData.append('deleteAttachmentIds', JSON.stringify(data.deleteAttachmentIds));
@@ -140,8 +146,15 @@ export function useUpdateMission() {
           .patch<{ success: true; data: Mission }>(`/missions/${id}`, formData)
           .then((res) => res.data.data);
       }
+      const body: Record<string, unknown> = {};
+      if (data.title !== undefined) body.title = data.title;
+      if (data.startDate !== undefined) body.startDate = data.startDate;
+      if (data.endDate !== undefined) body.endDate = data.endDate;
+      if (data.consultantRates !== undefined) body.consultantRates = data.consultantRates;
+      if (data.bdcIds !== undefined) body.bdcIds = data.bdcIds;
+      if (data.deleteAttachmentIds && data.deleteAttachmentIds.length > 0) body.deleteAttachmentIds = data.deleteAttachmentIds;
       return apiClient
-        .patch<{ success: true; data: Mission }>(`/missions/${id}`, data)
+        .patch<{ success: true; data: Mission }>(`/missions/${id}`, body)
         .then((res) => res.data.data);
     },
     onSuccess: () => {

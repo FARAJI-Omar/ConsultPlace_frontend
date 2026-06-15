@@ -103,7 +103,7 @@ export interface Invoice {
   payments?: PaymentRecord[];
   paid?: number | null;
   rest?: number | null;
-  documents?: string[];
+  documents?: { type: string; url: string }[];
   timesheet?: { id: number; month: string; days: number; status: string; mission: { id: number; title: string; contractId: number } };
   client?: { id: number; raison_sociale: string; email: string };
   consultants?: { id: number; name: string; email: string }[];
@@ -119,8 +119,8 @@ export interface Invoice {
     paymentHistory: { amount: number; date: string; consultantId: number; paid: number; rest: number }[];
   }[];
   months?: string[];
-  bdc?: string;
   delai?: number;
+  bdcConsumptions?: { id: number; invoiceId: number; timesheetId: number; bdcId: number; daysConsumed: number; bdc?: { id: number; bdc: string } }[];
 }
 
 export interface PaymentRecord {
@@ -148,8 +148,8 @@ export interface MarkPaidPayload {
 export interface GenerateInvoicePayload {
   timesheetId: number;
   vatRate?: number;
-  bdc?: string;
   delai?: number;
+  bdcAssignments?: { timesheetId: number; bdcId: number }[];
 }
 
 export interface PayoutPayload {

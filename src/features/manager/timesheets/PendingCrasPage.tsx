@@ -7,6 +7,7 @@ import { useGenerateGroupedInvoice } from '../../../hooks/manager/useInvoices';
 import { formatDate } from '../../../lib/utils';
 import ReviewCraModal from './ReviewCraModal';
 import GenerateInvoiceModal from './GenerateInvoiceModal';
+import BdcSelectorForTimesheet from './BdcSelectorForTimesheet';
 import type { Column } from '../../../components/common/DataTable';
 import type { ManagerTimesheet } from '../../../types/manager';
 
@@ -44,8 +45,8 @@ export default function PendingCrasPage() {
   const [selectedTsIds, setSelectedTsIds] = useState<number[]>([]);
   const [showGroupedModal, setShowGroupedModal] = useState(false);
   const [groupedVatRate, setGroupedVatRate] = useState('20');
-  const [groupedBdc, setGroupedBdc] = useState('');
   const [groupedDelai, setGroupedDelai] = useState('');
+  const [groupedBdcAssignments, setGroupedBdcAssignments] = useState<Record<number, number[]>>({});
   const [showHint, setShowHint] = useState(true);
   const hintRef = useRef<HTMLDivElement>(null);
 
@@ -242,20 +243,43 @@ export default function PendingCrasPage() {
 
       {showGroupedModal && (() => {
         const selected = filteredData.filter((ts) => selectedTsIds.includes(ts.id));
+
+        const handleBdcChange = (timesheetId: number, bdcIds: number[]) => {
+          setGroupedBdcAssignments((prev) => ({ ...prev, [timesheetId]: bdcIds }));
+        };
+
+        const hasWarnings = selected.some((ts) => {
+          const bdcIds = groupedBdcAssignments[ts.id] ?? [];
+          if (bdcIds.length === 0) return false;
+          return false;
+        });
+
         return (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
-            <div className="w-full max-w-lg rounded-[12px] bg-[#ffffff] p-6 shadow-xl">
+            <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-[12px] bg-[#ffffff] p-6 shadow-xl">
               <h2 className="mb-4 text-lg font-semibold text-[#111111]">
                 Générer une facture groupée
               </h2>
               <p className="mb-3 text-sm text-[#6b7280]">
                 Vous allez générer une facture unique pour les {selected.length} relevés suivants&nbsp;:
               </p>
-              <div className="mb-4 max-h-48 overflow-y-auto space-y-2">
+              <div className="mb-4 space-y-4">
                 {selected.map((ts) => (
-                  <div key={ts.id} className="flex items-center justify-between rounded-[8px] bg-[#f9fafb] px-3 py-2 text-sm">
-                    <span className="font-medium text-[#111111]">{ts.consultant.name}</span>
-                    <span className="text-[#6b7280]">{formatMonth(ts.month)} — {ts.mission.title}</span>
+                  <div key={ts.id} className="rounded-[8px] border border-[#e5e7eb] p-4">
+                    <div className="mb-2 flex items-center justify-between">
+                      <span className="text-sm font-medium text-[#111111]">{ts.consultant.name}</span>
+                      <span className="text-xs text-[#6b7280]">{formatMonth(ts.month)} — {ts.mission.title} — {ts.days} jours</span>
+                    </div>
+                    <div className="pl-2">
+                      <label className="mb-1 block text-xs font-medium text-[#6b7280]">Bons de commande (facultatif)</label>
+                      <BdcSelectorForTimesheet
+                        missionId={ts.mission.id}
+                        timesheetId={ts.id}
+                        timesheetDays={ts.days}
+                        selectedBdcIds={groupedBdcAssignments[ts.id] ?? []}
+                        onChange={handleBdcChange}
+                      />
+                    </div>
                   </div>
                 ))}
               </div>
@@ -272,16 +296,6 @@ export default function PendingCrasPage() {
                   className="w-full rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] outline-none focus:border-primary-blue"
                 />
               </div>
-              <div className="mb-4">
-                <label className="mb-1 block text-sm font-medium text-[#111111]">Bon de commande (BDC)</label>
-                <input
-                  type="text"
-                  value={groupedBdc}
-                  onChange={(e) => setGroupedBdc(e.target.value)}
-                  placeholder="Facultatif"
-                  className="w-full rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] outline-none focus:border-primary-blue"
-                />
-              </div>
               <div className="mb-6">
                 <label className="mb-1 block text-sm font-medium text-[#111111]">Délai (en jours)</label>
                 <input
@@ -295,37 +309,45 @@ export default function PendingCrasPage() {
               </div>
               <div className="flex justify-end gap-3">
                 <button
-                  onClick={() => { setShowGroupedModal(false); setGroupedVatRate('20'); setGroupedBdc(''); setGroupedDelai(''); }}
+                  onClick={() => { setShowGroupedModal(false); setGroupedVatRate('20'); setGroupedDelai(''); setGroupedBdcAssignments({}); }}
                   className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-4 py-2 text-sm text-[#111111] transition-colors hover:bg-[#f3f4f6]"
                 >
                   Annuler
                 </button>
                 <button
                   onClick={() => {
-                    const payload: Record<string, unknown> = { timesheetIds: selectedTsIds, vatRate: Number(groupedVatRate) || 20 };
-                    if (groupedBdc.trim()) payload.bdc = groupedBdc.trim();
+                    const bdcAssignments: { timesheetId: number; bdcId: number }[] = [];
+                    selected.forEach((ts) => {
+                      const bdcIds = groupedBdcAssignments[ts.id] ?? [];
+                      bdcIds.forEach((bdcId) => bdcAssignments.push({ timesheetId: ts.id, bdcId }));
+                    });
+                    const payload: Record<string, unknown> = {
+                      timesheetIds: selectedTsIds,
+                      vatRate: Number(groupedVatRate) || 20,
+                    };
                     const delaiNum = parseInt(groupedDelai, 10);
                     if (!isNaN(delaiNum) && delaiNum > 0) payload.delai = delaiNum;
+                    if (bdcAssignments.length > 0) payload.bdcAssignments = bdcAssignments;
                     groupedMutation.mutate(
-                      payload as { timesheetIds: number[]; vatRate?: number; bdc?: string; delai?: number },
+                      payload as unknown as Parameters<typeof groupedMutation.mutate>[0],
                       {
                         onSuccess: () => {
                           setShowGroupedModal(false);
                           setGroupedMode(false);
                           setSelectedTsIds([]);
                           setGroupedVatRate('20');
-                          setGroupedBdc('');
                           setGroupedDelai('');
+                          setGroupedBdcAssignments({});
                         },
                         onError: (err) => {
                           const axiosErr = err as { response?: { data?: { error?: { message?: string } } } };
-                          toast.error(axiosErr.response?.data?.error?.message ?? "Erreur lors de la génération");
+                          toast.error(axiosErr.response?.data?.error?.message ?? 'Erreur lors de la génération');
                           setShowGroupedModal(false);
                         },
                       },
                     );
                   }}
-                  disabled={groupedMutation.isPending}
+                  disabled={groupedMutation.isPending || hasWarnings}
                   className="cursor-pointer rounded-[8px] bg-[#10b981] px-4 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-90 disabled:opacity-50"
                 >
                   {groupedMutation.isPending ? 'Génération...' : 'Confirmer'}

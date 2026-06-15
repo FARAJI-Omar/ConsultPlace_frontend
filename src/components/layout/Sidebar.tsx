@@ -30,11 +30,12 @@ const NAV_ITEMS = [
   { label: 'Clients', path: '/admin/clients', icon: Building2 },
   { label: 'Consultants', path: '/admin/consultants', icon: Users },
   {
-    label: 'Contrats & Missions',
+    label: 'Contrats & Missions & BDC',
     icon: FolderKanban,
     children: [
       { label: 'Contrats', path: '/admin/contracts', icon: FileText },
       { label: 'Missions', path: '/admin/missions', icon: ClipboardList },
+      { label: 'Bons de commande', path: '/admin/bons-de-commande', icon: ClipboardList },
     ],
   },
   { label: 'Gestionnaires', path: '/admin/gestionnaires', icon: Shield },
@@ -63,7 +64,7 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
 
       <aside
         className={`fixed top-0 left-0 z-50 h-screen bg-[#ffffff] border-r border-[#e5e7eb] transition-all duration-200 flex flex-col ${
-          collapsed ? 'w-16' : 'w-64'
+          collapsed ? 'w-16' : 'w-62'
         } ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         } lg:sticky lg:translate-x-0`}
