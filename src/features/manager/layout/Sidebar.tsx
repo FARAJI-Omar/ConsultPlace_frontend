@@ -9,6 +9,7 @@ import {
   Bell,
   Activity,
   TrendingUp,
+  ClipboardList,
   PanelLeftClose,
   PanelLeftOpen,
   type LucideIcon,
@@ -33,6 +34,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Alertes', path: '/manager/alerts', icon: Bell },
   { label: 'Relevés ', path: '/manager/timesheets', icon: FileText },
   { label: 'Factures', path: '/manager/invoices', icon: Receipt },
+  { label: 'Bons de commande', path: '/manager/bons-de-commande', icon: ClipboardList },
   { label: 'Paiements consultants', path: '/manager/payouts', icon: Wallet },
   { label: 'Suivi Global', path: '/manager/tracking', icon: Activity },
   { label: 'Prévisions et Rentabilité ', path: '/manager/forecasts', icon: TrendingUp },
@@ -47,6 +49,8 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
     const isActive =
       item.path === '/manager/alerts'
         ? location.pathname === '/manager/alerts' || location.pathname === '/manager/alertrules'
+        : item.path === '/manager/bons-de-commande'
+        ? location.pathname.startsWith('/manager/bons-de-commande')
         : location.pathname === item.path;
     return `flex items-center gap-3 rounded-[8px] px-3 py-2 text-sm transition-colors whitespace-nowrap cursor-pointer ${
       isActive

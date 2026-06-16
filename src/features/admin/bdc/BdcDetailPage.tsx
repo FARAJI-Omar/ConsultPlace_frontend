@@ -121,12 +121,9 @@ export default function BdcDetailPage() {
               <FileText className="h-4 w-4" />
               Contrat
             </div>
-            <Link
-              to={`/admin/contracts/${bdc.contractId}`}
-              className="text-sm font-medium text-primary-blue hover:underline"
-            >
+            <p className="text-sm font-medium text-[#111111]">
               {bdc.contract?.ref ?? '—'}
-            </Link>
+            </p>
           </div>
 
           <div className="space-y-1">
@@ -145,12 +142,9 @@ export default function BdcDetailPage() {
               Mission
             </div>
             {bdc.missionId ? (
-              <Link
-                to={`/admin/missions/${bdc.missionId}`}
-                className="text-sm font-medium text-primary-blue hover:underline"
-              >
+              <p className="text-sm font-medium text-[#111111]">
                 {bdc.mission?.title ?? '—'}
-              </Link>
+              </p>
             ) : (
               <p className="text-sm text-[#6b7280]">Non assignée</p>
             )}
@@ -220,9 +214,12 @@ export default function BdcDetailPage() {
                 className="flex items-center justify-between rounded-[8px] border border-[#e5e7eb] px-4 py-3"
               >
                 <div className="space-y-0.5">
-                  <p className="text-sm font-medium text-[#111111]">
+                  <Link
+                    to={`/admin/invoices/${c.invoiceId}`}
+                    className="text-sm font-medium text-primary-blue hover:underline"
+                  >
                     Facture {c.invoice?.ref ?? c.invoiceRef}
-                  </p>
+                  </Link>
                   {c.invoice?.issueDate && (
                     <p className="text-xs text-[#6b7280]">
                       {c.invoice.issueDate.slice(0, 10)}

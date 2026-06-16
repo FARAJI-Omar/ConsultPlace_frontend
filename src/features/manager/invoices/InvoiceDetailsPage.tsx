@@ -1,4 +1,4 @@
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useInvoiceDetail, useMarkPaid, useDownloadPdf, useEmailInvoice, useCancelInvoice } from '../../../hooks/manager/useInvoices';
 import { useTriggerPayout } from '../../../hooks/manager/usePayouts';
 import { useSendReminder, useSetAutoReminder, useStopAutoReminder } from '../../../hooks/manager/useReminders';
@@ -29,6 +29,7 @@ const statusLabels: Record<string, string> = {
 };
 
 export default function InvoiceDetailsPage() {
+  const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const invoiceId = id ? Number(id) : null;
   const { data, isLoading } = useInvoiceDetail(invoiceId);
@@ -363,9 +364,11 @@ export default function InvoiceDetailsPage() {
             ) : (
               <div className="space-y-2">
                 {invoice.bdcConsumptions.map((c) => (
-                  <div
+                  <button
                     key={c.id}
-                    className="flex items-center justify-between rounded-[6px] bg-[#f9fafb] px-3 py-2"
+                    type="button"
+                    onClick={() => navigate(`/manager/bons-de-commande/${c.bdcId}`)}
+                    className="flex w-full items-center justify-between rounded-[6px] bg-[#f9fafb] px-3 py-2 text-left transition-colors hover:bg-[#eff6ff] cursor-pointer"
                   >
                     <div className="flex items-center gap-2">
                       <ClipboardList className="h-4 w-4 text-[#3b82f6]" />
@@ -374,7 +377,7 @@ export default function InvoiceDetailsPage() {
                       </span>
                     </div>
                     <span className="text-sm text-[#6b7280]">{c.daysConsumed} jours</span>
-                  </div>
+                  </button>
                 ))}
               </div>
             )}
