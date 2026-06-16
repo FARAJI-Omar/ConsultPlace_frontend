@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
 import { toast } from 'sonner';
-import { Upload, X, ChevronRight, ChevronLeft } from 'lucide-react';
+import { Upload, X, ChevronRight, ChevronLeft, Loader2 } from 'lucide-react';
 import Select from 'react-select';
 import { parseApiError } from '../../../utils/errorParser';
 import { cleanFilename } from '../../../lib/utils';
 import { useMutateMission, useUpdateMission } from '../../../hooks/useMissions';
+import { useImageCompression } from '../../../hooks/useImageCompression';
 import type { Mission } from '../../../hooks/useMissions';
 import { useGetContracts } from '../../../hooks/useContracts';
 import { useGetConsultants } from '../../../hooks/useConsultants';
@@ -71,6 +72,7 @@ export default function MissionForm({ onSuccess, mission }: MissionFormProps) {
   const [deletedAttachmentIds, setDeletedAttachmentIds] = useState<number[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const fileRef = useRef<HTMLInputElement>(null);
+  const submittingRef = useRef(false);
 
   const { data: contractsData } = useGetContracts(1, 200);
   const { data: consultantsData } = useGetConsultants(1, 200);
@@ -78,6 +80,7 @@ export default function MissionForm({ onSuccess, mission }: MissionFormProps) {
   const createMutation = useMutateMission();
   const updateMutation = useUpdateMission();
   const mutation = isEdit ? updateMutation : createMutation;
+  const { trackFiles, untrackFile, getCompressedFiles, isCompressing, compressingFiles } = useImageCompression();
 
   const contractIdNum = Number(form.contractId);
   const { data: bdcsData } = useGetBdcsByContract(isEdit ? mission?.contractId : contractIdNum);
@@ -110,11 +113,16 @@ export default function MissionForm({ onSuccess, mission }: MissionFormProps) {
     }
 
     setFiles((prev) => [...prev, ...allowed]);
+    trackFiles(allowed);
     if (fileRef.current) fileRef.current.value = '';
   };
 
   const removeFile = (index: number) => {
-    setFiles((prev) => prev.filter((_, i) => i !== index));
+    setFiles((prev) => {
+      const removed = prev[index];
+      if (removed) untrackFile(removed);
+      return prev.filter((_, i) => i !== index);
+    });
   };
 
   const validateStep1 = (): boolean => {
@@ -156,8 +164,10 @@ export default function MissionForm({ onSuccess, mission }: MissionFormProps) {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     setErrors({});
 
     const conv = (v: string) => v && v.includes('/') ? toStorageDate(v) : v;
@@ -183,7 +193,8 @@ export default function MissionForm({ onSuccess, mission }: MissionFormProps) {
         }
       }
       if (changedRates.length > 0) patchData.consultantRates = changedRates;
-      if (files.length > 0) patchData.files = files;
+      const compressedFiles = files.length > 0 ? await getCompressedFiles(files) : [];
+      if (compressedFiles.length > 0) patchData.files = compressedFiles;
       if (deletedAttachmentIds.length > 0) patchData.deleteAttachmentIds = deletedAttachmentIds;
       const origBdcIds = (mission!.bdcs ?? []).map((b) => b.id).sort();
       const newBdcIds = [...selectedBdcIds].sort();
@@ -191,6 +202,7 @@ export default function MissionForm({ onSuccess, mission }: MissionFormProps) {
         patchData.bdcIds = newBdcIds;
       }
       if (Object.keys(patchData).length === 0) {
+        submittingRef.current = false;
         toast.error('Aucune modification détectée');
         return;
       }
@@ -198,10 +210,12 @@ export default function MissionForm({ onSuccess, mission }: MissionFormProps) {
         { id: mission!.id, data: patchData as Parameters<typeof updateMutation.mutate>[0]['data'] },
         {
           onSuccess: () => {
+            submittingRef.current = false;
             toast.success('Mission modifiée avec succès');
             onSuccess();
           },
           onError: (err) => {
+            submittingRef.current = false;
             const fieldErrors = parseApiError(err);
             if (fieldErrors) {
               setErrors(fieldErrors);
@@ -213,6 +227,7 @@ export default function MissionForm({ onSuccess, mission }: MissionFormProps) {
         },
       );
     } else {
+      const compressedFiles = files.length > 0 ? await getCompressedFiles(files) : [];
       createMutation.mutate(
         {
           contractId: Number(form.contractId),
@@ -223,15 +238,17 @@ export default function MissionForm({ onSuccess, mission }: MissionFormProps) {
           title: form.title,
           startDate: f.startDate,
           endDate: f.endDate || undefined,
-          files: files.length > 0 ? files : undefined,
+          files: compressedFiles.length > 0 ? compressedFiles : undefined,
           bdcIds: selectedBdcIds.length > 0 ? selectedBdcIds : undefined,
         },
         {
           onSuccess: () => {
+            submittingRef.current = false;
             toast.success('Mission créée avec succès');
             onSuccess();
           },
           onError: (err) => {
+            submittingRef.current = false;
             const fieldErrors = parseApiError(err);
             if (fieldErrors) {
               setErrors(fieldErrors);
@@ -490,6 +507,9 @@ export default function MissionForm({ onSuccess, mission }: MissionFormProps) {
             {files.map((file, i) => (
               <li key={i} className="flex items-center justify-between rounded bg-[#f9fafb] px-3 py-1.5 text-sm text-[#111111]">
                 <span className="truncate">{file.name}</span>
+                {compressingFiles.has(file) && (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin text-[#6b7280] shrink-0 ml-1" />
+                )}
                 <button
                   type="button"
                   onClick={() => removeFile(i)}
@@ -626,10 +646,10 @@ export default function MissionForm({ onSuccess, mission }: MissionFormProps) {
           ) : (
             <button
               type="submit"
-              disabled={mutation.isPending}
+              disabled={mutation.isPending || isCompressing}
               className="cursor-pointer rounded-[8px] bg-primary-blue px-6 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {mutation.isPending ? 'Enregistrement...' : isEdit ? 'Modifier' : 'Créer la mission'}
+              {mutation.isPending ? 'Enregistrement...' : isCompressing ? 'Optimisation...' : isEdit ? 'Modifier' : 'Créer la mission'}
             </button>
           )}
         </div>

@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { FileText, Download, Calendar, Hash, Clock, Activity } from 'lucide-react';
 import { useGetBdcById, useUploadBdcAttachments } from '../../../hooks/useBdc';
 import { cleanFilename } from '../../../lib/utils';
+import { compressImages } from '../../../lib/compressImage';
 import { downloadFile } from '../../../utils/downloadFile';
 import Modal from '../../../components/common/Modal';
 import BdcForm from './BdcForm';
@@ -19,7 +20,7 @@ export default function BdcDetailPage() {
   const [uploading, setUploading] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
     if (files.length === 0) return;
 
@@ -30,8 +31,9 @@ export default function BdcDetailPage() {
     }
 
     setUploading(true);
+    const compressed = await compressImages(files);
     uploadAttachments.mutate(
-      { id: bdcId, files },
+      { id: bdcId, files: compressed },
       {
         onSuccess: () => {
           toast.success('Documents ajoutés avec succès');

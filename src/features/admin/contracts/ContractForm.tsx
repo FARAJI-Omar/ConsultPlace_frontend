@@ -1,9 +1,10 @@
 import { useState, useRef } from 'react';
 import { toast } from 'sonner';
-import { Upload, X } from 'lucide-react';
+import { Upload, X, Loader2 } from 'lucide-react';
 import { parseApiError } from '../../../utils/errorParser';
 import { cleanFilename } from '../../../lib/utils';
 import { useMutateContract, useUpdateContract } from '../../../hooks/useContracts';
+import { useImageCompression } from '../../../hooks/useImageCompression';
 import type { Contract } from '../../../hooks/useContracts';
 import { useGetClients } from '../../../hooks/useClients';
 import LoadingOverlay from '../../../components/common/LoadingOverlay';
@@ -57,11 +58,13 @@ export default function ContractForm({ onSuccess, contract }: ContractFormProps)
   const [deletedAttachmentIds, setDeletedAttachmentIds] = useState<number[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const fileRef = useRef<HTMLInputElement>(null);
+  const submittingRef = useRef(false);
 
   const { data: clientsData } = useGetClients(1, 100);
   const createMutation = useMutateContract();
   const updateMutation = useUpdateContract();
   const mutation = isEdit ? updateMutation : createMutation;
+  const { trackFiles, untrackFile, getCompressedFiles, isCompressing, compressingFiles } = useImageCompression();
 
   const handleChange = (key: string, value: string) => {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -84,15 +87,21 @@ export default function ContractForm({ onSuccess, contract }: ContractFormProps)
     }
 
     setFiles((prev) => [...prev, ...allowed]);
+    trackFiles(allowed);
     if (fileRef.current) fileRef.current.value = '';
   };
 
   const removeFile = (index: number) => {
-    setFiles((prev) => prev.filter((_, i) => i !== index));
+    setFiles((prev) => {
+      const removed = prev[index];
+      if (removed) untrackFile(removed);
+      return prev.filter((_, i) => i !== index);
+    });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submittingRef.current) return;
     setErrors({});
 
     const conv = (v: string) => v && v.includes('/') ? toStorageDate(v) : v;
@@ -120,6 +129,9 @@ export default function ContractForm({ onSuccess, contract }: ContractFormProps)
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) return;
 
+    submittingRef.current = true;
+    const compressedFiles = files.length > 0 ? await getCompressedFiles(files) : [];
+
     if (isEdit) {
       const normalize = (d: string) => d.slice(0, 10);
       const origStart = normalize(contract!.startDate);
@@ -131,9 +143,10 @@ export default function ContractForm({ onSuccess, contract }: ContractFormProps)
       if (curEnd !== origEnd) patchData.endDate = curEnd;
       if (f.profile !== contract!.profile) patchData.profile = f.profile;
       if (Number(f.dailyRate) !== contract!.dailyRate) patchData.dailyRate = Number(f.dailyRate);
-      if (files.length > 0) patchData.files = files;
+      if (compressedFiles.length > 0) patchData.files = compressedFiles;
       if (deletedAttachmentIds.length > 0) patchData.deleteAttachmentIds = deletedAttachmentIds;
       if (Object.keys(patchData).length === 0) {
+        submittingRef.current = false;
         toast.error('Aucune modification détectée');
         return;
       }
@@ -141,10 +154,12 @@ export default function ContractForm({ onSuccess, contract }: ContractFormProps)
         { id: contract!.id, data: patchData },
         {
           onSuccess: () => {
+            submittingRef.current = false;
             toast.success('Contrat modifié avec succès');
             onSuccess();
           },
           onError: (err) => {
+            submittingRef.current = false;
             const fieldErrors = parseApiError(err);
             if (fieldErrors) {
               setErrors(fieldErrors);
@@ -163,14 +178,16 @@ export default function ContractForm({ onSuccess, contract }: ContractFormProps)
           endDate: f.endDate,
           profile: f.profile,
           dailyRate: Number(f.dailyRate),
-          files: files.length > 0 ? files : undefined,
+          files: compressedFiles.length > 0 ? compressedFiles : undefined,
         },
         {
           onSuccess: () => {
+            submittingRef.current = false;
             toast.success('Contrat créé avec succès');
             onSuccess();
           },
           onError: (err) => {
+            submittingRef.current = false;
             const fieldErrors = parseApiError(err);
             if (fieldErrors) {
               setErrors(fieldErrors);
@@ -331,6 +348,9 @@ export default function ContractForm({ onSuccess, contract }: ContractFormProps)
             {files.map((file, i) => (
               <li key={i} className="flex items-center justify-between rounded bg-[#f9fafb] px-3 py-1.5 text-sm text-[#111111]">
                 <span className="truncate">{file.name}</span>
+                {compressingFiles.has(file) && (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin text-[#6b7280] shrink-0 ml-1" />
+                )}
                 <button
                   type="button"
                   onClick={() => removeFile(i)}
@@ -362,10 +382,10 @@ export default function ContractForm({ onSuccess, contract }: ContractFormProps)
         </button>
         <button
           type="submit"
-          disabled={mutation.isPending || Object.keys(errors).length > 0}
-          className="cursor-pointer rounded-[8px] bg-primary-blue px-6 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {mutation.isPending ? 'Enregistrement...' : isEdit ? 'Modifier' : 'Créer'}
+          disabled={mutation.isPending || isCompressing || Object.keys(errors).length > 0}
+            className="cursor-pointer rounded-[8px] bg-primary-blue px-6 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {mutation.isPending ? 'Enregistrement...' : isCompressing ? 'Optimisation...' : isEdit ? 'Modifier' : 'Créer'}
         </button>
       </div>
     </form>

@@ -4,7 +4,9 @@ import { useConsultantMissions } from '../../../hooks/consultant/useConsultantMi
 import { useCreateTimesheet } from '../../../hooks/consultant/useCreateTimesheet';
 import { useUploadAttachments } from '../../../hooks/consultant/useAttachments';
 import { useSubmitTimesheet } from '../../../hooks/consultant/useSubmitTimesheet';
+import { useImageCompression } from '../../../hooks/useImageCompression';
 import { useMoroccoHolidays } from '../../../hooks/consultant/useMoroccoHolidays';
+import { Loader2 } from 'lucide-react';
 import CalendarGrid from './CalendarGrid';
 import LoadingOverlay from '../../../components/common/LoadingOverlay';
 import type { DailyEntry } from '../../../types/models';
@@ -91,6 +93,7 @@ export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?:
   const createTimesheet = useCreateTimesheet();
   const uploadMutation = useUploadAttachments();
   const submitTimesheet = useSubmitTimesheet();
+  const { trackFiles, untrackFile, getCompressedFiles, isCompressing, compressingFiles } = useImageCompression();
 
   const isOrchestrating =
     createTimesheet.isPending || uploadMutation.isPending || submitTimesheet.isPending;
@@ -226,10 +229,15 @@ export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?:
       return;
     }
     setProofFiles(combined);
+    trackFiles(valid);
   }
 
   function removeProofFile(index: number) {
-    setProofFiles((prev) => prev.filter((_, i) => i !== index));
+    setProofFiles((prev) => {
+      const removed = prev[index];
+      if (removed) untrackFile(removed);
+      return prev.filter((_, i) => i !== index);
+    });
     setFileError(null);
   }
 
@@ -238,9 +246,11 @@ export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?:
     const valid = validateFiles(incoming);
     if (valid.length === 0) return;
     setFactureFile(valid[0]);
+    trackFiles(valid);
   }
 
   function removeFactureFile() {
+    if (factureFile) untrackFile(factureFile);
     setFactureFile(null);
     setFileError(null);
   }
@@ -293,9 +303,10 @@ export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?:
     const promises: Promise<unknown>[] = [];
 
     if (proofFiles.length > 0) {
+      const compressed = await getCompressedFiles(proofFiles);
       promises.push(
         uploadMutation.mutateAsync({
-          files: proofFiles,
+          files: compressed,
           timesheetId: String(timesheetId),
           type: 'PROOF',
         }),
@@ -303,9 +314,10 @@ export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?:
     }
 
     if (factureFile) {
+      const compressed = await getCompressedFiles([factureFile]);
       promises.push(
         uploadMutation.mutateAsync({
-          files: [factureFile],
+          files: compressed,
           timesheetId: String(timesheetId),
           type: 'CONSULTANT_FACTURE',
         }),
@@ -488,6 +500,9 @@ export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?:
                       {file.name.split('.').pop()?.toUpperCase() ?? 'FICHIER'}
                     </span>
                     <span className="text-sm text-[#111111]">{file.name}</span>
+                    {compressingFiles.has(file) && (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin text-[#6b7280] shrink-0" />
+                    )}
                     <span className="text-xs text-[#6b7280]">
                       ({(file.size / 1024 / 1024).toFixed(1)} Mo)
                     </span>
@@ -515,6 +530,9 @@ export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?:
             <div className="rounded-[12px] border-2 border-solid border-[#e5e7eb] bg-[#f9f9f9] px-6 py-6 text-center">
               <p className="text-sm text-[#6b7280]">
                 Fichier sélectionné : <span className="font-medium text-[#111111]">{factureFile.name}</span>
+                {compressingFiles.has(factureFile) && (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin text-[#6b7280] shrink-0 ml-1 inline-block align-middle" />
+                )}
               </p>
               <button
                 type="button"
@@ -554,19 +572,19 @@ export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?:
         <button
           type="button"
           onClick={handleSaveDraftClick}
-          disabled={!selectedMissionId || isOrchestrating}
+          disabled={!selectedMissionId || isOrchestrating || isCompressing}
           className="cursor-pointer rounded-[8px] border border-[#afb1b3] bg-[#ffffff] px-5 py-2.5 text-sm font-semibold text-[#111111] hover:bg-[#8f9194] disabled:opacity-50 transition-colors"
         >
-          {createTimesheet.isPending ? 'Enregistrement...' : 'Enregistrer comme brouillon'}
+          {createTimesheet.isPending ? 'Enregistrement...' : isCompressing ? 'Optimisation...' : 'Enregistrer comme brouillon'}
         </button>
         <button
           type="button"
           onClick={handleSubmitClick}
-          disabled={!selectedMissionId || proofFiles.length === 0 || !factureFile || isOrchestrating}
-          title={(!proofFiles.length || !factureFile) ? 'Les documents Rapport d\'activité et facture du consultant requis' : ''}
+          disabled={!selectedMissionId || proofFiles.length === 0 || !factureFile || isOrchestrating || isCompressing}
+          title={(!proofFiles.length || !factureFile) ? 'Les documents Rapport d\'activité et facture du consultant requis' : isCompressing ? 'Optimisation des fichiers en cours...' : ''}
           className="cursor-pointer rounded-[8px] bg-green-600 px-5 py-2.5 text-sm font-semibold text-[#ffffff] hover:bg-green-700 disabled:bg-[#e5e7eb] disabled:text-[#6b7280] disabled:cursor-not-allowed transition-colors"
         >
-          {submitTimesheet.isPending ? 'Soumission...' : 'Soumettre'}
+          {submitTimesheet.isPending ? 'Soumission...' : isCompressing ? 'Optimisation...' : 'Soumettre'}
         </button>
       </div>
 

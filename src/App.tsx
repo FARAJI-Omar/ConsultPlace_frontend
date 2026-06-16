@@ -33,6 +33,8 @@ import PartialPaymentsPage from './features/manager/invoices/PartialPaymentsPage
 import PayoutTrackingPage from './features/manager/payouts/PayoutTrackingPage';
 import GlobalTrackingPage from './features/manager/tracking/GlobalTrackingPage';
 import ForecastsPage from './features/manager/tracking/ForecastsPage';
+import ManagerBdcPage from './features/manager/bdc/ManagerBdcPage';
+import ManagerBdcDetailPage from './features/manager/bdc/ManagerBdcDetailPage';
 import ManagerLayout from './features/manager/layout/ManagerLayout';
 import ConsultantLayout from './features/consultant/layout/ConsultantLayout';
 import ConsultantDashboard from './features/consultant/dashboard/ConsultantDashboard';
@@ -109,6 +111,8 @@ const router = createBrowserRouter([
             ],
           },
           { path: 'payouts', element: <PayoutTrackingPage /> },
+          { path: 'bons-de-commande', element: <ManagerBdcPage /> },
+          { path: 'bons-de-commande/:id', element: <ManagerBdcDetailPage /> },
           { path: 'tracking', element: <GlobalTrackingPage /> },
           { path: 'forecasts', element: <ForecastsPage /> },
         ],

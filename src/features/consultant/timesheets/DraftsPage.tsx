@@ -8,6 +8,7 @@ import {
 } from '../../../hooks/consultant/useAttachments';
 import { useSubmitTimesheet } from '../../../hooks/consultant/useTimesheets';
 import { formatDate, cleanFilename } from '../../../lib/utils';
+import { compressImages } from '../../../lib/compressImage';
 import EditCraModal from './EditCraModal';
 import { downloadFile } from '../../../utils/downloadFile';
 import type { Timesheet } from '../../../types/models';
@@ -94,7 +95,8 @@ export default function DraftsPage() {
             }}
             onUploadFiles={async (files, type) => {
               try {
-                await uploadAttachments.mutateAsync({ files, timesheetId: String(draft.id), type });
+                const compressed = await compressImages(files);
+                await uploadAttachments.mutateAsync({ files: compressed, timesheetId: String(draft.id), type });
                 toast.success('Fichier(s) ajouté(s).');
               } catch (err: unknown) {
                 const msg =
