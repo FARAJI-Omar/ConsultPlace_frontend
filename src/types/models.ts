@@ -227,7 +227,8 @@ export type AlertEvent =
   | 'LATE_PAYOUT'
   | 'UNBILLED_CRA'
   | 'PENDING_CRA'
-  | 'UPCOMING_BILL';
+  | 'UPCOMING_BILL'
+  | 'LOW_BDC_DAYS';
 
 export interface AlertRule {
   id: number;

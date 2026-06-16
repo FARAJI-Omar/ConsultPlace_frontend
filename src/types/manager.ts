@@ -218,6 +218,7 @@ export interface TrackingRow {
   consultantStatus: string | string[];
   consultantPaymentDate: string | null | (string | null)[];
   timesheetIds?: number[];
+  bdcs?: { id: number; bdc: string; totalDays: number; daysLeft: number; timesheetId: number }[];
 }
 
 export interface TurnoverForecast {

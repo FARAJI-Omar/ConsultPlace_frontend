@@ -23,6 +23,7 @@ const EVENT_OPTIONS: { value: AlertEvent; label: string }[] = [
   { value: 'UNBILLED_CRA', label: 'Relevé non facturé' },
   { value: 'PENDING_CRA', label: 'Relevé en attente' },
   { value: 'UPCOMING_BILL', label: 'Facture à venir' },
+  { value: 'LOW_BDC_DAYS', label: 'BDC faible en jours' },
 ];
 
 const EVENT_LABELS: Record<AlertEvent, string> = {
@@ -31,6 +32,7 @@ const EVENT_LABELS: Record<AlertEvent, string> = {
   UNBILLED_CRA: 'Relevé non facturé',
   PENDING_CRA: 'Relevé en attente',
   UPCOMING_BILL: 'Facture à venir',
+  LOW_BDC_DAYS: 'BDC faible en jours',
 };
 
 const VARIABLE_LABELS: Record<string, string> = {
@@ -44,6 +46,9 @@ const VARIABLE_LABELS: Record<string, string> = {
   month: 'Mois',
   daysPending: 'Jours en attente',
   daysSinceValidation: 'Jours depuis validation',
+  bdcRef: 'Réf. BDC',
+  daysLeft: 'Jours restants',
+  totalDays: 'Jours total',
 };
 
 const SAMPLE_VALUES: Record<string, string> = {

@@ -61,6 +61,7 @@ export default function AlertRulesPage() {
           UNBILLED_CRA: 'Relevé non facturé',
           PENDING_CRA: 'Relevé en attente',
           UPCOMING_BILL: 'Facture à venir',
+          LOW_BDC_DAYS: 'BDC faible en jours',
         };
         return labels[item.event] ?? item.event;
       },

@@ -184,7 +184,7 @@ export default function GlobalTrackingPage() {
       return (
         <div className="flex flex-wrap gap-1">
           {missions.map((m, i) => (
-            <span key={i} className="inline-block rounded-full px-2.5 py-0.5 text-xs font-medium text-[#0369a1]">{m}</span>
+            <span key={i} className="inline-block rounded-full px-2.5 py-0.5 text-xs font-medium text-[#0073d8]">{m}</span>
           ))}
         </div>
       );
@@ -194,7 +194,7 @@ export default function GlobalTrackingPage() {
       return (
         <div className="flex flex-wrap gap-1">
           {ids.map((id) => (
-            <Link key={id} to={`/manager/timesheets/${id}`} className="inline-block rounded-[6px] border border-[#e5e7eb] px-2.5 py-1 text-xs font-medium text-[#3b82f6] hover:bg-[#f3f4f6]">
+            <Link key={id} to={`/manager/timesheets/${id}`} className="inline-block rounded-[6px] border border-[#3b82f6] px-2.5 py-1 text-xs font-medium text-[#3b82f6] hover:bg-[#0055ff2c]">
               #{id}
             </Link>
           ))}
@@ -211,7 +211,32 @@ export default function GlobalTrackingPage() {
         </div>
       );
     } },
-    { key: 'invoiceRef', label: 'Facture', render: (r) => r.invoiceRef ? <Link to={`/manager/invoices/${r.id}`} className="text-[#3b82f6] hover:underline">{r.invoiceRef}</Link> : '—' },
+    { key: 'bdcs', label: 'BDC (reste)', render: (r) => {
+      const timesheetIds = new Set(r.timesheetIds ?? []);
+      const seen = new Set<number>();
+      const usedBdcs = (r.bdcs ?? []).filter((b) => {
+        if (!timesheetIds.has(b.timesheetId)) return false;
+        if (seen.has(b.id)) return false;
+        seen.add(b.id);
+        return true;
+      });
+      return usedBdcs.length === 0 ? (
+        <span className="text-xs text-[#6b7280]">—</span>
+      ) : (
+        <div className="flex flex-wrap gap-1">
+          {usedBdcs.map((b) => (
+            <Link
+              key={b.id}
+              to={`/manager/bons-de-commande/${b.id}`}
+              className="inline-block rounded-full px-2.5 py-0.5 text-xs font-medium bg-[#f0fdf4] text-[#15803d] hover:bg-[#d1fae5] transition-colors"
+            >
+              {b.bdc} ({b.daysLeft}/{b.totalDays})
+            </Link>
+          ))}
+        </div>
+      );
+    } },
+    { key: 'invoiceRef', label: 'Facture', render: (r) => r.invoiceRef ? <Link to={`/manager/invoices/${r.id}`} className="inline-block rounded-full px-2.5 py-0.5 text-sm font-medium text-[#3b82f6] hover:bg-[#0060f910] transition-colors">{r.invoiceRef}</Link> : '—' },
     { key: 'total', label: 'TTC', render: (r) => `${(r.total ?? 0).toLocaleString()} DH` },
     {
       key: 'clientStatus',

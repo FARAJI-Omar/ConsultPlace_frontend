@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../lib/apiClient';
 
 export type AlertType = 'CRITICAL' | 'WARNING' | 'INFO';
-export type AlertEvent = 'LATE_INVOICE' | 'LATE_PAYOUT' | 'UNBILLED_CRA' | 'PENDING_CRA' | 'UPCOMING_BILL';
+export type AlertEvent = 'LATE_INVOICE' | 'LATE_PAYOUT' | 'UNBILLED_CRA' | 'PENDING_CRA' | 'UPCOMING_BILL' | 'LOW_BDC_DAYS';
 
 export const ALLOWED_VARIABLES: Record<AlertEvent, string[]> = {
   LATE_INVOICE: ['invoiceRef', 'daysOverdue', 'daysUntilDue', 'clientName', 'amount', 'dueDate'],
@@ -10,6 +10,7 @@ export const ALLOWED_VARIABLES: Record<AlertEvent, string[]> = {
   PENDING_CRA: ['month', 'consultantName', 'daysPending'],
   UNBILLED_CRA: ['month', 'consultantName', 'daysSinceValidation'],
   UPCOMING_BILL: ['invoiceRef', 'daysUntilDue', 'clientName', 'amount', 'dueDate'],
+  LOW_BDC_DAYS: ['bdcRef', 'daysLeft', 'totalDays', 'clientName'],
 };
 
 export interface AlertRule {
