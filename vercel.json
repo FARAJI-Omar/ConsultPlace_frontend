@@ -1,8 +1,6 @@
 {
-  "redirects": [
-    { "source": "/uploads/(.*)", "destination": "https://consultplace.159.65.125.109.sslip.io/uploads/$1", "permanent": false }
-  ],
   "rewrites": [
+    { "source": "/uploads/(.*)", "destination": "/api/uploads?path=$1" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
