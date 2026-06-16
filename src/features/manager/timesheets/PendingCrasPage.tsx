@@ -47,6 +47,7 @@ export default function PendingCrasPage() {
   const [groupedVatRate, setGroupedVatRate] = useState('20');
   const [groupedDelai, setGroupedDelai] = useState('');
   const [groupedBdcAssignments, setGroupedBdcAssignments] = useState<Record<number, number[]>>({});
+  const [bdcValidationErrors, setBdcValidationErrors] = useState<Record<number, boolean>>({});
   const [showHint, setShowHint] = useState(true);
   const hintRef = useRef<HTMLDivElement>(null);
 
@@ -248,11 +249,17 @@ export default function PendingCrasPage() {
           setGroupedBdcAssignments((prev) => ({ ...prev, [timesheetId]: bdcIds }));
         };
 
-        const hasWarnings = selected.some((ts) => {
-          const bdcIds = groupedBdcAssignments[ts.id] ?? [];
-          if (bdcIds.length === 0) return false;
-          return false;
-        });
+        const allSelections = selected.map((ts) => ({
+          timesheetId: ts.id,
+          days: ts.days,
+          selectedBdcIds: groupedBdcAssignments[ts.id] ?? [],
+        }));
+
+        const handleBdcValidationChange = (timesheetId: number, hasError: boolean) => {
+          setBdcValidationErrors((prev) => ({ ...prev, [timesheetId]: hasError }));
+        };
+
+        const hasBdcErrors = selected.some((ts) => bdcValidationErrors[ts.id]);
 
         return (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
@@ -278,6 +285,8 @@ export default function PendingCrasPage() {
                         timesheetDays={ts.days}
                         selectedBdcIds={groupedBdcAssignments[ts.id] ?? []}
                         onChange={handleBdcChange}
+                        allSelections={allSelections}
+                        onValidationChange={handleBdcValidationChange}
                       />
                     </div>
                   </div>
@@ -332,6 +341,7 @@ export default function PendingCrasPage() {
                       payload as unknown as Parameters<typeof groupedMutation.mutate>[0],
                       {
                         onSuccess: () => {
+                          toast.success('Facture groupée générée avec succès');
                           setShowGroupedModal(false);
                           setGroupedMode(false);
                           setSelectedTsIds([]);
@@ -347,7 +357,7 @@ export default function PendingCrasPage() {
                       },
                     );
                   }}
-                  disabled={groupedMutation.isPending || hasWarnings}
+                  disabled={groupedMutation.isPending || hasBdcErrors}
                   className="cursor-pointer rounded-[8px] bg-[#10b981] px-4 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-90 disabled:opacity-50"
                 >
                   {groupedMutation.isPending ? 'Génération...' : 'Confirmer'}
