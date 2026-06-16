@@ -94,7 +94,7 @@ export interface BonDeCommande {
   contract?: Partial<Contract & { client?: Partial<Client> }>;
   mission?: Partial<Mission>;
   attachments?: DocumentFile[];
-  consumedBy?: { invoiceId: number; invoiceRef: string; daysConsumed: number; timesheetId: number }[];
+  consumedBy?: { invoiceId: number; invoiceRef: string; daysConsumed: number; timesheetId: number; invoice?: { ref: string; issueDate: string } }[];
 }
 
 export interface BdcConsumption {

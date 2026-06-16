@@ -221,11 +221,13 @@ export default function BdcDetailPage() {
               >
                 <div className="space-y-0.5">
                   <p className="text-sm font-medium text-[#111111]">
-                    Facture {c.invoiceRef}
+                    Facture {c.invoice?.ref ?? c.invoiceRef}
                   </p>
-                  <p className="text-xs text-[#6b7280]">
-                    Relevé n°{c.timesheetId}
-                  </p>
+                  {c.invoice?.issueDate && (
+                    <p className="text-xs text-[#6b7280]">
+                      {c.invoice.issueDate.slice(0, 10)}
+                    </p>
+                  )}
                 </div>
                 <span className="text-sm font-medium text-[#111111]">{c.daysConsumed} jours</span>
               </div>
