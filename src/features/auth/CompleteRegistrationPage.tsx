@@ -111,6 +111,7 @@ export default function CompleteRegistrationPage() {
         return;
       }
 
+      apiClient.post('/logout').catch(() => {});
       dispatch(clearCredentials());
       mutation.mutate({ token: currentToken, password, confirmPassword });
     },
