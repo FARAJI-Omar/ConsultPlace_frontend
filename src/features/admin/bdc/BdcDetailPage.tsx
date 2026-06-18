@@ -216,12 +216,9 @@ export default function BdcDetailPage() {
                 className="flex items-center justify-between rounded-[8px] border border-[#e5e7eb] px-4 py-3"
               >
                 <div className="space-y-0.5">
-                  <Link
-                    to={`/admin/invoices/${c.invoiceId}`}
-                    className="text-sm font-medium text-primary-blue hover:underline"
-                  >
+                  <p className="text-sm font-medium text-[#111111]">
                     Facture {c.invoice?.ref ?? c.invoiceRef}
-                  </Link>
+                  </p>
                   {c.invoice?.issueDate && (
                     <p className="text-xs text-[#6b7280]">
                       {c.invoice.issueDate.slice(0, 10)}
