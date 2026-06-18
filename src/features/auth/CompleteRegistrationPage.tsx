@@ -66,6 +66,7 @@ export default function CompleteRegistrationPage() {
         .post<CompleteRegistrationResponse>('/complete-registration', payload)
         .then((res) => res.data),
     onSuccess: () => {
+      sessionStorage.removeItem('invitationToken');
       navigate('/login', { state: { registrationSuccess: true } });
     },
     onError: (error: unknown) => {

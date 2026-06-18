@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 import { useLoginMutation } from './useLoginMutation';
 import newLogo from '../../assets/new-logo.png';
@@ -24,6 +24,10 @@ export default function Login() {
   useEffect(() => {
     if (location.state?.registrationSuccess) {
       setSuccessMessage('Inscription terminée, vous pouvez vous connecter');
+      navigate('/login', { replace: true, state: {} });
+    }
+    if (location.state?.resetSuccess) {
+      setSuccessMessage('Mot de passe réinitialisé, vous pouvez vous connecter');
       navigate('/login', { replace: true, state: {} });
     }
   }, [location, navigate]);
@@ -195,6 +199,12 @@ export default function Login() {
             {fieldErrors.password && (
               <p className="mt-1 text-sm text-[#ef4444]">{fieldErrors.password}</p>
             )}
+          </div>
+
+          <div className="-mt-3 text-right">
+            <Link to="/forgot-password" className="text-sm text-primary-blue hover:text-[#2563eb]">
+              Mot de passe oublié ?
+            </Link>
           </div>
 
           {captchaError && (

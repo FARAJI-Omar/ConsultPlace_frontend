@@ -1,6 +1,8 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import Login from './features/auth/Login';
 import CompleteRegistrationPage from './features/auth/CompleteRegistrationPage';
+import ForgotPasswordPage from './features/auth/ForgotPasswordPage';
+import ResetPasswordPage from './features/auth/ResetPasswordPage';
 import GuestGuard from './components/common/Guards/GuestGuard';
 import AdminRoute from './components/common/Guards/AdminRoute';
 import ManagerRoute from './components/common/Guards/ManagerRoute';
@@ -62,6 +64,14 @@ const router = createBrowserRouter([
   {
     path: '/complete-registration',
     element: <CompleteRegistrationPage />,
+  },
+  {
+    path: '/forgot-password',
+    element: <ForgotPasswordPage />,
+  },
+  {
+    path: '/reset-password',
+    element: <ResetPasswordPage />,
   },
   {
     path: '/admin',

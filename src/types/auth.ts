@@ -31,6 +31,21 @@ export interface CompleteRegistrationPayload {
   confirmPassword: string;
 }
 
+export interface ForgotPasswordPayload {
+  email: string;
+}
+
+export interface ResetPasswordPayload {
+  token: string;
+  password: string;
+  confirmPassword: string;
+}
+
+export interface ResetPasswordResponse {
+  success: boolean;
+  data: { email: string };
+}
+
 export interface CompleteRegistrationResponse {
   success: boolean;
   data: { consultantName: string; email: string };
