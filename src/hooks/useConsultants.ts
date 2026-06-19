@@ -80,3 +80,18 @@ export function useToggleConsultantStatus() {
     },
   });
 }
+
+// ponytail: single mutation, same pattern as other consultant hooks
+export function useResendInvitation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) =>
+      apiClient
+        .post<{ success: true; data: Consultant }>(`/consultants/${id}/resend-invitation`)
+        .then((res) => res.data.data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['consultants'] });
+    },
+  });
+}

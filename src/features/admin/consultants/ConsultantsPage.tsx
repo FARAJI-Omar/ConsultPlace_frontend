@@ -4,7 +4,7 @@ import { DataTable, type Column } from '../../../components/common/DataTable';
 import Modal from '../../../components/common/Modal';
 import ConsultantForm from './ConsultantForm';
 import { cn } from '../../../lib/utils';
-import { useGetConsultants, useToggleConsultantStatus } from '../../../hooks/useConsultants';
+import { useGetConsultants, useToggleConsultantStatus, useResendInvitation } from '../../../hooks/useConsultants';
 
 interface ConsultantRow {
   id: number;
@@ -23,9 +23,11 @@ export default function ConsultantsPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingConsultant, setEditingConsultant] = useState<ConsultantRow | null>(null);
   const [confirmToggle, setConfirmToggle] = useState<{ id: number; isActive: boolean } | null>(null);
+  const [confirmResend, setConfirmResend] = useState<number | null>(null);
 
   const { data, isLoading } = useGetConsultants(page, pageSize);
   const toggleStatus = useToggleConsultantStatus();
+  const resendInvitation = useResendInvitation();
 
   const handlePageChange = useCallback((p: number) => setPage(p), []);
   const handlePageSizeChange = useCallback((size: number) => {
@@ -61,6 +63,19 @@ export default function ConsultantsPage() {
         },
       },
     );
+  };
+
+  const handleConfirmResend = () => {
+    if (!confirmResend) return;
+    resendInvitation.mutate(confirmResend, {
+      onSuccess: () => {
+        toast.success('Invitation renvoyée avec succès');
+        setConfirmResend(null);
+      },
+      onError: () => {
+        toast.error('Erreur lors du renvoi de l\'invitation');
+      },
+    });
   };
 
   const columns: Column<ConsultantRow>[] = [
@@ -112,6 +127,15 @@ export default function ConsultantsPage() {
           >
             {item.isActive ? 'Désactiver' : 'Activer'}
           </button>
+          {item.isActive && (
+            <button
+              onClick={() => setConfirmResend(item.id)}
+              disabled={resendInvitation.isPending}
+              className="cursor-pointer rounded-[8px] border border-[#3b82f6] bg-blue-100 px-3 py-1.5 text-xs font-medium text-blue-600 transition-colors hover:bg-blue-300 disabled:opacity-50"
+            >
+              Renvoyer l'invitation
+            </button>
+          )}
         </div>
       ),
     },
@@ -186,6 +210,32 @@ export default function ConsultantsPage() {
                 }`}
               >
                 {toggleStatus.isPending ? 'Confirmation...' : 'Confirmer'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {confirmResend && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div className="w-full max-w-sm rounded-[12px] bg-[#ffffff] p-6 shadow-xl">
+            <h2 className="mb-2 text-lg font-semibold text-[#111111]">Renvoi d'invitation</h2>
+            <p className="mb-6 text-sm text-[#6b7280]">
+              Renvoyer l'email d'invitation à ce consultant&nbsp;?
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setConfirmResend(null)}
+                className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-4 py-2 text-sm text-[#111111] transition-colors hover:bg-[#f3f4f6]"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={handleConfirmResend}
+                disabled={resendInvitation.isPending}
+                className="cursor-pointer rounded-[8px] bg-primary-blue px-4 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-90 disabled:opacity-50"
+              >
+                {resendInvitation.isPending ? 'Envoi...' : 'Confirmer'}
               </button>
             </div>
           </div>
