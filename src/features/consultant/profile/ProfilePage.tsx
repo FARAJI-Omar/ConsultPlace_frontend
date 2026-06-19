@@ -49,7 +49,7 @@ export default function ProfilePage() {
           </div>
           <div>
             <p className="text-[#6b7280]">Email</p>
-            <p className="font-medium text-[#111111]">{profile.email}</p>
+            <p className="text-xs md:text-sm font-medium text-[#111111] break-all">{profile.email}</p>
           </div>
           <div>
             <p className="text-[#6b7280]">Profil</p>

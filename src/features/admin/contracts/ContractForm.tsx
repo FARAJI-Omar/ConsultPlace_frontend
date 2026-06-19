@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import { toast } from 'sonner';
 import { Upload, X, Loader2 } from 'lucide-react';
 import { parseApiError } from '../../../utils/errorParser';
-import { cleanFilename } from '../../../lib/utils';
+import { truncateFilename } from '../../../lib/utils';
 import { useMutateContract, useUpdateContract } from '../../../hooks/useContracts';
 import { useImageCompression } from '../../../hooks/useImageCompression';
 import type { Contract } from '../../../hooks/useContracts';
@@ -289,14 +289,14 @@ export default function ContractForm({ onSuccess, contract }: ContractFormProps)
             {existingDocs.map((att) => {
               const isDeleted = deletedAttachmentIds.includes(att.id);
               return (
-                <li key={att.id} className={`flex items-center justify-between rounded px-3 py-1.5 text-sm ${isDeleted ? 'bg-red-50 text-[#6b7280] line-through' : 'bg-[#f9fafb] text-[#111111]'}`}>
+                <li key={att.id} className={`flex items-center justify-between rounded px-3 py-1.5 text-xs md:text-sm ${isDeleted ? 'bg-red-50 text-[#6b7280] line-through' : 'bg-[#f9fafb] text-[#111111]'}`}>
                   <a
                     href={att.url}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="truncate hover:underline"
                   >
-                    {cleanFilename(att.filename)}
+                    {truncateFilename(att.filename)}
                   </a>
                   {!isDeleted ? (
                     <button
@@ -329,11 +329,11 @@ export default function ContractForm({ onSuccess, contract }: ContractFormProps)
         </label>
         <div
           onClick={() => fileRef.current?.click()}
-          className="flex cursor-pointer items-center gap-2 rounded-[8px] border border-dashed border-[#e5e7eb] px-3 py-4 text-sm text-[#6b7280] transition-colors hover:border-primary-blue hover:text-primary-blue flex-nowrap"
-        >
-          <Upload className="h-4 w-4 shrink-0" />
-          <span className="shrink-0">Cliquez pour ajouter des fichiers</span>
-          <span className="text-xs text-[#6b7280] shrink-0">(PDF, JPG, PNG, max 10 fichiers, 10 Mo chacun)</span>
+className="flex cursor-pointer flex-wrap items-center gap-1 rounded-[8px] border border-dashed border-[#e5e7eb] px-3 py-4 text-sm text-[#6b7280] transition-colors hover:border-primary-blue hover:text-primary-blue"
+          >
+            <Upload className="h-4 w-4 shrink-0" />
+            <span>Cliquez pour ajouter des fichiers</span>
+            <span className="w-full text-[8px] md:text-xs text-[#6b7280]">(PDF, JPG, PNG, max 10 fichiers, 10 Mo chacun)</span>
         </div>
         <input
           ref={fileRef}
@@ -346,8 +346,8 @@ export default function ContractForm({ onSuccess, contract }: ContractFormProps)
         {files.length > 0 && (
           <ul className="mt-2 space-y-1">
             {files.map((file, i) => (
-              <li key={i} className="flex items-center justify-between rounded bg-[#f9fafb] px-3 py-1.5 text-sm text-[#111111]">
-                <span className="truncate">{file.name}</span>
+              <li key={i} className="flex items-center justify-between rounded bg-[#f9fafb] px-3 py-1.5 text-xs md:text-sm text-[#111111]">
+                <span className="truncate">{truncateFilename(file.name)}</span>
                 {compressingFiles.has(file) && (
                   <Loader2 className="h-3.5 w-3.5 animate-spin text-[#6b7280] shrink-0 ml-1" />
                 )}

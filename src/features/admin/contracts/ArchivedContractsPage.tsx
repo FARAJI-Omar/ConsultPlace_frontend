@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 import { toast } from 'sonner';
+import { Eye, ArchiveRestore } from 'lucide-react';
 import { DataTable, type Column } from '../../../components/common/DataTable';
 import { useGetContracts, useToggleContractArchive, type Contract } from '../../../hooks/useContracts';
 import { cn, formatDate } from '../../../lib/utils';
@@ -69,16 +70,18 @@ export default function ArchivedContractsPage() {
         <div className="flex items-center justify-center gap-2">
           <button
             onClick={() => navigate(`/admin/contracts/${item.id}`)}
-            className="cursor-pointer rounded-[6px] bg-[#EFF6FF] px-2.5 py-1 text-xs font-medium text-primary-blue transition-colors hover:bg-blue-100"
+            className="inline-flex cursor-pointer items-center gap-1 rounded-[6px] bg-[#EFF6FF] px-2.5 py-1 text-xs font-medium text-primary-blue transition-colors hover:bg-blue-100"
           >
-            Détails
+            <Eye size={14} className="lg:hidden" />
+            <span className="hidden lg:inline">Détails</span>
           </button>
           <button
             onClick={() => setConfirmRestore(item)}
             disabled={toggleArchive.isPending}
-            className="cursor-pointer rounded-[6px] bg-[#d1fae5] px-2.5 py-1 text-xs font-medium text-[#065f46] transition-colors hover:bg-green-200 disabled:opacity-50"
+            className="inline-flex cursor-pointer items-center gap-1 rounded-[6px] bg-[#d1fae5] px-2.5 py-1 text-xs font-medium text-[#065f46] transition-colors hover:bg-green-200 disabled:opacity-50"
           >
-            Restaurer
+            <ArchiveRestore size={14} className="lg:hidden" />
+            <span className="hidden lg:inline">Restaurer</span>
           </button>
         </div>
       ),

@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useRef, useState, useEffect } from 'react';
 import type { HolidayInfo } from '../../../hooks/consultant/useMoroccoHolidays';
 
 const DAY_HEADERS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
@@ -32,6 +32,16 @@ export interface CalendarGridProps {
 }
 
 export default function CalendarGrid({ year, month, entries, holidays, touchedDays, totalHours: totalHoursProp, onChange }: CalendarGridProps) {
+  const [tooltip, setTooltip] = useState<{ text: string; top: number; left: number } | null>(null);
+  const tooltipRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (tooltip) {
+      const t = setTimeout(() => setTooltip(null), 2000);
+      return () => clearTimeout(t);
+    }
+  }, [tooltip]);
+
   const daysInMonth = getDaysInMonth(year, month);
   const firstDayIndex = getFirstDayOfMonth(year, month);
 
@@ -110,10 +120,16 @@ export default function CalendarGrid({ year, month, entries, holidays, touchedDa
                 key={dayKey}
                 className="flex flex-col items-center gap-1 border border-[#e5e7eb] p-1.5 min-h-[80px]"
                 style={{ backgroundColor: getDayBg(value, isHolidayDay, isTouched) }}
+                onClick={(e) => {
+                  if (holidayName) {
+                    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                    setTooltip({ text: holidayName, top: rect.top - 8, left: rect.left + rect.width / 2 });
+                  }
+                }}
               >
-                <span className="text-[14px] font-semibold text-[#838996]">{day}</span>
+                <span className="text-xs md:text-sm font-semibold text-[#838996]">{day}</span>
                 {holidayName && (
-                  <span className="text-[10px] leading-tight text-center text-[#6b7280] line-clamp-2">{holidayName}</span>
+                  <span className="text-[10px] leading-tight text-center text-[#6b7280] truncate w-full" title={holidayName}>{holidayName}</span>
                 )}
                 <div className="w-full">
                   <input
@@ -137,8 +153,18 @@ export default function CalendarGrid({ year, month, entries, holidays, touchedDa
 
       <div className="flex items-center justify-end gap-1.5 text-right">
         <span className="text-xs text-[#6b7280]">Total des heures :</span>
-        <span className="text-[14px] font-semibold text-[#111111]">{totalHours}h</span>
+        <span className="text-xs md:text-sm font-semibold text-[#111111]">{totalHours}h</span>
       </div>
+
+      {tooltip && (
+        <div
+          ref={tooltipRef}
+          className="fixed z-50 rounded-[4px] bg-[#111111] px-2 py-1 text-xs text-[#ffffff] whitespace-nowrap pointer-events-none"
+          style={{ top: tooltip.top, left: tooltip.left, transform: 'translate(-50%, -100%)' }}
+        >
+          {tooltip.text}
+        </div>
+      )}
     </div>
   );
 }

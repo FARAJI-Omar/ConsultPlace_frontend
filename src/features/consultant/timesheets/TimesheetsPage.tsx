@@ -1,5 +1,6 @@
 import { useState, createElement } from 'react';
 import { Link } from 'react-router-dom';
+import { Eye } from 'lucide-react';
 import { useConsultantTimesheets } from '../../../hooks/consultant/useConsultantDashboard';
 import { DataTable, type Column } from '../../../components/common/DataTable';
 import { formatDate } from '../../../lib/utils';
@@ -55,9 +56,10 @@ const columns: Column<Timesheet>[] = [
     render: (t) => (
       <Link
         to={`/consultant/timesheets/${t.id}`}
-        className="inline-block rounded-[8px] border border-[#bdbdbd] bg-[#ffffff] px-2.5 py-1.5 text-xs font-medium text-[#111111] transition-colors hover:bg-[#f3f4f6]"
+        className="inline-flex items-center gap-1 rounded-[8px] border border-[#bdbdbd] bg-[#ffffff] px-2.5 py-1.5 text-xs font-medium text-[#111111] transition-colors hover:bg-[#f3f4f6]"
       >
-        Détails
+        <Eye size={14} className="md:hidden" />
+        <span className="hidden md:inline">Détails</span>
       </Link>
     ),
   },
@@ -82,9 +84,9 @@ export default function TimesheetsPage() {
   ) ?? [];
 
   return (
-    <div className="rounded-[12px] bg-[#f5f5f5] p-8">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-[22px] font-semibold text-[#111111]">
+    <div className="overflow-hidden">
+      <div className="mb-6">
+        <h1 className="text-[22px] font-semibold text-[#111111] mb-2">
           Tous les relevés mensuels
         </h1>
         <select

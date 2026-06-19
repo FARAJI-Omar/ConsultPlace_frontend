@@ -16,7 +16,7 @@ export default function EditCraModal({ timesheetId, open, onClose }: EditCraModa
         onClick={(e) => e.stopPropagation()}
       >
         <div className="px-6 py-4 border-b border-[#e5e7eb]">
-          <h2 className="text-lg font-semibold text-[#111111]">Modifier les heures</h2>
+          <h2 className="text-sm md:text-lg font-semibold text-[#111111]">Modifier les heures</h2>
         </div>
         <div className="p-6">
           <EditCraForm timesheetId={timesheetId} onClose={onClose} />

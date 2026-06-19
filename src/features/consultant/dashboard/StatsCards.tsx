@@ -31,25 +31,25 @@ export default function StatsCards({
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-      {stats.map((stat) => {
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+      {stats.map((stat, index) => {
         const isGainsTotaux = stat.label === 'Gains totaux';
         return (
           <div
             key={stat.label}
-            className={`rounded-[12px] p-8 transition-all ${
+            className={`rounded-[12px] p-4 md:p-8 transition-all ${index >= 2 ? 'col-span-2 lg:col-span-1' : ''} ${
               isGainsTotaux
                 ? 'bg-green-500/20 border border-transparent shadow-sm'
-                : 'bg-[#f5f5f5] border border-transparent shadow-sm'
+                : 'bg-white border border-[#e5e7eb]'
             }`}
           >
             <p
-              className="text-[18px] font-semibold leading-[1.4] mb-2 text-[#111111]"
+              className="text-sm md:text-xl font-bold leading-[1.4] mb-1 md:mb-2 text-[#111111]"
             >
               {stat.value}
             </p>
             <p
-              className="text-[16px] leading-[1.5] text-[#374151]"
+              className="text-xs md:text-[16px] leading-[1.5] text-[#374151]"
             >
               {stat.label}
             </p>

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { FileDown } from 'lucide-react';
 import { usePayoutsHistory, useTriggerPayout, useExportPayoutsPdf } from '../../../hooks/manager/usePayouts';
 import { useInvoices } from '../../../hooks/manager/useInvoices';
 import { Skeleton, SkeletonCard, SkeletonTable } from '../../../components/ui/skeleton';
@@ -109,13 +110,13 @@ export default function PayoutTrackingPage() {
       <h1 className="text-2xl font-semibold text-[#111111]">Paiements consultants</h1>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="rounded-[12px] bg-[#ffffff] border border-[#e5e7eb] p-6">
-          <p className="text-sm text-[#6b7280]">Total à payer</p>
-          <p className="mt-1 text-2xl font-semibold text-[#111111]">{(totals?.total_to_be_payed ?? 0).toLocaleString()} DH</p>
+        <div className="rounded-[12px] bg-[#ffffff] border border-[#e5e7eb] p-4 md:p-6">
+          <p className="text-xs md:text-sm text-[#6b7280]">Total à payer</p>
+          <p className="mt-1 text-lg md:text-2xl font-semibold text-[#111111]">{(totals?.total_to_be_payed ?? 0).toLocaleString()} DH</p>
         </div>
-        <div className="rounded-[12px] bg-[#ffffff] border border-[#e5e7eb] p-6">
-          <p className="text-sm text-[#6b7280]">Total payé</p>
-          <p className="mt-1 text-2xl font-semibold text-[#111111]">{(totals?.total_payed ?? 0).toLocaleString()} DH</p>
+        <div className="rounded-[12px] bg-[#ffffff] border border-[#e5e7eb] p-4 md:p-6">
+          <p className="text-xs md:text-sm text-[#6b7280]">Total payé</p>
+          <p className="mt-1 text-lg md:text-2xl font-semibold text-[#111111]">{(totals?.total_payed ?? 0).toLocaleString()} DH</p>
         </div>
       </div>
 
@@ -123,7 +124,7 @@ export default function PayoutTrackingPage() {
         <div className="rounded-[12px] bg-[#ffffff] border border-[#e5e7eb] p-6">
           <h2 className="mb-4 text-lg font-semibold text-[#111111]">Consultants non payés</h2>
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-sm">
+            <table className="w-full border-collapse text-xs md:text-sm">
               <thead>
                 <tr className="border-b border-[#e5e7eb]">
                   <th className="px-3 py-2 text-left text-xs font-medium text-[#6b7280]">Facture</th>
@@ -157,7 +158,7 @@ export default function PayoutTrackingPage() {
                         disabled={payoutMutation.isPending}
                         className="cursor-pointer rounded-[8px] bg-[#3b82f6] px-3 py-1.5 text-xs font-medium text-[#ffffff] transition-opacity hover:opacity-90 disabled:opacity-50"
                       >
-                        Payer consultant
+                        Payer<span className="hidden md:inline"> consultant</span>
                       </button>
                     </td>
                   </tr>
@@ -173,16 +174,17 @@ export default function PayoutTrackingPage() {
           <h2 className="text-lg font-semibold text-[#111111]">Historique</h2>
           <button
             onClick={() => setExportModal(true)}
-            className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-4 py-2 text-xs font-medium text-white transition-colors bg-red-400 hover:bg-red-500"
+            className="inline-flex cursor-pointer items-center gap-1 rounded-[8px] border border-[#e5e7eb] px-4 py-2 text-xs font-medium text-white transition-colors bg-red-400 hover:bg-red-500"
           >
-            Exporter PDF
+            <FileDown size={14} className="md:hidden" />
+            <span className="hidden md:inline">Exporter PDF</span>
           </button>
         </div>
         {history.length === 0 ? (
           <p className="text-sm text-[#6b7280]">Aucun paiement effectué</p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-sm">
+            <table className="w-full border-collapse text-xs md:text-sm">
               <thead>
                 <tr className="border-b border-[#e5e7eb]">
                   <th className="px-3 py-2 text-left text-xs font-medium text-[#6b7280]">Facture</th>

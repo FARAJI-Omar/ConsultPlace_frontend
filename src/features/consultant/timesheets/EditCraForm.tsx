@@ -102,13 +102,13 @@ export default function EditCraForm({ timesheetId, onClose }: { timesheetId: num
       <div className="flex flex-wrap items-end gap-4">
         <div className="flex flex-col gap-1.5">
           <label className="text-xs font-medium uppercase tracking-wider text-[#6b7280]">Mission</label>
-          <div className="h-10 rounded-[8px] border border-[#e5e7eb] bg-[#f5f5f5] px-3 text-sm text-[#6b7280] flex items-center min-w-[240px]">
+          <div className="h-10 rounded-[8px] border border-[#e5e7eb] bg-[#f5f5f5] px-3 text-xs md:text-sm text-[#6b7280] flex items-center min-w-[240px]">
             {timesheet.mission?.title ?? '—'}
           </div>
         </div>
         <div className="flex flex-col gap-1.5">
           <label className="text-xs font-medium uppercase tracking-wider text-[#6b7280]">Mois</label>
-          <div className="h-10 rounded-[8px] border border-[#e5e7eb] bg-[#f5f5f5] px-3 text-sm text-[#6b7280] flex items-center min-w-[140px]">
+          <div className="h-10 rounded-[8px] border border-[#e5e7eb] bg-[#f5f5f5] px-3 text-xs md:text-sm text-[#6b7280] flex items-center min-w-[140px]">
             {monthNames[month]} {year}
           </div>
         </div>
@@ -128,7 +128,7 @@ export default function EditCraForm({ timesheetId, onClose }: { timesheetId: num
         <button
           type="button"
           onClick={onClose}
-          className="cursor-pointer rounded-[8px] border border-[#e5e7eb] bg-[#ffffff] px-5 py-2.5 text-sm font-semibold text-[#111111] hover:bg-[#f3f4f6] transition-colors"
+          className="cursor-pointer rounded-[8px] border border-[#e5e7eb] bg-[#ffffff] px-5 py-2.5 text-xs md:text-sm font-semibold text-[#111111] hover:bg-[#f3f4f6] transition-colors"
         >
           Annuler
         </button>
@@ -136,7 +136,7 @@ export default function EditCraForm({ timesheetId, onClose }: { timesheetId: num
           type="button"
           onClick={handleSave}
           disabled={updateTimesheet.isPending}
-          className="cursor-pointer rounded-[8px] bg-primary-blue px-5 py-2.5 text-sm font-semibold text-[#ffffff] hover:opacity-90 disabled:opacity-50 transition-opacity"
+          className="cursor-pointer rounded-[8px] bg-primary-blue px-5 py-2.5 text-xs md:text-sm font-semibold text-[#ffffff] hover:opacity-90 disabled:opacity-50 transition-opacity"
         >
           {updateTimesheet.isPending ? 'Enregistrement...' : 'Enregistrer'}
         </button>

@@ -7,8 +7,9 @@ import {
   useUploadAttachments,
 } from '../../../hooks/consultant/useAttachments';
 import { useSubmitTimesheet } from '../../../hooks/consultant/useTimesheets';
-import { formatDate, cleanFilename } from '../../../lib/utils';
+import { formatDate, truncateFilename } from '../../../lib/utils';
 import { compressImages } from '../../../lib/compressImage';
+import { Delete, SquarePen, Send } from 'lucide-react';
 import EditCraModal from './EditCraModal';
 import { downloadFile } from '../../../utils/downloadFile';
 import type { Timesheet } from '../../../types/models';
@@ -49,7 +50,7 @@ export default function RejectedPage() {
   };
 
   return (
-    <div className="rounded-[12px] bg-[#f5f5f5] p-8">
+    <div className="p-2">
       <h1 className="text-[22px] font-semibold text-[#111111] mb-6">
         Relevés rejetés
       </h1>
@@ -155,8 +156,8 @@ function RejectedCard({
 
   return (
     <div className="rounded-[12px] bg-[#ffffff] border border-[#e5e7eb] overflow-hidden">
-      <div className="flex items-center justify-between px-6 py-4">
-        <div className="flex items-center gap-6">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between px-4 py-4 gap-2">
+        <div className="flex items-center justify-between md:justify-start md:gap-6">
           <div>
             <p className="text-sm font-medium text-[#111111]">
               {formatMonth(item.month)}
@@ -166,40 +167,62 @@ function RejectedCard({
               {item.mission?.title ?? 'Mission inconnue'}
             </p>
           </div>
-          <div className="text-right">
+          <div className="md:hidden flex items-center gap-2">
+            <button
+              type="button"
+              onClick={onEdit}
+              title="Modifier les heures"
+              className="inline-flex cursor-pointer items-center gap-1 rounded-[8px] border border-[#e5e7eb] bg-[#ffffff] px-3 py-2 text-xs font-semibold text-[#111111] hover:bg-[#f3f4f6] transition-colors"
+            >
+              <SquarePen size={14} />
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowSubmitConfirm(true)}
+              disabled={isSubmitting || !hasRequiredFiles}
+              title={!hasRequiredFiles ? 'Les documents Rapport d\'activité et facture du consultant requis' : ''}
+              className="inline-flex cursor-pointer items-center gap-1 rounded-[8px] bg-green-600 px-3 py-2 text-xs font-semibold text-[#ffffff] hover:bg-green-700 transition-colors disabled:bg-[#e5e7eb] disabled:text-[#6b7280] disabled:cursor-not-allowed"
+            >
+              <Send size={14} />
+            </button>
+          </div>
+        </div>
+        <div className="flex items-center justify-between md:justify-start md:gap-6">
+          <div className="text-left">
             <p className="text-sm text-[#111111]">{item.totalHours}h</p>
             <p className="text-xs text-[#6b7280]">Créé le {formatDate(item.createdAt)}</p>
           </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={onEdit}
-            className="cursor-pointer rounded-[8px] border border-[#e5e7eb] bg-[#ffffff] px-3 py-2 text-xs font-semibold text-[#111111] hover:bg-[#f3f4f6] transition-colors"
-          >
-            Modifier les heures
-          </button>
-          <button
-            type="button"
-            onClick={() => setShowSubmitConfirm(true)}
-            disabled={isSubmitting || !hasRequiredFiles}
-            title={!hasRequiredFiles ? 'Les documents Rapport d\'activité et facture du consultant requis' : ''}
-            className="cursor-pointer rounded-[8px] bg-green-600 px-3 py-2 text-xs font-semibold text-[#ffffff] hover:bg-green-700 transition-colors disabled:bg-[#e5e7eb] disabled:text-[#6b7280] disabled:cursor-not-allowed"
-          >
-            {isSubmitting ? 'Soumission...' : 'Soumettre'}
-          </button>
+          <div className="hidden md:flex items-center gap-2">
+            <button
+              type="button"
+              onClick={onEdit}
+              title="Modifier les heures"
+              className="inline-flex cursor-pointer items-center gap-1 rounded-[8px] border border-[#e5e7eb] bg-[#ffffff] px-3 py-2 text-xs font-semibold text-[#111111] hover:bg-[#f3f4f6] transition-colors"
+            >
+              <SquarePen size={14} className="md:hidden" />
+              <span className="hidden md:inline">Modifier les heures</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowSubmitConfirm(true)}
+              disabled={isSubmitting || !hasRequiredFiles}
+              title={isSubmitting ? 'Soumission en cours...' : !hasRequiredFiles ? 'Les documents Rapport d\'activité et facture du consultant requis' : 'Soumettre le relevé'}
+              className="inline-flex cursor-pointer items-center gap-1 rounded-[8px] bg-green-600 px-3 py-2 text-xs font-semibold text-[#ffffff] hover:bg-green-700 transition-colors disabled:bg-[#e5e7eb] disabled:text-[#6b7280] disabled:cursor-not-allowed"
+            >
+              <span className="hidden md:inline">{isSubmitting ? 'Soumission...' : 'Soumettre'}</span>
+            </button>
+          </div>
         </div>
       </div>
 
       {item.rejectionReason && (
-        <div className="mx-6 mb-4 rounded-[8px] bg-[#fef2f2] border border-[#fecaca] p-4">
+        <div className="mx-4 mb-4 rounded-[8px] bg-[#fef2f2] border border-[#fecaca] p-4">
           <p className="text-xs font-semibold text-[#dc2626] mb-1">Motif du rejet</p>
           <p className="text-sm text-[#991b1b]">{item.rejectionReason}</p>
         </div>
       )}
 
-      <div className="border-t border-[#e5e7eb] px-6 py-4 space-y-4">
+      <div className="border-t border-[#e5e7eb] px-4 py-4 space-y-4">
         {attachmentsLoading && (
           <p className="text-xs text-[#6b7280]">Chargement des pièces jointes...</p>
         )}
@@ -247,19 +270,21 @@ function RejectedCard({
                           {att.filename.split('.').pop()?.toUpperCase() ?? 'FICHIER'}
                         </span>
                         <div className="flex flex-col">
-                          <button type="button" onClick={() => downloadFile(att.url, att.filename)} className="cursor-pointer text-sm text-[#111111] underline underline-offset-2 hover:text-[#6b7280] transition-colors">{cleanFilename(att.filename)}</button>
+                          <button type="button" onClick={() => downloadFile(att.url, att.filename)} className="cursor-pointer text-xs md:text-sm text-[#111111] underline underline-offset-2 hover:text-[#6b7280] transition-colors">{truncateFilename(att.filename)}</button>
                           {att.uploadedAt && (
                             <span className="text-xs text-[#6b7280] mt-0.5">Ajouté le {formatDate(att.uploadedAt)}</span>
                           )}
                         </div>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => setConfirmDeleteId(att.id)}
-                        className="cursor-pointer rounded-[8px] px-2 py-1 text-xs font-semibold text-[#ef4444] hover:bg-[#fef2f2] transition-colors"
-                      >
-                        Supprimer
-                      </button>
+                        <button
+                          type="button"
+                          onClick={() => setConfirmDeleteId(att.id)}
+                          title="Supprimer"
+                          className="inline-flex cursor-pointer items-center gap-1 rounded-[8px] px-2 py-1 text-xs font-semibold text-[#ef4444] hover:bg-[#fef2f2] transition-colors"
+                        >
+                          <Delete size={14} className="md:hidden" />
+                          <span className="hidden md:inline">Supprimer</span>
+                        </button>
                     </li>
                   ))}
                 </ul>
@@ -277,19 +302,21 @@ function RejectedCard({
                           {att.filename.split('.').pop()?.toUpperCase() ?? 'FICHIER'}
                         </span>
                         <div className="flex flex-col">
-                          <button type="button" onClick={() => downloadFile(att.url, att.filename)} className="cursor-pointer text-sm text-[#111111] underline underline-offset-2 hover:text-[#6b7280] transition-colors">{cleanFilename(att.filename)}</button>
+                          <button type="button" onClick={() => downloadFile(att.url, att.filename)} className="cursor-pointer text-xs md:text-sm text-[#111111] underline underline-offset-2 hover:text-[#6b7280] transition-colors">{truncateFilename(att.filename)}</button>
                           {att.uploadedAt && (
                             <span className="text-xs text-[#6b7280] mt-0.5">Ajouté le {formatDate(att.uploadedAt)}</span>
                           )}
                         </div>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => setConfirmDeleteId(att.id)}
-                        className="cursor-pointer rounded-[8px] px-2 py-1 text-xs font-semibold text-[#ef4444] hover:bg-[#fef2f2] transition-colors"
-                      >
-                        Supprimer
-                      </button>
+                        <button
+                          type="button"
+                          onClick={() => setConfirmDeleteId(att.id)}
+                          title="Supprimer"
+                          className="inline-flex cursor-pointer items-center gap-1 rounded-[8px] px-2 py-1 text-xs font-semibold text-[#ef4444] hover:bg-[#fef2f2] transition-colors"
+                        >
+                          <Delete size={14} className="md:hidden" />
+                          <span className="hidden md:inline">Supprimer</span>
+                        </button>
                     </li>
                   ))}
                 </ul>
@@ -355,9 +382,11 @@ function RejectedCard({
                         onDeleteAttachment(confirmDeleteId);
                         setConfirmDeleteId(null);
                       }}
-                      className="cursor-pointer rounded-[8px] bg-[#ef4444] px-4 py-2 text-xs font-semibold text-[#ffffff] hover:bg-[#dc2626] transition-colors"
+                      className="inline-flex cursor-pointer items-center gap-1 rounded-[8px] bg-[#ef4444] px-4 py-2 text-xs font-semibold text-[#ffffff] hover:bg-[#dc2626] transition-colors"
+                      title="Supprimer"
                     >
-                      Supprimer
+                      <Delete size={14} className="md:hidden" />
+                      <span className="hidden md:inline">Supprimer</span>
                     </button>
                   </div>
                 </div>

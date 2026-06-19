@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { DataTable, type Column } from '../../../components/common/DataTable';
 import Modal from '../../../components/common/Modal';
 import AlertRuleForm from './AlertRuleForm';
+import { Pencil } from 'lucide-react';
 import { useGetAlertRules } from '../../../hooks/useAlertRules';
 import type { AlertRule } from '../../../hooks/useAlertRules';
 
@@ -115,9 +116,10 @@ export default function AlertRulesPage() {
       render: (item) => (
         <button
           onClick={() => openEdit(item)}
-          className="cursor-pointer rounded-[6px] bg-[#03b5537c] text-green-800 px-2.5 py-1 text-xs font-medium  transition-colors hover:bg-green-700"
+          className="inline-flex cursor-pointer items-center gap-1 rounded-[6px] bg-[#03b5537c] text-green-800 px-2.5 py-1 text-xs font-medium  transition-colors hover:bg-green-700"
         >
-          Modifier
+          <Pencil size={14} className="lg:hidden" />
+          <span className="hidden lg:inline">Modifier</span>
         </button>
       ),
     },

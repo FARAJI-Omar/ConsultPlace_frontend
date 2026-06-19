@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { FileText, Download } from 'lucide-react';
+import { FileText, Download, X, Check } from 'lucide-react';
 import { useManagerTimesheetDetail, useReviewTimesheet } from '../../../hooks/manager/useManagerTimesheets';
-import { formatDate, cleanFilename } from '../../../lib/utils';
+import { formatDate, truncateFilename } from '../../../lib/utils';
 import { Skeleton } from '../../../components/ui/skeleton';
 import HorizontalStepper from '../../../components/common/HorizontalStepper';
 import { toast } from 'sonner';
@@ -136,16 +136,18 @@ export default function TimesheetDetailsPage() {
             <button
               onClick={() => setShowReject(true)}
               disabled={reviewMutation.isPending}
-              className="cursor-pointer rounded-[8px] bg-[#ef4444] px-4 py-2 text-sm font-medium text-[#ffffff] transition-colors hover:bg-[#dc2626] disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex cursor-pointer items-center gap-1 rounded-[8px] bg-[#ef4444] px-4 py-2 text-sm font-medium text-[#ffffff] transition-colors hover:bg-[#dc2626] disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Rejeter
+              <X size={16} className="md:hidden" />
+              <span className="hidden md:inline">Rejeter</span>
             </button>
             <button
               onClick={() => setShowApproveConfirm(true)}
               disabled={reviewMutation.isPending}
-              className="cursor-pointer rounded-[8px] bg-[#3b82f6] px-4 py-2 text-sm font-medium text-[#ffffff] transition-colors hover:bg-[#2563eb] disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex cursor-pointer items-center gap-1 rounded-[8px] bg-[#3b82f6] px-4 py-2 text-sm font-medium text-[#ffffff] transition-colors hover:bg-[#2563eb] disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Approuver
+              <Check size={16} className="md:hidden" />
+              <span className="hidden md:inline">Approuver</span>
             </button>
           </div>
         )}
@@ -268,9 +270,9 @@ export default function TimesheetDetailsPage() {
                 href={att.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="truncate text-sm font-medium text-[#111111] hover:underline"
+                className="truncate text-xs md:text-sm font-medium text-[#111111] hover:underline"
               >
-                {cleanFilename(att.filename)}
+                {truncateFilename(att.filename)}
               </a>
               <p className="text-xs text-[#6b7280]">{typeLabel[att.type] ?? att.type}</p>
             </div>

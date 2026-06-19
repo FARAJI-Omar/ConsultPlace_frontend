@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { Eye, FileDown } from 'lucide-react';
 import { formatDate } from '../../../lib/utils';
 import { DataTable } from '../../../components/common/DataTable';
 import { useGlobalTracking, exportTrackingCSV } from '../../../hooks/manager/useAdvancedTracking';
@@ -288,9 +289,10 @@ export default function GlobalTrackingPage() {
       render: (r) => (
         <button
           onClick={(e) => { e.stopPropagation(); setDetailRow(r); }}
-          className="cursor-pointer rounded-[8px] border border-[#bdbdbd] bg-[#ffffff] px-3 py-1.5 text-xs font-medium text-[#111111] transition-colors hover:bg-[#f3f4f6]"
+          className="inline-flex cursor-pointer items-center gap-1 rounded-[8px] border border-[#bdbdbd] bg-[#ffffff] px-3 py-1.5 text-xs font-medium text-[#111111] transition-colors hover:bg-[#f3f4f6]"
         >
-          Détail
+          <Eye size={14} className="md:hidden" />
+          <span className="hidden md:inline">Détail</span>
         </button>
       ),
     },
@@ -303,9 +305,9 @@ export default function GlobalTrackingPage() {
         <button
           onClick={handleExport}
           disabled={exporting}
-          className="cursor-pointer rounded-[8px] bg-red-400 px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50 hover:bg-red-500 disabled:hover:bg-red-400"
+          className="inline-flex cursor-pointer items-center gap-1 rounded-[8px] bg-red-400 px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50 hover:bg-red-500 disabled:hover:bg-red-400"
         >
-          {exporting ? 'Exportation...' : 'Exporter CSV'}
+          {exporting ? 'Exportation...' : <><FileDown size={16} className="md:hidden" /><span className="hidden md:inline">Exporter CSV</span></>}
         </button>
       </div>
 

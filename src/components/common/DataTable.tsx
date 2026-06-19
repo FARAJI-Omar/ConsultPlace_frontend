@@ -53,7 +53,7 @@ function DataTableInner<T>({
   if (isLoading) {
     return (
       <div className="overflow-x-auto">
-        <table className="w-full border-collapse text-sm">
+        <table className="w-full border-collapse text-xs md:text-sm">
           <thead>
             <tr className="border-b border-[#e5e7eb]">
               {columns.map((col, idx) => (
@@ -91,7 +91,7 @@ function DataTableInner<T>({
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full border-collapse text-sm">
+      <table className="w-full border-collapse text-xs md:text-sm">
         <thead>
           <tr className="border-b border-[#e5e7eb]">
             {columns.map((col, idx) => (
@@ -126,12 +126,12 @@ function DataTableInner<T>({
       </table>
 
       <div className="flex items-center justify-between px-4 py-3">
-        <div className="flex items-center gap-2 text-sm text-[#6b7280]">
+        <div className="flex items-center gap-2 text-xs md:text-sm text-[#6b7280]">
           <span>Lignes par page:</span>
           <select
             value={pagination.itemsPerPage}
             onChange={handlePageSizeChange}
-            className="rounded border border-[#e5e7eb] px-2 py-1 text-sm text-[#111111] focus:outline-none focus:border-[#111111]"
+            className="rounded border border-[#e5e7eb] px-2 py-1 text-xs md:text-sm text-[#111111] focus:outline-none focus:border-[#111111]"
           >
             {PAGE_SIZES.map((size) => (
               <option key={size} value={size}>
@@ -141,7 +141,7 @@ function DataTableInner<T>({
           </select>
         </div>
 
-        <div className="flex items-center gap-2 text-sm text-[#6b7280]">
+        <div className="flex items-center gap-2 text-xs md:text-sm text-[#6b7280]">
           <span>
             Page {pagination.currentPage} sur {pagination.totalPages}
           </span>

@@ -179,93 +179,95 @@ export default function ManagerDashboard() {
         {kpisLoading
           ? Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)
           : <>
-              <div className="rounded-[12px] bg-[#f5f5f5] p-6">
-                <p className="text-sm font-medium text-[#6b7280]">Factures en attente</p>
-                <p className="mt-2 text-3xl font-semibold text-[#111111]">{kpis?.pendingInvoices ?? 0}</p>
+              <div className="rounded-[12px] bg-white border border-[#e5e7eb] p-4 md:p-6">
+                <p className="text-xs md:text-sm font-medium text-[#6b7280]">Factures en attente</p>
+                <p className="mt-1 md:mt-2 text-lg md:text-3xl font-semibold text-[#111111]">{kpis?.pendingInvoices ?? 0}</p>
               </div>
-              <div className="rounded-[12px] bg-[#f5f5f5] p-6">
-                <p className="text-sm font-medium text-[#6b7280]">CA facturé (HT)</p>
-                <p className="mt-2 text-3xl font-semibold text-[#111111]">{(kpis?.totalPaid ?? 0).toLocaleString()} DH</p>
+              <div className="rounded-[12px] bg-white border border-[#e5e7eb] p-4 md:p-6">
+                <p className="text-xs md:text-sm font-medium text-[#6b7280]">CA facturé (HT)</p>
+                <p className="mt-1 md:mt-2 text-lg md:text-3xl font-semibold text-[#111111]">{(kpis?.totalPaid ?? 0).toLocaleString()} DH</p>
               </div>
-              <div className="rounded-[12px] bg-[#f5f5f5] p-6">
-                <p className="text-sm font-medium text-[#6b7280]">Encaissé (TTC)</p>
-                <p className="mt-2 text-3xl font-semibold text-[#111111]">{(kpis?.totalReceived ?? 0).toLocaleString()} DH</p>
+              <div className="rounded-[12px] bg-white border border-[#e5e7eb] p-4 md:p-6">
+                <p className="text-xs md:text-sm font-medium text-[#6b7280]">Encaissé (TTC)</p>
+                <p className="mt-1 md:mt-2 text-lg md:text-3xl font-semibold text-[#111111]">{(kpis?.totalReceived ?? 0).toLocaleString()} DH</p>
               </div>
-              <div className="rounded-[12px] bg-[#f5f5f5] p-6">
-                <p className="text-sm font-medium text-[#6b7280]">En attente (TTC)</p>
-                <p className="mt-2 text-3xl font-semibold text-[#111111]">{(kpis?.totalPendingInvoices ?? 0).toLocaleString()} DH</p>
+              <div className="rounded-[12px] bg-white border border-[#e5e7eb] p-4 md:p-6">
+                <p className="text-xs md:text-sm font-medium text-[#6b7280]">En attente (TTC)</p>
+                <p className="mt-1 md:mt-2 text-lg md:text-3xl font-semibold text-[#111111]">{(kpis?.totalPendingInvoices ?? 0).toLocaleString()} DH</p>
               </div>
             </>
         }
       </div>
 
-      <div className="rounded-[12px] bg-[#fef2f2] p-6">
+      <div className="rounded-[12px] bg-[#fef2f2] p-4">
         <h2 className="text-lg font-semibold text-[#111111]">Alertes critiques</h2>
         {criticalAlerts.length === 0 ? (
           <p className="mt-4 text-sm text-[#6b7280]">Aucune alerte critique</p>
         ) : (
           <div className="mt-4 space-y-3">
             {criticalAlerts.map((alert) => (
-              <div
-                key={alert.id}
-                className="flex items-center justify-between rounded-[8px] border border-[#e5e7eb] bg-[#ffffff] px-4 py-3"
-              >
-                <div className="flex items-start gap-3 flex-1">
-                  <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-[#ef4444]" />
-                  <div>
-                    <p className="text-sm font-medium text-[#111111]">{alert.title}</p>
-                    <p className="text-xs text-[#6b7280]">{alert.message}</p>
-                    <p className="mt-1 text-xs text-[#898989]">
-                      {formatDate(alert.createdAt)}
-                    </p>
+                <div
+                  key={alert.id}
+                  className="flex flex-col md:flex-row md:items-center md:justify-between rounded-[8px] border border-[#e5e7eb] bg-[#ffffff] px-4 py-3 gap-3"
+                >
+                  <div className="flex items-start gap-3 flex-1 min-w-0">
+                    <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-[#ef4444]" />
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-[#111111]">{alert.title}</p>
+                      <p className="text-xs text-[#6b7280] break-words">{alert.message}</p>
+                      <p className="mt-1 text-xs text-[#898989]">
+                        {formatDate(alert.createdAt)}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 self-end md:self-auto">
+                    {alert.payload.entityType === 'INVOICE' && (
+                      <>
+                        {alert.event === 'LATE_PAYOUT' && (
+                          <button
+                            onClick={() => {
+                              setPayoutAlert(alert);
+                setPayoutAmount('80');
+                              setPayoutComment('');
+                            }}
+                            disabled={payoutMutation.isPending}
+                            className="inline-flex items-center gap-1 cursor-pointer rounded-[8px] bg-[#ff0000] px-3 py-1.5 text-sm font-semibold text-[#ffffff] transition-opacity hover:opacity-40 disabled:opacity-50"
+                          >
+                            <DollarSign className="h-3.5 w-3.5" />
+                            <span className="hidden md:inline">Payer le consultant</span>
+                            <span className="md:hidden">Payer</span>
+                          </button>
+                        )}
+                        {alert.event === 'LATE_INVOICE' && (
+                          <button
+                            onClick={() => setReminderAlert(alert)}
+                            disabled={sendReminderMutation.isPending}
+                            className="inline-flex items-center gap-1 cursor-pointer rounded-[8px] bg-[#ff0000] px-3 py-1.5 text-sm font-semibold text-[#ffffff] transition-opacity hover:opacity-40 disabled:opacity-50"
+                          >
+                            <Bell className="h-3.5 w-3.5" />
+                            <span className="hidden md:inline">Envoyer une relance</span>
+                            <span className="md:hidden">Relance</span>
+                          </button>
+                        )}
+                      </>
+                    )}
+                    <button
+                      onClick={() => handleResolve(alert.id)}
+                      disabled={updateStatus.isPending}
+                      className="cursor-pointer rounded-full border border-[#ef4444] p-1 text-[#ef4444] transition-colors hover:bg-[#fef2f2] disabled:opacity-40"
+                      title="Résoudre"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  {alert.payload.entityType === 'INVOICE' && (
-                    <>
-                      {alert.event === 'LATE_PAYOUT' && (
-                        <button
-                          onClick={() => {
-                            setPayoutAlert(alert);
-          setPayoutAmount('80');
-                            setPayoutComment('');
-                          }}
-                          disabled={payoutMutation.isPending}
-                          className="inline-flex items-center gap-1 cursor-pointer rounded-[8px] bg-[#ff0000] px-3 py-1.5 text-sm font-semibold text-[#ffffff] transition-opacity hover:opacity-40 disabled:opacity-50"
-                        >
-                          <DollarSign className="h-3.5 w-3.5" />
-                          Payer le consultant
-                        </button>
-                      )}
-                      {alert.event === 'LATE_INVOICE' && (
-                        <button
-                          onClick={() => setReminderAlert(alert)}
-                          disabled={sendReminderMutation.isPending}
-                          className="inline-flex items-center gap-1 cursor-pointer rounded-[8px] bg-[#ff0000] px-3 py-1.5 text-sm font-semibold text-[#ffffff] transition-opacity hover:opacity-40 disabled:opacity-50"
-                        >
-                          <Bell className="h-3.5 w-3.5" />
-                          Envoyer une relance
-                        </button>
-                      )}
-                    </>
-                  )}
-                  <button
-                    onClick={() => handleResolve(alert.id)}
-                    disabled={updateStatus.isPending}
-                    className="cursor-pointer rounded-full border border-[#ef4444] p-1 text-[#ef4444] transition-colors hover:bg-[#fef2f2] disabled:opacity-40"
-                    title="Résoudre"
-                  >
-                    <X className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              </div>
             ))}
           </div>
         )}
       </div>
 
       {clients.length > 0 && (
-        <div className="rounded-[12px] bg-[#f5f5f5] p-6">
+        <div className="rounded-[12px] bg-white p-4">
           <h2 className="text-lg font-semibold text-[#111111] mb-4">
             Répartition CA par client ({monthNames[(summary!.month || 1) - 1]} {summary!.year})
           </h2>

@@ -53,16 +53,16 @@ export default function PaymentsHistoryPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center">
+      <div className="flex flex-col md:flex-row md:items-center gap-4">
         <h1 className="text-2xl font-semibold text-[#111111]">Historique des paiements</h1>
-        <div className="flex flex-1 justify-center gap-4">
-          <div className="rounded-[12px] border border-[#e5e7eb] bg-[#0ace2e2e] px-6 py-3">
+        <div className="flex justify-center gap-4">
+          <div className="rounded-[12px] border border-[#e5e7eb] bg-[#0ace2e2e] px-4 py-2 md:px-6 md:py-3">
             <p className="text-xs text-[#6b7280]">Total missions</p>
-            <p className="text-xl font-semibold text-[#111111]">{totalMissions}</p>
+            <p className="text-sm md:text-xl font-semibold text-[#111111]">{totalMissions}</p>
           </div>
-          <div className="rounded-[12px] border border-[#e5e7eb] bg-[#0ace2e2e] px-5 py-3">
+          <div className="rounded-[12px] border border-[#e5e7eb] bg-[#0ace2e2e] px-4 py-2 md:px-6 md:py-3">
             <p className="text-xs text-[#6b7280]">Gains totaux {new Date().getFullYear()}</p>
-            <p className="text-xl font-semibold text-[#111111]">{totalGains.toLocaleString()} DH</p>
+            <p className="text-sm md:text-xl font-semibold text-[#111111]">{totalGains.toLocaleString()} DH</p>
           </div>
         </div>
       </div>

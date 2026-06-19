@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { Eye, FileText, Download } from 'lucide-react';
 import { useGetContractById } from '../../../hooks/useContracts';
 import { useGetMissionsByContract } from '../../../hooks/useMissions';
-import { formatDate, cleanFilename } from '../../../lib/utils';
+import { formatDate, truncateFilename } from '../../../lib/utils';
 import Modal from '../../../components/common/Modal';
 import ContractForm from './ContractForm';
 import { downloadFile } from '../../../utils/downloadFile';
@@ -107,7 +107,7 @@ export default function ContractDetailsPage() {
               <ul className="space-y-2">
                 {contract.attachments.map((doc) => (
                   <li key={doc.id}>
-                    <div className="flex items-center gap-2 rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111]">
+                    <div className="flex items-center gap-2 rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-xs md:text-sm text-[#111111]">
                       <FileText className="h-4 w-4 shrink-0 text-primary-blue" />
                       <a
                         href={doc.url}
@@ -115,7 +115,7 @@ export default function ContractDetailsPage() {
                         rel="noopener noreferrer"
                         className="min-w-0 flex-1 truncate hover:underline"
                       >
-                        {cleanFilename(doc.filename)}
+                        {truncateFilename(doc.filename)}
                       </a>
                       <button
                         type="button"

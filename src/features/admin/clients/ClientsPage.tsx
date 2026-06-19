@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { Eye, Pencil, ArchiveX, ArchiveRestore } from 'lucide-react';
 
 import { toast } from 'sonner';
 import { DataTable, type Column } from '../../../components/common/DataTable';
@@ -110,23 +111,26 @@ export default function ClientsPage() {
         <div className="flex items-center justify-center gap-2">
           <button
             onClick={() => navigate(`/admin/clients/${item.id}`)}
-            className="cursor-pointer rounded-[6px] bg-[#EFF6FF] px-2.5 py-1 text-xs font-medium text-primary-blue transition-colors hover:bg-blue-100"
+            className="inline-flex cursor-pointer items-center gap-1 rounded-[6px] bg-[#EFF6FF] px-2.5 py-1 text-xs font-medium text-primary-blue transition-colors hover:bg-blue-100"
           >
-            Détails
+            <Eye size={14} className="lg:hidden" />
+            <span className="hidden lg:inline">Détails</span>
           </button>
           <button
             onClick={() => openEdit(item)}
-            className="cursor-pointer rounded-[6px] bg-[#03b5537c] text-green-800 px-2.5 py-1 text-xs font-medium transition-colors hover:bg-green-700"
+            className="inline-flex cursor-pointer items-center gap-1 rounded-[6px] bg-[#03b5537c] text-green-800 px-2.5 py-1 text-xs font-medium transition-colors hover:bg-green-700"
           >
-            Modifier
+            <Pencil size={14} className="lg:hidden" />
+            <span className="hidden lg:inline">Modifier</span>
           </button>
           <button
             onClick={() => setConfirmArchive(item)}
             disabled={toggleArchive.isPending}
-            className="cursor-pointer rounded-[6px] px-2.5 py-1 text-xs font-medium transition-colors disabled:opacity-50"
+            className="inline-flex cursor-pointer items-center gap-1 rounded-[6px] px-2.5 py-1 text-xs font-medium transition-colors disabled:opacity-50"
             style={{ backgroundColor: item.isArchived ? '#d1fae5' : '#fef3c7', color: item.isArchived ? '#065f46' : '#92400e' }}
           >
-            {item.isArchived ? 'Restaurer' : 'Archiver'}
+            {item.isArchived ? <ArchiveRestore size={14} className="lg:hidden" /> : <ArchiveX size={14} className="lg:hidden" />}
+            <span className="hidden lg:inline">{item.isArchived ? 'Restaurer' : 'Archiver'}</span>
           </button>
         </div>
       ),

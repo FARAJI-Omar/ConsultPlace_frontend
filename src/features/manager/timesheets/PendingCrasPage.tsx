@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
+import { Eye, BookOpenCheck, Receipt } from 'lucide-react';
 import { DataTable } from '../../../components/common/DataTable';
 import { useManagerTimesheets } from '../../../hooks/manager/useManagerTimesheets';
 import { useGenerateGroupedInvoice } from '../../../hooks/manager/useInvoices';
@@ -128,24 +129,27 @@ export default function PendingCrasPage() {
           {ts.status === 'SOUMIS' && (
             <button
               onClick={() => setSelectedTimesheetId(ts.id)}
-              className="cursor-pointer rounded-[8px] bg-[#3b82f6] px-3 py-1.5 text-xs font-medium text-[#ffffff] transition-colors hover:bg-[#2563eb]"
+              className="inline-flex cursor-pointer items-center gap-1 rounded-[8px] bg-[#3b82f6] px-3 py-1.5 text-xs font-medium text-[#ffffff] transition-colors hover:bg-[#2563eb]"
             >
-              Examiner
+              <BookOpenCheck size={14} className="md:hidden" />
+              <span className="hidden md:inline">Examiner</span>
             </button>
           )}
           {ts.status === 'VALIDE' && !groupedMode && (
             <button
               onClick={() => setInvoiceTimesheet(ts)}
-              className="cursor-pointer rounded-[8px] bg-[#10b981] px-3 py-1.5 text-xs font-medium text-[#ffffff] transition-colors hover:bg-[#059669]"
+              className="inline-flex cursor-pointer items-center gap-1 rounded-[8px] bg-[#10b981] px-3 py-1.5 text-xs font-medium text-[#ffffff] transition-colors hover:bg-[#059669]"
             >
-              + Générer facture
+              <Receipt size={14} className="md:hidden" />
+              <span className="hidden md:inline">+ Générer facture</span>
             </button>
           )}
           <Link
             to={`/manager/timesheets/${ts.id}`}
-            className="inline-block rounded-[8px] border border-[#848383] bg-[#ffffff] px-3 py-1.5 text-xs font-medium text-[#111111] transition-colors hover:bg-[#bdbdbd]"
+            className="inline-flex cursor-pointer items-center gap-1 rounded-[8px] border border-[#848383] bg-[#ffffff] px-3 py-1.5 text-xs font-medium text-[#111111] transition-colors hover:bg-[#bdbdbd]"
           >
-            Voir détails
+            <Eye size={14} className="md:hidden" />
+            <span className="hidden md:inline">Voir détails</span>
           </Link>
         </div>
       ),

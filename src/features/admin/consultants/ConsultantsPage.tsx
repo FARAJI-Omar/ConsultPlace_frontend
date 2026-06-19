@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
+import { Pencil, ShieldCheck, ShieldOff, Mail } from 'lucide-react';
 import { DataTable, type Column } from '../../../components/common/DataTable';
 import Modal from '../../../components/common/Modal';
 import ConsultantForm from './ConsultantForm';
@@ -112,28 +113,31 @@ export default function ConsultantsPage() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => handleEdit(item)}
-            className="cursor-pointer rounded-[6px] bg-[#03b5537c] text-green-800 px-2.5 py-1 text-xs font-medium  transition-colors hover:bg-green-700"
+            className="inline-flex cursor-pointer items-center gap-1 rounded-[6px] bg-[#03b5537c] text-green-800 px-2.5 py-1 text-xs font-medium  transition-colors hover:bg-green-700"
           >
-            Modifier
+            <Pencil size={14} className="lg:hidden" />
+            <span className="hidden lg:inline">Modifier</span>
           </button>
           <button
             onClick={() => handleToggle(item.id, item.isActive)}
             disabled={toggleStatus.isPending}
-            className={`cursor-pointer rounded-[8px] px-3 py-1.5 text-xs font-medium transition-colors ${
+            className={`inline-flex cursor-pointer items-center gap-1 rounded-[6px] px-2.5 py-1 text-xs font-medium transition-colors ${
               item.isActive
                 ? 'border border-red-600 hover:bg-red-600/40'
                 : 'border border-green-600 text-success hover:bg-green-600/40'
             } disabled:opacity-50`}
           >
-            {item.isActive ? 'Désactiver' : 'Activer'}
+            {item.isActive ? <ShieldOff size={14} className="lg:hidden" /> : <ShieldCheck size={14} className="lg:hidden" />}
+            <span className="hidden lg:inline">{item.isActive ? 'Désactiver' : 'Activer'}</span>
           </button>
           {item.isActive && (
             <button
               onClick={() => setConfirmResend(item.id)}
               disabled={resendInvitation.isPending}
-              className="cursor-pointer rounded-[8px] border border-[#3b82f6] bg-blue-100 px-3 py-1.5 text-xs font-medium text-blue-600 transition-colors hover:bg-blue-300 disabled:opacity-50"
+              className="inline-flex cursor-pointer items-center gap-1 rounded-[6px] border border-[#3b82f6] bg-blue-100 px-2.5 py-1 text-xs font-medium text-blue-600 transition-colors hover:bg-blue-300 disabled:opacity-50"
             >
-              Renvoyer l'invitation
+              <Mail size={14} className="lg:hidden" />
+              <span className="hidden lg:inline">Renvoyer l'invitation</span>
             </button>
           )}
         </div>

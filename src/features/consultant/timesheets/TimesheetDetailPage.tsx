@@ -3,7 +3,7 @@ import { FileText, Download } from 'lucide-react';
 import { useTimesheetById } from '../../../hooks/consultant/useTimesheets';
 import HorizontalStepper from '../../../components/common/HorizontalStepper';
 import { downloadFile } from '../../../utils/downloadFile';
-import { cleanFilename } from '../../../lib/utils';
+import { truncateFilename } from '../../../lib/utils';
 
 const monthNames = [
   'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
@@ -75,7 +75,7 @@ export default function TimesheetDetailPage() {
         <h1 className="text-2xl font-semibold text-[#111111]">Détail du relevé</h1>
       </div>
 
-      <div className="rounded-[12px] bg-[#f5f5f5] p-6">
+      <div className="rounded-[12px] bg-white p-4">
         <h2 className="mb-6 text-lg font-semibold text-[#111111]">Suivi du statut</h2>
         <HorizontalStepper
           steps={(ts.history ?? []).map((e) => ({
@@ -87,7 +87,7 @@ export default function TimesheetDetailPage() {
         />
       </div>
 
-      <div className="rounded-[12px] bg-[#f5f5f5] p-6">
+      <div className="rounded-[12px] bg-white p-4">
         <div className="grid grid-cols-2 gap-6 text-sm">
           <div>
             <p className="text-[#6b7280]">Mission</p>
@@ -108,7 +108,7 @@ export default function TimesheetDetailPage() {
         </div>
       </div>
 
-      <div className="rounded-[12px] bg-[#f5f5f5] p-6">
+      <div className="rounded-[12px] bg-white p-4">
         <h2 className="mb-4 text-lg font-semibold text-[#111111]">Calendrier</h2>
         <div className="grid grid-cols-7 gap-1 text-center text-sm">
           {DAY_LABELS.map((label) => (
@@ -123,14 +123,14 @@ export default function TimesheetDetailPage() {
             return (
               <div
                 key={day}
-                className={`rounded-[6px] py-2 text-sm ${
+                className={`rounded-[6px] py-1 md:py-2 text-sm ${
                   hasEntry
                     ? 'bg-[#3b82f6] font-medium text-[#ffffff]'
-                    : 'bg-[#ffffff] text-[#6b7280]'
+                    : 'bg-[#f5f5f5c5] text-[#6b7280]'
                 }`}
               >
                 <div>{day}</div>
-                {hasEntry && <div className="text-[16px] font-bold opacity-80">{hours}h</div>}
+                {hasEntry && <div className="text-sm font-bold opacity-80">{hours}h</div>}
               </div>
             );
           })}
@@ -140,7 +140,7 @@ export default function TimesheetDetailPage() {
       {(() => {
         const filtered = ts.attachments?.filter((a) => a.type === 'PROOF' || a.type === 'CONSULTANT_FACTURE');
         return filtered && filtered.length > 0 ? (
-          <div className="rounded-[12px] bg-[#f5f5f5] p-6">
+          <div className="rounded-[12px] bg-white p-4">
             <h2 className="mb-4 text-lg font-semibold text-[#111111]">Pièces jointes</h2>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {filtered.map((att) => (
@@ -154,7 +154,7 @@ export default function TimesheetDetailPage() {
                     <FileText className="h-5 w-5 text-[#3b82f6]" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-[#111111]">{cleanFilename(att.filename)}</p>
+                    <p className="truncate text-xs md:text-sm font-medium text-[#111111]">{truncateFilename(att.filename)}</p>
                     <p className="text-xs text-[#6b7280]">Telecharger</p>
                   </div>
                   <Download className="h-4 w-4 shrink-0 text-[#6b7280]" />

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { FileText, Download, ClipboardList } from 'lucide-react';
 import { useGetMissionById } from '../../../hooks/useMissions';
-import { formatDate, cleanFilename } from '../../../lib/utils';
+import { formatDate, truncateFilename } from '../../../lib/utils';
 import Modal from '../../../components/common/Modal';
 import MissionForm from './MissionForm';
 import { downloadFile } from '../../../utils/downloadFile';
@@ -230,9 +230,9 @@ export default function MissionDetailsPage() {
                     href={att.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="truncate text-sm font-medium text-[#111111] hover:underline"
+                    className="truncate text-xs md:text-sm font-medium text-[#111111] hover:underline"
                   >
-                    {cleanFilename(att.filename)}
+                    {truncateFilename(att.filename)}
                   </a>
                   <p className="text-xs text-[#6b7280]">Document</p>
                 </div>

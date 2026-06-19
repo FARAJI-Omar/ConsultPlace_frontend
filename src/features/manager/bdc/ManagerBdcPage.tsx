@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Eye } from 'lucide-react';
 import { DataTable, type Column } from '../../../components/common/DataTable';
 import { useGetBdcs } from '../../../hooks/useBdc';
 import { formatDate } from '../../../lib/utils';
@@ -82,9 +83,10 @@ export default function ManagerBdcPage() {
         <div className="flex items-center justify-center gap-2">
           <button
             onClick={() => navigate(`/manager/bons-de-commande/${item.id}`)}
-            className="cursor-pointer rounded-[6px] bg-[#EFF6FF] px-2.5 py-1 text-xs font-medium text-primary-blue transition-colors hover:bg-blue-100"
+            className="inline-flex cursor-pointer items-center gap-1 rounded-[6px] bg-[#EFF6FF] px-2.5 py-1 text-xs font-medium text-primary-blue transition-colors hover:bg-blue-100"
           >
-            Détails
+            <Eye size={14} className="md:hidden" />
+            <span className="hidden md:inline">Détails</span>
           </button>
         </div>
       ),

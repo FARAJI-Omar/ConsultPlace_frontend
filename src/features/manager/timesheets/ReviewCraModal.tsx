@@ -1,7 +1,8 @@
 import { useState } from 'react';
+import { X, Check } from 'lucide-react';
 import { useManagerTimesheetDetail, useReviewTimesheet } from '../../../hooks/manager/useManagerTimesheets';
 import { toast } from 'sonner';
-import { cleanFilename } from '../../../lib/utils';
+import { truncateFilename } from '../../../lib/utils';
 
 interface ReviewCraModalProps {
   timesheetId: number;
@@ -142,7 +143,7 @@ export default function ReviewCraModal({ timesheetId, open, onClose }: ReviewCra
                         rel="noopener noreferrer"
                         className="inline-block rounded-full bg-[#f3f4f6] px-3 py-1 text-xs text-[#3b82f6] hover:underline"
                       >
-                        {cleanFilename(att.filename)}
+                        {truncateFilename(att.filename)}
                       </a>
                     ))}
                   </div>
@@ -171,16 +172,18 @@ export default function ReviewCraModal({ timesheetId, open, onClose }: ReviewCra
                     <button
                       onClick={() => setRejectMode(true)}
                       disabled={reviewMutation.isPending}
-                      className="cursor-pointer rounded-[8px] bg-[#ef4444] px-4 py-2 text-sm font-medium text-[#ffffff] transition-colors hover:bg-[#dc2626] disabled:cursor-not-allowed disabled:opacity-50"
+                      className="inline-flex cursor-pointer items-center gap-1 rounded-[8px] bg-[#ef4444] px-4 py-2 text-sm font-medium text-[#ffffff] transition-colors hover:bg-[#dc2626] disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                      Rejeter
+                      <X size={16} className="md:hidden" />
+                      <span className="hidden md:inline">Rejeter</span>
                     </button>
                     <button
                       onClick={() => setShowApproveConfirm(true)}
                       disabled={reviewMutation.isPending}
-                      className="cursor-pointer rounded-[8px] bg-[#3b82f6] px-4 py-2 text-sm font-medium text-[#ffffff] transition-colors hover:bg-[#2563eb] disabled:cursor-not-allowed disabled:opacity-50"
+                      className="inline-flex cursor-pointer items-center gap-1 rounded-[8px] bg-[#3b82f6] px-4 py-2 text-sm font-medium text-[#ffffff] transition-colors hover:bg-[#2563eb] disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                      Approuver
+                      <Check size={16} className="md:hidden" />
+                      <span className="hidden md:inline">Approuver</span>
                     </button>
                   </>
                 ) : (

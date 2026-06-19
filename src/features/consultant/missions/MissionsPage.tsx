@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Eye, FilePlus } from 'lucide-react';
 import { DataTable } from '../../../components/common/DataTable';
 import type { Column } from '../../../components/common/DataTable';
 import { useConsultantMissions } from '../../../hooks/consultant/useConsultantMissions';
@@ -73,22 +74,21 @@ export default function MissionsPage() {
         <div className="flex gap-2">
           <button
             onClick={() => navigate(`/consultant/missions/${mission.id}`)}
-            className="cursor-pointer rounded-[8px] border border-[#bdbdbd] bg-[#ffffff] px-3 py-1.5 text-xs font-medium text-[#111111] transition-colors hover:bg-[#f3f4f6]"
+            className="inline-flex cursor-pointer items-center gap-1 rounded-[8px] border border-[#bdbdbd] bg-[#ffffff] px-3 py-1.5 text-xs font-medium text-[#111111] transition-colors hover:bg-[#f3f4f6]"
           >
-            Voir détails
+            <Eye size={14} className="md:hidden" />
+            <span className="hidden md:inline">Voir détails</span>
           </button>
           {mission.canCreateTimesheet ? (
             <button
               onClick={(e) => { e.stopPropagation(); navigate(`/consultant/timesheets/new?missionId=${mission.id}`); }}
-              className="cursor-pointer rounded-[8px] bg-[#3b82f6] px-3 py-1.5 text-xs font-medium text-[#ffffff] transition-colors hover:bg-[#2563eb]"
+              className="inline-flex cursor-pointer items-center gap-1 rounded-[8px] bg-[#3b82f6] px-3 py-1.5 text-xs font-medium text-[#ffffff] transition-colors hover:bg-[#2563eb]"
             >
-              + Créer relevé
+              <FilePlus size={14} className="md:hidden" />
+              <span className="hidden md:inline">+ Créer relevé</span>
             </button>
           ) : (
             <span className="inline-flex items-center gap-1 rounded-[8px] border border-[#e5e7eb] bg-[#f9fafb] px-3 py-1.5 text-xs text-[#6b7280]">
-              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-              </svg>
               ✓ À jour
             </span>
           )}

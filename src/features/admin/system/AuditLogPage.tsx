@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef, type ReactNode } from 'react';
-
+import { Eye } from 'lucide-react';
 import { DataTable, type Column } from '../../../components/common/DataTable';
 import Modal from '../../../components/common/Modal';
 import { useGetAuditLogs, type AuditLogEntry } from '../../../hooks/useAuditLog';
@@ -169,9 +169,10 @@ export default function AuditLogPage() {
             setSelectedEntry(item);
             setDetailsModalOpen(true);
           }}
-          className="cursor-pointer rounded-[8px] border border-[#e5e7eb] bg-[#ffffff] px-3 py-1.5 text-xs font-medium text-[#111111] transition-colors hover:bg-[#f3f4f6]"
+          className="inline-flex cursor-pointer items-center gap-1 rounded-[8px] border border-[#e5e7eb] bg-[#ffffff] px-3 py-1.5 text-xs font-medium text-[#111111] transition-colors hover:bg-[#f3f4f6]"
         >
-          Détails
+          <Eye size={14} className="lg:hidden" />
+          <span className="hidden lg:inline">Détails</span>
         </button>
       ),
     },
@@ -374,7 +375,7 @@ function InfoItem({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div>
       <p className="text-xs font-medium text-[#6b7280]">{label}</p>
-      <div className="mt-0.5 text-sm text-[#111111]">{value}</div>
+      <div className="mt-0.5 text-xs md:text-sm text-[#111111]">{value}</div>
     </div>
   );
 }

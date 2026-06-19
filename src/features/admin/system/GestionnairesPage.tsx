@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
+import { Trash2 } from 'lucide-react';
 import { DataTable, type Column } from '../../../components/common/DataTable';
 import Modal from '../../../components/common/Modal';
 import GestionnaireForm from './GestionnaireForm';
@@ -52,9 +53,10 @@ export default function GestionnairesPage() {
           <button
             onClick={() => setConfirmDelete(item)}
             disabled={deleteGestionnaire.isPending}
-            className="cursor-pointer rounded-[6px] bg-red-100 px-2.5 py-1 text-xs font-medium text-red-700 transition-colors hover:bg-red-200 disabled:opacity-50"
+            className="inline-flex cursor-pointer items-center gap-1 rounded-[6px] bg-red-100 px-2.5 py-1 text-xs font-medium text-red-700 transition-colors hover:bg-red-200 disabled:opacity-50"
           >
-            Supprimer
+            <Trash2 size={14} className="lg:hidden" />
+            <span className="hidden lg:inline">Supprimer</span>
           </button>
         </div>
       ),

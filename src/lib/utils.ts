@@ -14,6 +14,16 @@ export function cleanFilename(name: string): string {
   return name.replace(/^[a-f0-9]{8}-/i, '');
 }
 
+export function truncateFilename(name: string, max = 20): string {
+  const cleaned = name.replace(/^[a-f0-9]{8}-/i, '');
+  const dot = cleaned.lastIndexOf('.');
+  if (dot === -1) return cleaned.length <= max + 3 ? cleaned : cleaned.slice(0, max) + '...';
+  const ext = cleaned.slice(dot);
+  const base = cleaned.slice(0, dot);
+  if (base.length <= max) return cleaned;
+  return base.slice(0, max) + '...' + ext;
+}
+
 export function formatMonth(value: string | null | undefined): string {
   if (!value) return '—';
   const [year, month] = value.split('-');

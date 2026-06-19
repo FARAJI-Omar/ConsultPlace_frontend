@@ -13,7 +13,7 @@ export default function Reminders({ draftCount, rejectedCount }: RemindersProps)
       <div className="space-y-3">
         <Link
           to="/consultant/timesheets/drafts"
-          className="block rounded-[8px] bg-[#fef3c7] px-4 py-3 transition-colors hover:bg-[#fde68a]"
+          className="block rounded-[8px] bg-[#fef3c7] px-4 py-3 border border-[#ff880035] transition-colors hover:bg-[#fde68a]"
         >
           <p className="text-sm font-semibold text-[#92400e]">
             {draftCount > 0
@@ -27,7 +27,7 @@ export default function Reminders({ draftCount, rejectedCount }: RemindersProps)
 
         <Link
           to="/consultant/timesheets/rejected"
-          className="block rounded-[8px] bg-[#fef2f2] px-4 py-3 transition-colors hover:bg-[#fecaca]"
+          className="block rounded-[8px] bg-[#fef2f2] px-4 py-3 border border-[#ff00001b] transition-colors hover:bg-[#fecaca]"
         >
           <p className="text-sm font-semibold text-[#991b1b]">
             {rejectedCount > 0

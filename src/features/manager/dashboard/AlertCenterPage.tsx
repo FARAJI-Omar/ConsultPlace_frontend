@@ -211,25 +211,25 @@ export default function AlertCenterPage() {
             const config = severityConfig[severity];
 
             return (
-              <div key={severity} className={`rounded-[12px] p-6 ${config.bg}`}>
+              <div key={severity} className={`rounded-[12px] p-4 ${config.bg}`}>
                 <h2 className={`text-lg font-semibold text-[#111111]`}>{config.label}</h2>
                 <div className="mt-4 space-y-3">
                   {items.map((alert) => (
                     <div
                       key={alert.id}
-                      className="flex items-center justify-between rounded-[8px] border border-[#e5e7eb] bg-[#ffffff] px-4 py-3"
+                      className="flex flex-col md:flex-row md:items-center md:justify-between rounded-[8px] border border-[#e5e7eb] bg-[#ffffff] px-4 py-3 gap-3"
                     >
-                      <div className="flex items-start gap-3 flex-1">
+                      <div className="flex items-start gap-3 flex-1 min-w-0">
                         <span className={`mt-1 h-2 w-2 shrink-0 rounded-full ${config.dot}`} />
-                        <div>
+                        <div className="min-w-0">
                           <p className="text-sm font-medium text-[#111111]">{alert.title}</p>
-                          <p className="text-xs text-[#6b7280]">{alert.message}</p>
+                          <p className="text-xs text-[#6b7280] break-words">{alert.message}</p>
                           <p className="mt-1 text-xs text-[#898989]">
                             {formatDate(alert.createdAt)}
                           </p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 self-end md:self-auto">
                         {severity === 'CRITICAL' && alert.payload.entityType === 'INVOICE' && (
                           <>
                             {alert.event === 'LATE_PAYOUT' && (
@@ -243,7 +243,8 @@ export default function AlertCenterPage() {
                                 className="inline-flex items-center gap-1 cursor-pointer rounded-[8px] bg-[#ff0000] px-3 py-1.5 text-sm font-semibold text-[#ffffff] transition-opacity hover:opacity-40 disabled:opacity-50"
                               >
                                 <DollarSign className="h-3.5 w-3.5" />
-                                Payer le consultant
+                                <span className="hidden md:inline">Payer le consultant</span>
+                                <span className="md:hidden">Payer</span>
                               </button>
                             )}
                             {alert.event === 'LATE_INVOICE' && (
@@ -253,7 +254,8 @@ export default function AlertCenterPage() {
                                 className="inline-flex items-center gap-1 cursor-pointer rounded-[8px] bg-[#ff0000] px-3 py-1.5 text-sm font-semibold text-[#ffffff] transition-opacity hover:opacity-40 disabled:opacity-50"
                               >
                                 <Bell className="h-3.5 w-3.5" />
-                                Envoyer une relance
+                                <span className="hidden md:inline">Envoyer une relance</span>
+                                <span className="md:hidden">Relance</span>
                               </button>
                             )}
                           </>
@@ -278,7 +280,7 @@ export default function AlertCenterPage() {
 
       {payoutAlert && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
-          <div className="w-full max-w-sm rounded-[12px] bg-[#ffffff] p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+          <div className="w-full max-w-sm rounded-[12px] bg-[#ffffff] p-4 shadow-xl" onClick={(e) => e.stopPropagation()}>
             <h2 className="mb-4 text-lg font-semibold text-[#111111]">Payer le consultant</h2>
             <p className="mb-4 text-sm text-[#6b7280]">Facture #{payoutAlert.payload.entityId}</p>
 
@@ -351,7 +353,7 @@ export default function AlertCenterPage() {
 
       {reminderAlert && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
-          <div className="w-full max-w-sm rounded-[12px] bg-[#ffffff] p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+          <div className="w-full max-w-sm rounded-[12px] bg-[#ffffff] p-4 shadow-xl" onClick={(e) => e.stopPropagation()}>
             <h2 className="mb-2 text-lg font-semibold text-[#111111]">Envoyer une relance</h2>
             <p className="mb-6 text-sm text-[#6b7280]">
               Envoyer une relance pour la facture #{reminderInvoiceId} à {invoiceDetail?.data?.client?.email ?? '...'}&nbsp;?

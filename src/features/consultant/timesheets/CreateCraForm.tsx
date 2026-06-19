@@ -6,7 +6,8 @@ import { useUploadAttachments } from '../../../hooks/consultant/useAttachments';
 import { useSubmitTimesheet } from '../../../hooks/consultant/useSubmitTimesheet';
 import { useImageCompression } from '../../../hooks/useImageCompression';
 import { useMoroccoHolidays } from '../../../hooks/consultant/useMoroccoHolidays';
-import { Loader2 } from 'lucide-react';
+import { truncateFilename } from '../../../lib/utils';
+import { Loader2, CalendarX2, Send, Delete } from 'lucide-react';
 import CalendarGrid from './CalendarGrid';
 import LoadingOverlay from '../../../components/common/LoadingOverlay';
 import type { DailyEntry } from '../../../types/models';
@@ -394,7 +395,7 @@ export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?:
         </div>
       )}
 
-      <div className="flex flex-wrap items-end gap-4">
+      <div className="flex flex-wrap items-end gap-4 rounded-[12px] bg-[#ffffff] border border-[#e5e7eb] p-4">
         <div className="flex flex-col gap-1.5">
           <label className="text-xs font-medium uppercase tracking-wider text-[#6b7280]">
             Mission
@@ -442,9 +443,11 @@ export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?:
         <button
           type="button"
           onClick={handleClearMonth}
-          className="cursor-pointer rounded-[8px] border border-[#ef4444] bg-[#ffffff] px-4 py-2 text-sm font-medium text-[#ef4444] hover:bg-[#fef2f2] disabled:opacity-50 transition-colors ml-auto"
+          title="Effacer les heures"
+          className="cursor-pointer rounded-[8px] border border-[#ef4444] bg-[#ffffff] px-3 md:px-4 py-2 text-sm font-medium text-[#ef4444] hover:bg-[#fef2f2] disabled:opacity-50 transition-colors ml-auto"
         >
-          Effacer les heures
+          <CalendarX2 size={14} className="md:hidden" />
+          <span className="hidden md:inline">Effacer les heures</span>
         </button>
       </div>
 
@@ -459,7 +462,7 @@ export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?:
       />
 
       <div className="space-y-4">
-        <p className="text-sm font-medium text-[#ff0909]">* Les deux entrées sont obligatoires pour soumettre</p>
+        <p className="text-xs md:text-sm font-medium text-[#ff0909]">* Les deux entrées sont obligatoires pour soumettre</p>
 
         <div className="space-y-2">
           <label className="text-sm font-medium tracking-wider text-[#494d56]">
@@ -475,7 +478,7 @@ export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?:
             <p className="text-sm text-[#6b7280]">
               Glissez-déposez vos fichiers ici ou cliquez pour parcourir
             </p>
-            <p className="text-xs text-[#6b7280] mt-1">
+            <p className="text-[8px] md:text-xs text-[#6b7280] mt-1">
               Maximum {MAX_PROOF_FILES} fichiers, 10 Mo chacun
             </p>
             <input
@@ -499,7 +502,7 @@ export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?:
                     <span className="inline-block rounded-[9999px] bg-[#e5e7eb] px-2 py-0.5 text-xs text-[#6b7280]">
                       {file.name.split('.').pop()?.toUpperCase() ?? 'FICHIER'}
                     </span>
-                    <span className="text-sm text-[#111111]">{file.name}</span>
+                    <span className="text-xs md:text-sm text-[#111111]">{truncateFilename(file.name)}</span>
                     {compressingFiles.has(file) && (
                       <Loader2 className="h-3.5 w-3.5 animate-spin text-[#6b7280] shrink-0" />
                     )}
@@ -511,9 +514,11 @@ export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?:
                     type="button"
                     onClick={() => removeProofFile(i)}
                     disabled={isOrchestrating}
-                    className="cursor-pointer rounded-[8px] px-2 py-1 text-xs font-semibold text-[#dc5252] hover:bg-[#fef2f2] disabled:opacity-50 transition-colors"
+                    title="Retirer"
+                    className="inline-flex cursor-pointer items-center gap-1 rounded-[8px] px-2 py-1 text-xs font-semibold text-[#dc5252] hover:bg-[#fef2f2] disabled:opacity-50 transition-colors"
                   >
-                    Retirer
+                    <Delete size={14} className="md:hidden" />
+                    <span className="hidden md:inline">Retirer</span>
                   </button>
                 </li>
               ))}
@@ -529,7 +534,7 @@ export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?:
           {factureFile ? (
             <div className="rounded-[12px] border-2 border-solid border-[#e5e7eb] bg-[#f9f9f9] px-6 py-6 text-center">
               <p className="text-sm text-[#6b7280]">
-                Fichier sélectionné : <span className="font-medium text-[#111111]">{factureFile.name}</span>
+                Fichier sélectionné : <span className="font-medium text-xs md:text-sm text-[#111111]">{truncateFilename(factureFile.name)}</span>
                 {compressingFiles.has(factureFile) && (
                   <Loader2 className="h-3.5 w-3.5 animate-spin text-[#6b7280] shrink-0 ml-1 inline-block align-middle" />
                 )}
@@ -538,9 +543,11 @@ export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?:
                 type="button"
                 onClick={removeFactureFile}
                 disabled={isOrchestrating}
-                className="cursor-pointer rounded-[8px] px-3 py-1.5 mt-3 text-xs font-semibold text-[#dc5252] hover:bg-[#fef2f2] disabled:opacity-50 transition-colors"
+                title="Retirer"
+                className="inline-flex cursor-pointer items-center gap-1 rounded-[8px] px-3 py-1.5 mt-3 text-xs font-semibold text-[#dc5252] hover:bg-[#fef2f2] disabled:opacity-50 transition-colors"
               >
-                Retirer
+                <Delete size={14} className="md:hidden" />
+                <span className="hidden md:inline">Retirer</span>
               </button>
             </div>
           ) : (
@@ -553,7 +560,7 @@ export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?:
               <p className="text-sm text-[#6b7280]">
                 Glissez-déposez votre fichier ici ou cliquez pour parcourir
               </p>
-              <p className="text-xs text-[#6b7280] mt-1">
+              <p className="text-[8px] md:text-xs text-[#6b7280] mt-1">
                 1 fichier uniquement, 10 Mo maximum
               </p>
               <input
@@ -573,7 +580,7 @@ export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?:
           type="button"
           onClick={handleSaveDraftClick}
           disabled={!selectedMissionId || isOrchestrating || isCompressing}
-          className="cursor-pointer rounded-[8px] border border-[#afb1b3] bg-[#ffffff] px-5 py-2.5 text-sm font-semibold text-[#111111] hover:bg-[#8f9194] disabled:opacity-50 transition-colors"
+          className="inline-flex cursor-pointer items-center gap-1 rounded-[8px] border border-[#afb1b3] bg-[#ffffff] px-5 py-2.5 text-sm font-semibold text-[#111111] hover:bg-[#8f9194] disabled:opacity-50 transition-colors"
         >
           {createTimesheet.isPending ? 'Enregistrement...' : isCompressing ? 'Optimisation...' : 'Enregistrer comme brouillon'}
         </button>
@@ -582,9 +589,10 @@ export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?:
           onClick={handleSubmitClick}
           disabled={!selectedMissionId || proofFiles.length === 0 || !factureFile || isOrchestrating || isCompressing}
           title={(!proofFiles.length || !factureFile) ? 'Les documents Rapport d\'activité et facture du consultant requis' : isCompressing ? 'Optimisation des fichiers en cours...' : ''}
-          className="cursor-pointer rounded-[8px] bg-green-600 px-5 py-2.5 text-sm font-semibold text-[#ffffff] hover:bg-green-700 disabled:bg-[#e5e7eb] disabled:text-[#6b7280] disabled:cursor-not-allowed transition-colors"
+          className="inline-flex cursor-pointer items-center gap-1 rounded-[8px] bg-green-600 px-5 py-2.5 text-sm font-semibold text-[#ffffff] hover:bg-green-700 disabled:bg-[#e5e7eb] disabled:text-[#6b7280] disabled:cursor-not-allowed transition-colors"
         >
-          {submitTimesheet.isPending ? 'Soumission...' : isCompressing ? 'Optimisation...' : 'Soumettre'}
+          <Send size={14} className="md:hidden" />
+          <span className="hidden md:inline">{submitTimesheet.isPending ? 'Soumission...' : isCompressing ? 'Optimisation...' : 'Soumettre'}</span>
         </button>
       </div>
 

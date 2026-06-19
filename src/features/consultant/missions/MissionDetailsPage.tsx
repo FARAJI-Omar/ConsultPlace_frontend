@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
+import { FilePlus } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import apiClient from '../../../lib/apiClient';
 import { useConsultantTimesheets } from '../../../hooks/consultant/useConsultantDashboard';
@@ -101,29 +102,29 @@ export default function MissionDetailsPage() {
         </h1>
       </div>
 
-      <div className="rounded-[12px] bg-[#f5f5f5] p-8">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="rounded-[12px] bg-white p-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           <div>
             <p className="text-sm text-[#6b7280] mb-1">Client</p>
-            <p className="text-[16px] text-[#111111] font-medium">
+            <p className="text-sm md:text-[16px] text-[#111111] font-medium">
               {mission.contract?.client?.raison_sociale ?? '-'}
             </p>
           </div>
           <div>
             <p className="text-sm text-[#6b7280] mb-1">Référence contrat</p>
-            <p className="text-[16px] text-[#111111] font-medium">
+            <p className="text-sm md:text-[16px] text-[#111111] font-medium">
               {mission.contract?.ref ?? '-'}
             </p>
           </div>
           <div>
             <p className="text-sm text-[#6b7280] mb-1">Profil</p>
-            <p className="text-[16px] text-[#111111] font-medium">
+            <p className="text-sm md:text-[16px] text-[#111111] font-medium">
               {mission.contract?.profile ?? '-'}
             </p>
           </div>
           <div>
             <p className="text-sm text-[#6b7280] mb-1">Taux journalier</p>
-            <p className="text-[16px] text-[#111111] font-medium">
+            <p className="text-sm md:text-[16px] text-[#111111] font-medium">
               {mission.missionDailyRate
                 ? `${mission.missionDailyRate.toLocaleString()} DH`
                 : '-'}
@@ -131,13 +132,13 @@ export default function MissionDetailsPage() {
           </div>
           <div>
             <p className="text-sm text-[#6b7280] mb-1">Date début</p>
-            <p className="text-[16px] text-[#111111] font-medium">
+            <p className="text-sm md:text-[16px] text-[#111111] font-medium">
               {formatDate(mission.startDate)}
             </p>
           </div>
           <div>
             <p className="text-sm text-[#6b7280] mb-1">Date fin</p>
-            <p className="text-[16px] text-[#111111] font-medium">
+            <p className="text-sm md:text-[16px] text-[#111111] font-medium">
               {formatDate(mission.endDate)}
             </p>
           </div>
@@ -156,7 +157,7 @@ export default function MissionDetailsPage() {
         </div>
       </div>
 
-      <div className="flex items-center gap-2 bg-[#f8f9fa] rounded-full p-1.5 w-fit">
+      <div className="flex items-center gap-2 bg-[#f8f9fa] rounded-full py-1 w-fit">
         {TABS.map((tab) => (
           <button
             key={tab.value}
@@ -173,7 +174,7 @@ export default function MissionDetailsPage() {
       </div>
 
       {activeTab === 'timesheets' && (
-        <div className="rounded-[12px] bg-[#f5f5f5] p-8">
+        <div className="rounded-[12px] bg-[#ffffff] p-4">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-[18px] font-semibold text-[#111111] leading-[1.4]">
               Relevés mensuels associés
@@ -181,15 +182,13 @@ export default function MissionDetailsPage() {
             {mission.canCreateTimesheet ? (
               <button
                 onClick={() => navigate(`/consultant/timesheets/new?missionId=${missionId}`)}
-                className="cursor-pointer rounded-[8px] bg-[#3b82f6] px-3 py-1.5 text-xs font-medium text-[#ffffff] transition-colors hover:bg-[#2563eb]"
+                className="inline-flex cursor-pointer items-center gap-1 rounded-[8px] bg-[#3b82f6] px-3 py-1.5 text-xs font-medium text-[#ffffff] transition-colors hover:bg-[#2563eb]"
               >
-                + Créer relevé
+                <FilePlus size={14} className="md:hidden" />
+                <span className="hidden md:inline">+ Créer relevé</span>
               </button>
             ) : (
               <span className="inline-flex items-center gap-1 rounded-[8px] border border-[#e5e7eb] bg-[#f9fafb] px-3 py-1.5 text-xs text-[#6b7280]">
-                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
                 ✓ À jour
               </span>
             )}
@@ -200,19 +199,19 @@ export default function MissionDetailsPage() {
             </p>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-sm border-collapse">
+              <table className="w-full text-xs md:text-sm border-collapse">
                 <thead>
                   <tr className="border-b border-[#e5e7eb]">
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[#6b7280]">
+                    <th className="px-3 md:px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[#6b7280]">
                       Mois
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[#6b7280]">
+                    <th className="px-3 md:px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[#6b7280]">
                       Heures
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[#6b7280]">
+                    <th className="px-3 md:px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[#6b7280]">
                       Statut
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[#6b7280]">
+                    <th className="px-3 md:px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[#6b7280]">
                       Soumis le
                     </th>
                   </tr>
@@ -223,11 +222,11 @@ export default function MissionDetailsPage() {
                       key={ts.id}
                       className="border-b border-[#e5e7eb] hover:bg-[#f9fafb]"
                     >
-                      <td className="px-4 py-3 text-[#111111]">{ts.month}</td>
-                      <td className="px-4 py-3 text-[#111111]">
+                      <td className="px-3 md:px-4 py-3 text-xs md:text-sm text-[#111111]">{ts.month}</td>
+                      <td className="px-3 md:px-4 py-3 text-xs md:text-sm text-[#111111]">
                         {ts.totalHours}
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-3 md:px-4 py-3">
                         <span
                           className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
                             STATUS_BADGE[ts.status] ??
@@ -237,7 +236,7 @@ export default function MissionDetailsPage() {
                           {ts.status}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-[#111111]">
+                      <td className="px-3 md:px-4 py-3 text-xs md:text-sm text-[#111111]">
                         {formatDate(ts.submittedAt)}
                       </td>
                     </tr>
@@ -250,7 +249,7 @@ export default function MissionDetailsPage() {
       )}
 
       {activeTab === 'payouts' && (
-        <div className="rounded-[12px] bg-[#f5f5f5] p-8">
+        <div className="rounded-[12px] bg-[#ffffff] p-4">
           <h2 className="text-[18px] font-semibold text-[#111111] leading-[1.4] mb-4">
             Historique des paiements
           </h2>

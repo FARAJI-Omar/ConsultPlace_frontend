@@ -47,17 +47,17 @@ export default function ConsultantDashboard() {
         averageByMission={averageByMission}
       />
 
-      <div className="flex gap-6">
-        <div className="w-[70%]">
-          <ConsultantMonthlyRevenueChart
-            data={trackingData ?? []}
-            isLoading={trackingLoading}
-          />
-        </div>
-        <div className="w-[30%]">
+      <div className="flex flex-col md:flex-row gap-6">
+        <div className="w-full md:w-[30%] md:order-2 border border-[#e5e7eb] rounded-xl">
           <Reminders
             draftCount={draftCount}
             rejectedCount={rejectedCount}
+          />
+        </div>
+        <div className="w-full md:w-[70%] md:order-1">
+          <ConsultantMonthlyRevenueChart
+            data={trackingData ?? []}
+            isLoading={trackingLoading}
           />
         </div>
       </div>

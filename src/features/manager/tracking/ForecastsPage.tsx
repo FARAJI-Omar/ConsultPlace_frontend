@@ -88,14 +88,14 @@ const tdClass = 'px-4 py-3 text-sm border-b border-[#e5e7eb]';
 
 function KpiCard({ icon: Icon, label, value, className }: { icon: React.ElementType; label: string; value: string | number; className?: string }) {
   return (
-    <div className={cn('rounded-[12px] bg-white border border-[#e5e7eb] p-6 hover:shadow-sm transition-shadow', className)}>
+    <div className={cn('rounded-[12px] bg-white border border-[#e5e7eb] p-4 md:p-6 hover:shadow-sm transition-shadow', className)}>
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-sm text-[#6b7280]">{label}</p>
-          <p className="mt-1.5 text-2xl font-semibold text-[#111111]">{value}</p>
+          <p className="text-xs md:text-sm text-[#6b7280]">{label}</p>
+          <p className="mt-1 text-lg md:text-2xl font-semibold text-[#111111]">{value}</p>
         </div>
-        <div className="flex h-10 w-10 items-center justify-center rounded-[8px] bg-[#f8f9fa]">
-          <Icon className="h-5 w-5 text-[#111111]" />
+        <div className="flex h-8 w-8 md:h-10 md:w-10 items-center justify-center rounded-[8px] bg-[#f8f9fa]">
+          <Icon className="h-4 w-4 md:h-5 md:w-5 text-[#111111]" />
         </div>
       </div>
     </div>

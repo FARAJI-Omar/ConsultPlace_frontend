@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
+import { Pencil, Eye, FileLock } from 'lucide-react';
 import { DataTable, type Column } from '../../../components/common/DataTable';
 import Modal from '../../../components/common/Modal';
 import MissionForm from './MissionForm';
@@ -113,22 +114,25 @@ export default function MissionsPage() {
         <div className="flex items-center justify-left gap-2">
           <button
             onClick={() => handleEdit(item)}
-            className="cursor-pointer rounded-[6px]  px-2.5 py-1 text-xs font-medium bg-[#03b5537c] text-green-800 transition-colors hover:bg-green-700"
+            className="inline-flex cursor-pointer items-center gap-1 rounded-[6px]  px-2.5 py-1 text-xs font-medium bg-[#03b5537c] text-green-800 transition-colors hover:bg-green-700"
           >
-            Modifier
+            <Pencil size={14} className="lg:hidden" />
+            <span className="hidden lg:inline">Modifier</span>
           </button>
           <Link
             to={`/admin/missions/${item.id}`}
-            className="cursor-pointer rounded-[6px] bg-[#EFF6FF] px-2.5 py-1 text-xs font-medium text-primary-blue transition-colors hover:bg-blue-100"
+            className="inline-flex cursor-pointer items-center gap-1 rounded-[6px] bg-[#EFF6FF] px-2.5 py-1 text-xs font-medium text-primary-blue transition-colors hover:bg-blue-100"
           >
-            Détails
+            <Eye size={14} className="lg:hidden" />
+            <span className="hidden lg:inline">Détails</span>
           </Link>
           {item.status === 'ACTIVE' && (
             <button
               onClick={() => setConfirmClose(item)}
-              className="cursor-pointer rounded-[6px] bg-red-50 px-2.5 py-1 text-xs font-medium text-red-600 transition-colors hover:bg-red-100"
+              className="inline-flex cursor-pointer items-center gap-1 rounded-[6px] bg-red-50 px-2.5 py-1 text-xs font-medium text-red-600 transition-colors hover:bg-red-100"
             >
-              Clôturer
+              <FileLock size={14} className="lg:hidden" />
+              <span className="hidden lg:inline">Clôturer</span>
             </button>
           )}               
         </div>

@@ -21,7 +21,7 @@ export default function CreateCraPage() {
   const defaultMissionId = missionIdParam ? Number(missionIdParam) : undefined;
 
   return (
-    <div className="rounded-[12px] bg-[#f5f5f5] p-8">
+    <div className="p-2">
       <div className="flex items-center gap-2 mb-6 relative">
         <h1 className="text-[22px] font-semibold text-[#111111]">
           Nouveau relevé mensuel
@@ -40,7 +40,7 @@ export default function CreateCraPage() {
           </div>
         )}
       </div>
-      <div className="rounded-[12px] bg-[#ffffff] border border-[#e5e7eb] p-8">
+      <div className="">
         <CreateCraForm defaultMissionId={defaultMissionId} />
       </div>
     </div>

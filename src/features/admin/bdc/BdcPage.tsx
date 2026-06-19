@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Pencil, Eye } from 'lucide-react';
 import { DataTable, type Column } from '../../../components/common/DataTable';
 import Modal from '../../../components/common/Modal';
 import BdcForm from './BdcForm';
@@ -97,15 +98,17 @@ export default function BdcPage() {
         <div className="flex items-center justify-center gap-2">
           <button
             onClick={() => handleEdit(item)}
-            className="cursor-pointer rounded-[6px] bg-[#03b5537c] px-2.5 py-1 text-xs font-medium text-green-800 transition-colors hover:bg-green-700"
+            className="inline-flex cursor-pointer items-center gap-1 rounded-[6px] bg-[#03b5537c] px-2.5 py-1 text-xs font-medium text-green-800 transition-colors hover:bg-green-700"
           >
-            Modifier
+            <Pencil size={14} className="lg:hidden" />
+            <span className="hidden lg:inline">Modifier</span>
           </button>
           <button
             onClick={() => navigate(`/admin/bons-de-commande/${item.id}`)}
-            className="cursor-pointer rounded-[6px] bg-[#EFF6FF] px-2.5 py-1 text-xs font-medium text-primary-blue transition-colors hover:bg-blue-100"
+            className="inline-flex cursor-pointer items-center gap-1 rounded-[6px] bg-[#EFF6FF] px-2.5 py-1 text-xs font-medium text-primary-blue transition-colors hover:bg-blue-100"
           >
-            Détails
+            <Eye size={14} className="lg:hidden" />
+            <span className="hidden lg:inline">Détails</span>
           </button>
         </div>
       ),

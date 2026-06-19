@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { FileText, Eye, Download } from 'lucide-react';
 import { useGetClientById } from '../../../hooks/useClients';
-import { formatDate, cleanFilename } from '../../../lib/utils';
+import { formatDate, truncateFilename } from '../../../lib/utils';
 import Modal from '../../../components/common/Modal';
 import ClientForm from './ClientForm';
 import { downloadFile } from '../../../utils/downloadFile';
@@ -150,7 +150,7 @@ export default function ClientDetailPage() {
                             rel="noopener noreferrer"
                             className="text-primary-blue hover:underline"
                           >
-                            {cleanFilename(doc.filename)}
+                            {truncateFilename(doc.filename)}
                           </a>
                           <button
                             type="button"
