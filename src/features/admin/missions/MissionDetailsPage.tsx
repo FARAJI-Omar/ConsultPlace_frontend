@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { FileText, Download, ClipboardList } from 'lucide-react';
+import { FileText, Download, ClipboardList, Pencil } from 'lucide-react';
 import { useGetMissionById } from '../../../hooks/useMissions';
 import { formatDate, truncateFilename } from '../../../lib/utils';
 import Modal from '../../../components/common/Modal';
@@ -65,9 +65,11 @@ export default function MissionDetailsPage() {
         </h1>
         <button
           onClick={() => setEditModalOpen(true)}
-          className="ml-auto cursor-pointer rounded-[8px] bg-green-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-green-700"
+          title="Modifier la mission"
+          className="ml-auto inline-flex cursor-pointer items-center gap-1 rounded-[8px] bg-green-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-green-700"
         >
-          Modifier
+          <Pencil size={14} className="md:hidden" />
+          <span className="hidden md:inline">Modifier</span>
         </button>
       </div>
 

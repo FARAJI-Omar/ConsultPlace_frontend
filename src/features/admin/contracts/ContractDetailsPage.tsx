@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Eye, FileText, Download } from 'lucide-react';
+import { Eye, FileText, Download, Pencil } from 'lucide-react';
 import { useGetContractById } from '../../../hooks/useContracts';
 import { useGetMissionsByContract } from '../../../hooks/useMissions';
 import { formatDate, truncateFilename } from '../../../lib/utils';
@@ -53,9 +53,11 @@ export default function ContractDetailsPage() {
         </h1>
         <button
           onClick={() => setEditModalOpen(true)}
-          className="ml-auto cursor-pointer rounded-[8px] bg-green-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-green-700"
+          title="Modifier le contrat"
+          className="ml-auto inline-flex cursor-pointer items-center gap-1 rounded-[8px] bg-green-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-green-700"
         >
-          Modifier
+          <Pencil size={14} className="md:hidden" />
+          <span className="hidden md:inline">Modifier</span>
         </button>
       </div>
 

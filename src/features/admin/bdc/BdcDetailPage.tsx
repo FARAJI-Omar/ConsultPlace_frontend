@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { toast } from 'sonner';
-import { FileText, Download, Calendar, Hash, Clock, Activity } from 'lucide-react';
+import { FileText, Download, Calendar, Hash, Clock, Activity, Pencil } from 'lucide-react';
 import { useGetBdcById, useUploadBdcAttachments } from '../../../hooks/useBdc';
 import { truncateFilename } from '../../../lib/utils';
 import { compressImages } from '../../../lib/compressImage';
@@ -98,9 +98,11 @@ export default function BdcDetailPage() {
         </Link>
         <button
           onClick={() => setEditModalOpen(true)}
-          className="cursor-pointer rounded-[8px] bg-green-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-green-700"
+          title="Modifier le BDC"
+          className="inline-flex cursor-pointer items-center gap-1 rounded-[8px] bg-green-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-green-700"
         >
-          Modifier
+          <Pencil size={14} className="md:hidden" />
+          <span className="hidden md:inline">Modifier</span>
         </button>
       </div>
 
