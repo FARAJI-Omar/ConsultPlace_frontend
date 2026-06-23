@@ -62,7 +62,7 @@ export default function ManagerBdcDetailPage() {
 
       <div className="rounded-[12px] border border-[#e5e7eb] bg-[#ffffff] p-6">
         <div className="mb-6 flex items-center justify-between">
-          <h1 className="text-2xl font-semibold text-[#111111]">{bdc.bdc}</h1>
+          <h1 className="text-lg md:text-xl font-semibold text-[#111111]">{bdc.bdc}</h1>
           <span
             className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium ${
               bdc.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'

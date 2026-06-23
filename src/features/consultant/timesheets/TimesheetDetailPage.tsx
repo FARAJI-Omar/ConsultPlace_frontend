@@ -72,7 +72,7 @@ export default function TimesheetDetailPage() {
           </svg>
           Retour
         </Link>
-        <h1 className="text-2xl font-semibold text-[#111111]">Détail du relevé</h1>
+        <h1 className="text-xl font-semibold text-[#111111]">Détail du relevé</h1>
       </div>
 
       <div className="rounded-[12px] bg-white p-4">

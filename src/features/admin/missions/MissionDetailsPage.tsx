@@ -60,7 +60,7 @@ export default function MissionDetailsPage() {
           </svg>
           Retour
         </Link>
-        <h1 className="text-2xl font-semibold text-[#111111]">
+        <h1 className="text-lg md:text-xl font-semibold text-[#111111]">
           Mission {mission.title}
         </h1>
         <button

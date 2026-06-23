@@ -53,7 +53,7 @@ export default function ClientDetailPage() {
           </svg>
           Retour
         </Link>
-        <h1 className="text-2xl font-semibold text-[#111111]">
+        <h1 className="text-lg md:text-xl font-semibold text-[#111111]">
           {client.raison_sociale}
           {client.isArchived && (
             <span className="ml-3 inline-block rounded-full bg-gray-100 px-3 py-0.5 text-sm font-medium text-gray-500">Archivé</span>

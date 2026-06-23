@@ -48,7 +48,7 @@ export default function ContractDetailsPage() {
           </svg>
           Retour
         </Link>
-        <h1 className="text-2xl font-semibold text-[#111111]">
+        <h1 className="text-lg md:text-xl font-semibold text-[#111111]">
           Contrat {contract.ref}
         </h1>
         <button
@@ -140,57 +140,67 @@ export default function ContractDetailsPage() {
             Missions associées
           </h2>
           {missions && missions.length > 0 ? (
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-[#e5e7eb]">
-                  <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-[#6b7280]">
-                    Titre
-                  </th>
-                  <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-[#6b7280]">
-                    Consultant
-                  </th>
-                  <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-[#6b7280]">
-                    Statut
-                  </th>
-                  <th className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-[#6b7280]">
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {missions.map((m) => (
-                  <tr key={m.id} className="border-b border-[#e5e7eb] transition-colors hover:bg-[#f9fafb]">
-                    <td className="px-3 py-2">
-                      <Link
-                        to={`/admin/missions/${m.id}`}
-                        className="font-medium text-primary-blue transition-colors hover:text-primary-blue/80"
-                      >
-                        {m.title}
-                      </Link>
-                    </td>
-                    <td className="px-3 py-2 text-[#111111]">{m.consultant?.name ?? '—'}</td>
-                    <td className="px-3 py-2">
-                      <span
-                        className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
-                          m.status === 'ACTIVE'
-                            ? 'bg-green-100 text-green-700'
-                            : 'bg-gray-100 text-gray-500'
-                        }`}
-                      >
-                        {m.status === 'ACTIVE' ? 'Active' : 'Clôturée'}
-                      </span>
-                    </td>
-                    <td className="px-3 py-2">
-                      <Link
-                        to={`/admin/missions/${m.id}`}
-                        className="inline-flex cursor-pointer items-center rounded p-1.5 text-[#6b7280] transition-colors hover:bg-light-blue hover:text-primary-blue"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Link>
-                    </td>
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs md:text-sm">
+                <thead>
+                  <tr className="border-b border-[#e5e7eb]">
+                    <th className="px-2 md:px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-[#6b7280]">
+                      Titre
+                    </th>
+                    <th className="px-2 md:px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-[#6b7280]">
+                      Consultant
+                    </th>
+                    <th className="px-2 md:px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-[#6b7280]">
+                      Statut
+                    </th>
+                    <th className="px-2 md:px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-[#6b7280]">
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {missions.map((m) => (
+                    <tr key={m.id} className="border-b border-[#e5e7eb] transition-colors hover:bg-[#f9fafb]">
+                      <td className="px-2 md:px-3 py-2">
+                        <Link
+                          to={`/admin/missions/${m.id}`}
+                          className="font-medium text-primary-blue transition-colors hover:text-primary-blue/80"
+                        >
+                          {m.title}
+                        </Link>
+                      </td>
+                      <td className="px-2 md:px-3 py-2 text-[#111111]">
+                        {(() => {
+                          const list = m.consultants ?? [];
+                          if (list.length > 0) {
+                            return list.map((mc) => mc.consultant.name).join(', ');
+                          }
+                          return m.consultant?.name ?? '—';
+                        })()}
+                      </td>
+                      <td className="px-2 md:px-3 py-2">
+                        <span
+                          className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
+                            m.status === 'ACTIVE'
+                              ? 'bg-green-100 text-green-700'
+                              : 'bg-gray-100 text-gray-500'
+                          }`}
+                        >
+                          {m.status === 'ACTIVE' ? 'Active' : 'Clôturée'}
+                        </span>
+                      </td>
+                      <td className="px-2 md:px-3 py-2">
+                        <Link
+                          to={`/admin/missions/${m.id}`}
+                          className="inline-flex cursor-pointer items-center rounded p-1.5 text-[#6b7280] transition-colors hover:bg-light-blue hover:text-primary-blue"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           ) : (
             <div className="flex min-h-[150px] items-center justify-center">
               <p className="text-sm text-[#6b7280]">

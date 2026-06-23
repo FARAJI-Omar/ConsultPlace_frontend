@@ -97,7 +97,7 @@ export default function MissionDetailsPage() {
           </svg>
           Retour
         </Link>
-        <h1 className="text-[22px] font-semibold text-[#111111] leading-[1.3] tracking-[-0.3px]">
+        <h1 className="text-lg md:text-xl font-semibold text-[#111111]">
           {mission.title}
         </h1>
       </div>
@@ -176,7 +176,7 @@ export default function MissionDetailsPage() {
       {activeTab === 'timesheets' && (
         <div className="rounded-[12px] bg-[#ffffff] p-4">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-[18px] font-semibold text-[#111111] leading-[1.4]">
+            <h2 className="text-[16px] font-semibold text-[#111111] leading-[1.4]">
               Relevés mensuels associés
             </h2>
             {mission.canCreateTimesheet ? (
@@ -250,7 +250,7 @@ export default function MissionDetailsPage() {
 
       {activeTab === 'payouts' && (
         <div className="rounded-[12px] bg-[#ffffff] p-4">
-          <h2 className="text-[18px] font-semibold text-[#111111] leading-[1.4] mb-4">
+          <h2 className="text-[16px] font-semibold text-[#111111] leading-[1.4] mb-4">
             Historique des paiements
           </h2>
           {payoutHistory.length === 0 ? (

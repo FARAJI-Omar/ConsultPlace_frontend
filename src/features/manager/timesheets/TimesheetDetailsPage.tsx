@@ -130,7 +130,7 @@ export default function TimesheetDetailsPage() {
           </svg>
           Retour
         </Link>
-        <h1 className="text-2xl font-semibold text-[#111111]">Détail du relevé</h1>
+        <h1 className="text-lg md:text-xl font-semibold text-[#111111]">Détail du relevé</h1>
         {canReview && (
           <div className="ml-auto flex gap-3">
             <button

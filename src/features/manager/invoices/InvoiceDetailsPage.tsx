@@ -287,7 +287,7 @@ export default function InvoiceDetailsPage() {
           </svg>
           Retour
         </Link>
-        <h1 className="text-2xl font-semibold text-[#111111]">Facture {invoice.ref}</h1>
+        <h1 className="text-lg md:text-xl font-semibold text-[#111111]">Facture {invoice.ref}</h1>
         <div className="flex items-center gap-1.5">
           <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${statusBadge[invoice.status] || ''}`}>
             {statusLabels[invoice.status] || invoice.status}
