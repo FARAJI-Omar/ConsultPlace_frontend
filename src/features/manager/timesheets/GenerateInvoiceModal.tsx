@@ -45,6 +45,7 @@ export default function GenerateInvoiceModal({
 
   const { data: bdcsData } = useGetBdcsByMission(missionId);
   const availableBdcs = useMemo(() => (bdcsData ?? []).filter((b) => b.isActive || selectedBdcIds.includes(b.id)), [bdcsData, selectedBdcIds]);
+  const sortedBdcs = useMemo(() => [...availableBdcs].sort((a, b) => a.createdAt.localeCompare(b.createdAt)), [availableBdcs]);
 
   const selectedBdcTotalDays = useMemo(() => {
     return availableBdcs
@@ -55,6 +56,20 @@ export default function GenerateInvoiceModal({
   const bdcWarning = selectedBdcIds.length > 0 && selectedBdcTotalDays < timesheetDays
     ? `Jours insuffisants : ${selectedBdcTotalDays} disponible(s) vs ${timesheetDays} requis`
     : '';
+
+  const bdcBreakdown = useMemo(() => {
+    const result: { bdc: string; days: number }[] = [];
+    if (selectedBdcIds.length === 0 || !timesheetDays) return result;
+    const selected = sortedBdcs.filter((b) => selectedBdcIds.includes(b.id));
+    let remaining = timesheetDays;
+    for (const b of selected) {
+      if (remaining <= 0) break;
+      const take = Math.min(remaining, b.daysLeft);
+      result.push({ bdc: b.bdc, days: take });
+      remaining -= take;
+    }
+    return result;
+  }, [sortedBdcs, selectedBdcIds, timesheetDays]);
 
   if (!open) return null;
 
@@ -151,7 +166,7 @@ export default function GenerateInvoiceModal({
                   <p className="text-xs text-[#6b7280]">Aucun BDC disponible pour cette mission</p>
                 ) : (
                   <div className="space-y-2 max-h-40 overflow-y-auto">
-                    {availableBdcs.map((bdc) => {
+                    {sortedBdcs.map((bdc, idx) => {
                       const isSelected = selectedBdcIds.includes(bdc.id);
                       const remainingPct = bdc.totalDays > 0 ? Math.round((bdc.daysLeft / bdc.totalDays) * 100) : 0;
                       return (
@@ -173,6 +188,9 @@ export default function GenerateInvoiceModal({
                               <p className="text-sm font-medium text-[#111111]">{bdc.bdc}</p>
                               <p className="text-xs text-[#6b7280]">{bdc.daysLeft} / {bdc.totalDays} jours restants</p>
                             </div>
+                            <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-blue-500 text-[10px] font-bold text-blue-500">
+                              {idx + 1}
+                            </span>
                             <div className="h-1.5 w-12 rounded-full bg-[#e5e7eb]">
                               <div
                                 className={`h-1.5 rounded-full ${
@@ -194,6 +212,15 @@ export default function GenerateInvoiceModal({
                   <p className="mt-2 text-xs text-[#10b981]">
                     {selectedBdcTotalDays} jours disponibles sur {timesheetDays} requis
                   </p>
+                )}
+                {selectedBdcIds.length > 0 && (
+                  <div className="mt-1 space-y-0.5">
+                    {bdcBreakdown.filter((b) => b.days > 0).map((b) => (
+                      <p key={b.bdc} className="text-xs text-[#6b7280]">
+                        {b.days} jours consommés du {b.bdc}
+                      </p>
+                    ))}
+                  </div>
                 )}
               </div>
             )}

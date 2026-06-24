@@ -29,6 +29,7 @@ export default function BdcSelectorForTimesheet({
 }: BdcSelectorForTimesheetProps) {
   const { data: bdcsData } = useGetBdcsByMission(missionId);
   const availableBdcs = useMemo(() => (bdcsData ?? []).filter((b: BonDeCommande) => b.isActive || selectedBdcIds.includes(b.id)), [bdcsData, selectedBdcIds]);
+  const sortedBdcs = useMemo(() => [...availableBdcs].sort((a, b) => a.createdAt.localeCompare(b.createdAt)), [availableBdcs]);
 
   const bdcInfo = useMemo(() => {
     const consumedAll: Record<number, number> = {};
@@ -57,12 +58,13 @@ export default function BdcSelectorForTimesheet({
     simulate(consumedAll);
     simulate(consumedThis, timesheetId);
 
-    const info: Record<number, { claimedByOthers: number; effectiveDaysLeft: number; consumedTotal: number; overflow: boolean }> = {};
+    const info: Record<number, { claimedByOthers: number; effectiveDaysLeft: number; consumedTotal: number; overflow: boolean; consumedHere: number }> = {};
     availableBdcs.forEach((b) => {
       const total = consumedAll[b.id];
-      const byOthers = total - consumedThis[b.id];
+      const here = consumedThis[b.id];
+      const byOthers = total - here;
       const effectiveDaysLeft = Math.max(0, b.daysLeft - byOthers);
-      info[b.id] = { claimedByOthers: byOthers, effectiveDaysLeft, consumedTotal: total, overflow: total > b.daysLeft };
+      info[b.id] = { claimedByOthers: byOthers, effectiveDaysLeft, consumedTotal: total, overflow: total > b.daysLeft, consumedHere: here };
     });
     return info;
   }, [availableBdcs, selectedBdcIds, allSelections, timesheetId]);
@@ -98,7 +100,7 @@ export default function BdcSelectorForTimesheet({
         <p className="text-xs text-[#6b7280]">Aucun BDC disponible</p>
       ) : (
         <div className="space-y-1">
-          {availableBdcs.map((bdc) => {
+          {sortedBdcs.map((bdc, idx) => {
             const isSelected = selectedBdcIds.includes(bdc.id);
             const info = bdcInfo[bdc.id];
             const remainingPct = bdc.totalDays > 0 ? Math.round((info.effectiveDaysLeft / bdc.totalDays) * 100) : 0;
@@ -136,6 +138,9 @@ export default function BdcSelectorForTimesheet({
                       <p className="text-xs text-red-500">Dépassement : {info.consumedTotal} alloués sur {bdc.daysLeft} disponibles</p>
                     )}
                   </div>
+                  <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-blue-500 text-[10px] font-bold text-blue-500">
+                    {idx + 1}
+                  </span>
                   <div className="h-1.5 w-12 rounded-full bg-[#e5e7eb]">
                     <div
                       className={`h-1.5 rounded-full ${
@@ -157,6 +162,17 @@ export default function BdcSelectorForTimesheet({
         <p className="text-xs text-[#10b981]">
           {selectedBdcTotalDays} jours disponibles sur {timesheetDays} requis
         </p>
+      )}
+      {selectedBdcIds.length > 0 && (
+        <div className="space-y-0.5">
+          {sortedBdcs
+            .filter((b) => selectedBdcIds.includes(b.id) && (bdcInfo[b.id]?.consumedHere ?? 0) > 0)
+            .map((b) => (
+              <p key={b.id} className="text-xs text-[#6b7280]">
+                {bdcInfo[b.id].consumedHere} jours consommés du {b.bdc}
+              </p>
+            ))}
+        </div>
       )}
     </div>
   );
