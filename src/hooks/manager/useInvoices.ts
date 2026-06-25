@@ -149,6 +149,7 @@ export function useMarkPaid() {
 }
 
 export function useDownloadPdf() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: number) =>
       apiClient
@@ -161,6 +162,9 @@ export function useDownloadPdf() {
           link.click();
           window.URL.revokeObjectURL(url);
         }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+    },
   });
 }
 
