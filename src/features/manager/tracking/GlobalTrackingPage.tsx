@@ -212,12 +212,13 @@ export default function GlobalTrackingPage() {
         </div>
       );
     } },
-    { key: 'bdcs', label: 'BDC (reste)', render: (r) => {
+    { key: 'bdcs', label: <>BDC <span className="normal-case text-xs">(consommé/total)</span></>, render: (r) => {
       const timesheetIds = new Set(r.timesheetIds ?? []);
       const seen = new Set<number>();
       const usedBdcs = (r.bdcs ?? []).filter((b) => {
         if (!timesheetIds.has(b.timesheetId)) return false;
         if (seen.has(b.id)) return false;
+        if (b.consumedDays === 0) return false;
         seen.add(b.id);
         return true;
       });
@@ -231,7 +232,7 @@ export default function GlobalTrackingPage() {
               to={`/manager/bons-de-commande/${b.id}`}
               className="inline-block rounded-full px-2.5 py-0.5 text-xs font-medium bg-[#f0fdf4] text-[#15803d] hover:bg-[#d1fae5] transition-colors"
             >
-              {b.bdc} ({b.daysLeft}/{b.totalDays})
+              {b.bdc} ({b.consumedDays}/{b.totalDays})
             </Link>
           ))}
         </div>

@@ -3,7 +3,7 @@ import type { Pagination } from '../../types/api';
 
 export interface Column<T> {
   key: string;
-  label: string;
+  label: React.ReactNode;
   render?: (item: T, index: number) => React.ReactNode;
 }
 
