@@ -1,4 +1,4 @@
-﻿import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+﻿import { createBrowserRouter, RouterProvider, Outlet } from 'react-router-dom';
 import Login from './features/auth/Login';
 import CompleteRegistrationPage from './features/auth/CompleteRegistrationPage';
 import ForgotPasswordPage from './features/auth/ForgotPasswordPage';
@@ -53,108 +53,117 @@ import RootRedirect from './pages/RootRedirect';
 import NotFoundPage from './pages/NotFoundPage';
 import { useVersionCheck } from './hooks/useVersionCheck';
 
+function VersionCheckLayout() {
+  useVersionCheck();
+  return <Outlet />;
+}
+
 const router = createBrowserRouter([
   {
-    path: '/',
-    element: <RootRedirect />,
-  },
-  {
-    path: '/login',
-    element: <GuestGuard><Login /></GuestGuard>,
-  },
-  {
-    path: '/complete-registration',
-    element: <CompleteRegistrationPage />,
-  },
-  {
-    path: '/forgot-password',
-    element: <ForgotPasswordPage />,
-  },
-  {
-    path: '/reset-password',
-    element: <ResetPasswordPage />,
-  },
-  {
-    path: '/admin',
-    element: <AdminRoute />,
+    element: <VersionCheckLayout />,
     children: [
       {
-        element: <AdminLayout />,
-        children: [
-          { index: true, element: <DashboardPage /> },
-          { path: 'clients', element: <ClientsPage /> },
-          { path: 'clients/archived', element: <ArchivedClientsPage /> },
-          { path: 'clients/:id', element: <ClientDetailPage /> },
-          { path: 'consultants', element: <ConsultantsPage /> },
-          { path: 'contracts', element: <ContractsPage /> },
-          { path: 'contracts/archived', element: <ArchivedContractsPage /> },
-          { path: 'contracts/:id', element: <ContractDetailsPage /> },
-          { path: 'missions', element: <MissionsPage /> },
-          { path: 'missions/:id', element: <MissionDetailsPage /> },
-          { path: 'bons-de-commande', element: <BdcPage /> },
-          { path: 'bons-de-commande/:id', element: <BdcDetailPage /> },
-          { path: 'gestionnaires', element: <GestionnairesPage /> },
-          { path: 'alertrules', element: <AlertRulesPage /> },
-          { path: 'auditlog', element: <AuditLogPage /> },
-        ],
+        path: '/',
+        element: <RootRedirect />,
       },
-    ],
-  },
-  {
-    path: '/manager',
-    element: <ManagerRoute />,
-    children: [
       {
-        element: <ManagerLayout />,
+        path: '/login',
+        element: <GuestGuard><Login /></GuestGuard>,
+      },
+      {
+        path: '/complete-registration',
+        element: <CompleteRegistrationPage />,
+      },
+      {
+        path: '/forgot-password',
+        element: <ForgotPasswordPage />,
+      },
+      {
+        path: '/reset-password',
+        element: <ResetPasswordPage />,
+      },
+      {
+        path: '/admin',
+        element: <AdminRoute />,
         children: [
-          { index: true, element: <ManagerDashboard /> },
-          { path: 'alerts', element: <AlertCenterPage /> },
-          { path: 'alertrules', element: <ManagerAlertRulesPage /> },
-          { path: 'timesheets', element: <PendingCrasPage /> },
-          { path: 'timesheets/:id', element: <TimesheetDetailsPage /> },
           {
-            path: 'invoices',
-            element: <InvoicesLayout />,
+            element: <AdminLayout />,
             children: [
-              { index: true, element: <AllInvoicesPage /> },
-              { path: ':id', element: <InvoiceDetailsPage /> },
-              { path: 'partial-payments', element: <PartialPaymentsPage /> },
+              { index: true, element: <DashboardPage /> },
+              { path: 'clients', element: <ClientsPage /> },
+              { path: 'clients/archived', element: <ArchivedClientsPage /> },
+              { path: 'clients/:id', element: <ClientDetailPage /> },
+              { path: 'consultants', element: <ConsultantsPage /> },
+              { path: 'contracts', element: <ContractsPage /> },
+              { path: 'contracts/archived', element: <ArchivedContractsPage /> },
+              { path: 'contracts/:id', element: <ContractDetailsPage /> },
+              { path: 'missions', element: <MissionsPage /> },
+              { path: 'missions/:id', element: <MissionDetailsPage /> },
+              { path: 'bons-de-commande', element: <BdcPage /> },
+              { path: 'bons-de-commande/:id', element: <BdcDetailPage /> },
+              { path: 'gestionnaires', element: <GestionnairesPage /> },
+              { path: 'alertrules', element: <AlertRulesPage /> },
+              { path: 'auditlog', element: <AuditLogPage /> },
             ],
           },
-          { path: 'payouts', element: <PayoutTrackingPage /> },
-          { path: 'bons-de-commande', element: <ManagerBdcPage /> },
-          { path: 'bons-de-commande/:id', element: <ManagerBdcDetailPage /> },
-          { path: 'tracking', element: <GlobalTrackingPage /> },
-          { path: 'forecasts', element: <ForecastsPage /> },
         ],
       },
-    ],
-  },
-  {
-    path: '/consultant',
-    element: <ConsultantRoute />,
-    children: [
       {
-        element: <ConsultantLayout />,
+        path: '/manager',
+        element: <ManagerRoute />,
         children: [
-          { index: true, element: <ConsultantDashboard /> },
-          { path: 'profile', element: <ProfilePage /> },
-          { path: 'missions', element: <ConsultantMissionsPage /> },
-          { path: 'missions/:id', element: <ConsultantMissionDetailsPage /> },
-          { path: 'timesheets', element: <TimesheetsPage /> },
-          { path: 'timesheets/:id', element: <TimesheetDetailPage /> },
-          { path: 'timesheets/drafts', element: <DraftsPage /> },
-          { path: 'timesheets/rejected', element: <RejectedPage /> },
-          { path: 'timesheets/new', element: <CreateCraPage /> },
-          { path: 'payments', element: <PaymentsHistoryPage /> },
+          {
+            element: <ManagerLayout />,
+            children: [
+              { index: true, element: <ManagerDashboard /> },
+              { path: 'alerts', element: <AlertCenterPage /> },
+              { path: 'alertrules', element: <ManagerAlertRulesPage /> },
+              { path: 'timesheets', element: <PendingCrasPage /> },
+              { path: 'timesheets/:id', element: <TimesheetDetailsPage /> },
+              {
+                path: 'invoices',
+                element: <InvoicesLayout />,
+                children: [
+                  { index: true, element: <AllInvoicesPage /> },
+                  { path: ':id', element: <InvoiceDetailsPage /> },
+                  { path: 'partial-payments', element: <PartialPaymentsPage /> },
+                ],
+              },
+              { path: 'payouts', element: <PayoutTrackingPage /> },
+              { path: 'bons-de-commande', element: <ManagerBdcPage /> },
+              { path: 'bons-de-commande/:id', element: <ManagerBdcDetailPage /> },
+              { path: 'tracking', element: <GlobalTrackingPage /> },
+              { path: 'forecasts', element: <ForecastsPage /> },
+            ],
+          },
         ],
       },
+      {
+        path: '/consultant',
+        element: <ConsultantRoute />,
+        children: [
+          {
+            element: <ConsultantLayout />,
+            children: [
+              { index: true, element: <ConsultantDashboard /> },
+              { path: 'profile', element: <ProfilePage /> },
+              { path: 'missions', element: <ConsultantMissionsPage /> },
+              { path: 'missions/:id', element: <ConsultantMissionDetailsPage /> },
+              { path: 'timesheets', element: <TimesheetsPage /> },
+              { path: 'timesheets/:id', element: <TimesheetDetailPage /> },
+              { path: 'timesheets/drafts', element: <DraftsPage /> },
+              { path: 'timesheets/rejected', element: <RejectedPage /> },
+              { path: 'timesheets/new', element: <CreateCraPage /> },
+              { path: 'payments', element: <PaymentsHistoryPage /> },
+            ],
+          },
+        ],
+      },
+      { path: '*', element: <NotFoundPage /> },
     ],
   },
-  { path: '*', element: <NotFoundPage /> },
 ]);
 
 export default function App() {
-  useVersionCheck();
   return <RouterProvider router={router} />;
 }
