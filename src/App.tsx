@@ -1,4 +1,4 @@
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+﻿import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import Login from './features/auth/Login';
 import CompleteRegistrationPage from './features/auth/CompleteRegistrationPage';
 import ForgotPasswordPage from './features/auth/ForgotPasswordPage';
@@ -51,6 +51,7 @@ import CreateCraPage from './features/consultant/timesheets/CreateCraPage';
 import PaymentsHistoryPage from './features/consultant/payments/PaymentsHistoryPage';
 import RootRedirect from './pages/RootRedirect';
 import NotFoundPage from './pages/NotFoundPage';
+import { useVersionCheck } from './hooks/useVersionCheck';
 
 const router = createBrowserRouter([
   {
@@ -154,5 +155,6 @@ const router = createBrowserRouter([
 ]);
 
 export default function App() {
+  useVersionCheck();
   return <RouterProvider router={router} />;
 }
