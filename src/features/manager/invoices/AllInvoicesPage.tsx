@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { DataTable } from '../../../components/common/DataTable';
-import { useInvoices, useMarkPaid, useDownloadPdf, useGenerateInvoice, useCancelInvoice, useEmailInvoice } from '../../../hooks/manager/useInvoices';
+import { useInvoices, useMarkPaid, useDownloadPdf, useGenerateInvoice, useCancelInvoice, useEmailInvoice, useContractRates } from '../../../hooks/manager/useInvoices';
 import { useTriggerPayout } from '../../../hooks/manager/usePayouts';
 import { useSendReminder, useSetAutoReminder, useStopAutoReminder } from '../../../hooks/manager/useReminders';
 import { useJobStatus } from '../../../hooks/manager/useJobStatus';
@@ -38,6 +38,9 @@ export default function AllInvoicesPage() {
   const [vatRate, setVatRate] = useState('20');
   const [selectedBdcIds, setSelectedBdcIds] = useState<number[]>([]);
   const [delai, setDelai] = useState('');
+  const [appliedDailyRate, setAppliedDailyRate] = useState('');
+  const [customRate, setCustomRate] = useState('');
+  const [showCustomRate, setShowCustomRate] = useState(false);
   const [cancelConfirm, setCancelConfirm] = useState<number | null>(null);
   const [confirmMarkPaid, setConfirmMarkPaid] = useState<Invoice | null>(null);
   const [markPaidDate, setMarkPaidDate] = useState(new Date().toISOString().split('T')[0]);
@@ -57,6 +60,7 @@ export default function AllInvoicesPage() {
 
   const { data, isLoading } = useInvoices(page, limit, statusFilter || undefined);
   const validTimesheetsQuery = useManagerTimesheets(1, 1000, 'VALIDE');
+  const { data: contractRates, isLoading: ratesLoading } = useContractRates(generateTimesheetId ? parseInt(generateTimesheetId, 10) : null);
   const markPaidMutation = useMarkPaid();
   const downloadPdfMutation = useDownloadPdf();
   const emailMutation = useEmailInvoice();
@@ -292,6 +296,8 @@ export default function AllInvoicesPage() {
     const payload: Record<string, unknown> = { timesheetId: id, vatRate: parseFloat(vatRate) || 20 };
     const delaiNum = parseInt(delai, 10);
     if (!isNaN(delaiNum) && delaiNum > 0) payload.delai = delaiNum;
+    const rateNum = showCustomRate ? parseFloat(customRate) : parseFloat(appliedDailyRate);
+    if (!isNaN(rateNum) && rateNum > 0) payload.appliedDailyRate = rateNum;
     if (selectedBdcIds.length > 0) {
       payload.bdcAssignments = selectedBdcIds.map((bdcId) => ({ timesheetId: id, bdcId }));
     }
@@ -306,6 +312,9 @@ export default function AllInvoicesPage() {
           setVatRate('20');
           setSelectedBdcIds([]);
           setDelai('');
+          setAppliedDailyRate('');
+          setCustomRate('');
+          setShowCustomRate(false);
         },
         onError: (err: unknown) => {
           const axiosErr = err as { response?: { data?: { error?: { message?: string } } } };
@@ -527,6 +536,9 @@ export default function AllInvoicesPage() {
                   onChange={(e) => {
                     setGenerateTimesheetId(e.target.value);
                     setSelectedBdcIds([]);
+                    setAppliedDailyRate('');
+                    setCustomRate('');
+                    setShowCustomRate(false);
                   }}
                   className="w-full rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111]"
                 >
@@ -538,6 +550,69 @@ export default function AllInvoicesPage() {
                   ))}
                 </select>
               </div>
+              {generateTimesheetId && (
+                <div className="rounded-[8px] border border-[#e5e7eb] bg-[#f9fafb] p-3">
+                  <label className="block text-sm font-medium text-[#111111] mb-2">Taux journalier appliqué <span className="text-xs text-[#6b7280]">(Contrat)</span></label>
+                  {ratesLoading ? (
+                    <p className="text-xs text-[#6b7280]">Chargement...</p>
+                  ) : contractRates ? (
+                    <div className="space-y-1">
+                      <label className={`flex items-center gap-2 cursor-pointer rounded-[6px] border px-3 py-2 transition-colors ${!showCustomRate && appliedDailyRate === '' ? 'border-primary-blue bg-[#EFF6FF]' : 'border-[#e5e7eb] bg-[#ffffff] hover:bg-[#f3f4f6]'}`}>
+                        <input
+                          type="radio"
+                          name="dailyRate"
+                          checked={!showCustomRate && appliedDailyRate === ''}
+                          onChange={() => { setAppliedDailyRate(''); setShowCustomRate(false); }}
+                          className="cursor-pointer"
+                        />
+                        <span className="text-sm text-[#111111]">Taux actuel (contrat) — {contractRates.currentDailyRate.toLocaleString('fr-FR')} DH</span>
+                      </label>
+                      {contractRates.oldDailyRate > 0 && contractRates.oldDailyRate !== contractRates.currentDailyRate && (
+                        <label className={`flex items-center gap-2 cursor-pointer rounded-[6px] border px-3 py-2 transition-colors ${!showCustomRate && appliedDailyRate === String(contractRates.oldDailyRate) ? 'border-primary-blue bg-[#EFF6FF]' : 'border-[#e5e7eb] bg-[#ffffff] hover:bg-[#f3f4f6]'}`}>
+                          <input
+                            type="radio"
+                            name="dailyRate"
+                            checked={!showCustomRate && appliedDailyRate === String(contractRates.oldDailyRate)}
+                            onChange={() => { setAppliedDailyRate(String(contractRates.oldDailyRate)); setShowCustomRate(false); }}
+                            className="cursor-pointer"
+                          />
+                          <span className="text-sm text-[#111111]">Taux initial — {contractRates.oldDailyRate.toLocaleString('fr-FR')} DH</span>
+                        </label>
+                      )}
+                      <label className={`flex items-center gap-2 cursor-pointer rounded-[6px] border px-3 py-2 transition-colors ${showCustomRate ? 'border-primary-blue bg-[#EFF6FF]' : 'border-[#e5e7eb] bg-[#ffffff] hover:bg-[#f3f4f6]'}`}>
+                        <input
+                          type="radio"
+                          name="dailyRate"
+                          checked={showCustomRate}
+                          onChange={() => { setShowCustomRate(true); setAppliedDailyRate(''); }}
+                          className="cursor-pointer"
+                        />
+                        <span className="text-sm text-[#111111]">Autre</span>
+                      </label>
+                      {showCustomRate && (
+                        <input
+                          type="number"
+                          value={customRate}
+                          onChange={(e) => setCustomRate(e.target.value)}
+                          placeholder="Saisir un montant"
+                          className="mt-1 w-full rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111]"
+                        />
+                      )}
+                    </div>
+                  ) : (
+                    <div>
+                      <input
+                        type="number"
+                        value={customRate}
+                        onChange={(e) => setCustomRate(e.target.value)}
+                        placeholder="Saisir un montant (facultatif)"
+                        className="w-full rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111]"
+                      />
+                      <p className="mt-1 text-xs text-[#6b7280]">Laissez vide pour utiliser le taux actuel du contrat</p>
+                    </div>
+                  )}
+                </div>
+              )}
               <div>
                 <label className="block text-sm font-medium text-[#111111] mb-1">TVA (%)</label>
                 <input

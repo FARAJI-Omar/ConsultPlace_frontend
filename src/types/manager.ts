@@ -76,6 +76,12 @@ export interface ReviewPayload {
   reason?: string;
 }
 
+export interface ContractRates {
+  currentDailyRate: number;
+  oldDailyRate: number;
+  missionId: number;
+}
+
 export interface Invoice {
   id: number;
   ref: string;
@@ -87,6 +93,7 @@ export interface Invoice {
   vatRate: number;
   vat: number;
   total: number;
+  appliedDailyRate?: number;
   consultantPayout: number | null;
   consultantPayouts?: { consultantId: number; payoutAmount: number }[];
   consultantPayoutRest: number;
@@ -149,6 +156,7 @@ export interface GenerateInvoicePayload {
   timesheetId: number;
   vatRate?: number;
   delai?: number;
+  appliedDailyRate?: number;
   bdcAssignments?: { timesheetId: number; bdcId: number }[];
 }
 

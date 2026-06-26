@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../lib/apiClient';
-import type { Invoice, PaymentRecord, MarkPaidPayload, PaymentPayload } from '../../types/manager';
+import type { ContractRates, Invoice, PaymentRecord, MarkPaidPayload, PaymentPayload } from '../../types/manager';
 import type { Pagination } from '../../types/api';
 
 interface InvoiceListResponse {
@@ -18,6 +18,7 @@ interface GenerateInvoicePayload {
   timesheetId: number;
   vatRate?: number;
   delai?: number;
+  appliedDailyRate?: number;
   bdcAssignments?: { timesheetId: number; bdcId: number }[];
 }
 
@@ -70,6 +71,17 @@ export function useInvoiceDetail(id: number | null) {
   });
 }
 
+export function useContractRates(timesheetId: number | null) {
+  return useQuery({
+    queryKey: ['contract-rates', timesheetId],
+    queryFn: () =>
+      apiClient
+        .get<{ success: boolean; data: ContractRates }>(`/invoices/contract-rates/${timesheetId}`)
+        .then((res) => res.data.data),
+    enabled: timesheetId !== null,
+  });
+}
+
 export function useGenerateInvoice() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -89,6 +101,7 @@ interface GenerateGroupedPayload {
   timesheetIds: number[];
   vatRate?: number;
   delai?: number;
+  appliedDailyRate?: number;
   bdcAssignments?: { timesheetId: number; bdcId: number }[];
 }
 

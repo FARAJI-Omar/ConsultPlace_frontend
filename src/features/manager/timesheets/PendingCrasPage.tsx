@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { Eye, BookOpenCheck, Receipt } from 'lucide-react';
 import { DataTable } from '../../../components/common/DataTable';
 import { useManagerTimesheets } from '../../../hooks/manager/useManagerTimesheets';
-import { useGenerateGroupedInvoice } from '../../../hooks/manager/useInvoices';
+import { useGenerateGroupedInvoice, useContractRates } from '../../../hooks/manager/useInvoices';
 import { formatDate } from '../../../lib/utils';
 import ReviewCraModal from './ReviewCraModal';
 import GenerateInvoiceModal from './GenerateInvoiceModal';
@@ -47,6 +47,9 @@ export default function PendingCrasPage() {
   const [showGroupedModal, setShowGroupedModal] = useState(false);
   const [groupedVatRate, setGroupedVatRate] = useState('20');
   const [groupedDelai, setGroupedDelai] = useState('');
+  const [groupedAppliedRate, setGroupedAppliedRate] = useState('');
+  const [groupedCustomRate, setGroupedCustomRate] = useState('');
+  const [groupedShowCustomRate, setGroupedShowCustomRate] = useState(false);
   const [groupedBdcAssignments, setGroupedBdcAssignments] = useState<Record<number, number[]>>({});
   const [bdcValidationErrors, setBdcValidationErrors] = useState<Record<number, boolean>>({});
   const [showHint, setShowHint] = useState(true);
@@ -64,6 +67,8 @@ export default function PendingCrasPage() {
 
   const { data, isLoading } = useManagerTimesheets(page, limit, statusFilter || undefined);
   const groupedMutation = useGenerateGroupedInvoice();
+  const firstTsId = showGroupedModal && selectedTsIds.length > 0 ? selectedTsIds[0] : null;
+  const { data: groupedContractRates, isLoading: groupedRatesLoading } = useContractRates(firstTsId);
 
   const handleToggleSelection = (id: number) => {
     setSelectedTsIds((prev) =>
@@ -296,6 +301,67 @@ export default function PendingCrasPage() {
                   </div>
                 ))}
               </div>
+              <div className="mb-4 rounded-[8px] border border-[#e5e7eb] bg-[#f9fafb] p-3">
+                <label className="mb-2 block text-sm font-medium text-[#111111]">Taux journalier appliqué</label>
+                {groupedRatesLoading ? (
+                  <p className="text-xs text-[#6b7280]">Chargement...</p>
+                ) : groupedContractRates ? (
+                  <div className="space-y-1">
+                    <label className={`flex items-center gap-2 cursor-pointer rounded-[6px] border px-3 py-2 transition-colors ${!groupedShowCustomRate && groupedAppliedRate === '' ? 'border-primary-blue bg-[#EFF6FF]' : 'border-[#e5e7eb] bg-[#ffffff] hover:bg-[#f3f4f6]'}`}>
+                      <input
+                        type="radio"
+                        name="groupedDailyRate"
+                        checked={!groupedShowCustomRate && groupedAppliedRate === ''}
+                        onChange={() => { setGroupedAppliedRate(''); setGroupedShowCustomRate(false); }}
+                        className="cursor-pointer"
+                      />
+                      <span className="text-sm text-[#111111]">Taux actuel (contrat) — {groupedContractRates.currentDailyRate.toLocaleString('fr-FR')} DH</span>
+                    </label>
+                    {groupedContractRates.oldDailyRate > 0 && groupedContractRates.oldDailyRate !== groupedContractRates.currentDailyRate && (
+                      <label className={`flex items-center gap-2 cursor-pointer rounded-[6px] border px-3 py-2 transition-colors ${!groupedShowCustomRate && groupedAppliedRate === String(groupedContractRates.oldDailyRate) ? 'border-primary-blue bg-[#EFF6FF]' : 'border-[#e5e7eb] bg-[#ffffff] hover:bg-[#f3f4f6]'}`}>
+                        <input
+                          type="radio"
+                          name="groupedDailyRate"
+                          checked={!groupedShowCustomRate && groupedAppliedRate === String(groupedContractRates.oldDailyRate)}
+                          onChange={() => { setGroupedAppliedRate(String(groupedContractRates.oldDailyRate)); setGroupedShowCustomRate(false); }}
+                          className="cursor-pointer"
+                        />
+                        <span className="text-sm text-[#111111]">Taux initial — {groupedContractRates.oldDailyRate.toLocaleString('fr-FR')} DH</span>
+                      </label>
+                    )}
+                    <label className={`flex items-center gap-2 cursor-pointer rounded-[6px] border px-3 py-2 transition-colors ${groupedShowCustomRate ? 'border-primary-blue bg-[#EFF6FF]' : 'border-[#e5e7eb] bg-[#ffffff] hover:bg-[#f3f4f6]'}`}>
+                      <input
+                        type="radio"
+                        name="groupedDailyRate"
+                        checked={groupedShowCustomRate}
+                        onChange={() => { setGroupedShowCustomRate(true); setGroupedAppliedRate(''); }}
+                        className="cursor-pointer"
+                      />
+                      <span className="text-sm text-[#111111]">Autre</span>
+                    </label>
+                    {groupedShowCustomRate && (
+                      <input
+                        type="number"
+                        value={groupedCustomRate}
+                        onChange={(e) => setGroupedCustomRate(e.target.value)}
+                        placeholder="Saisir un montant"
+                        className="mt-1 w-full rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] outline-none focus:border-primary-blue"
+                      />
+                    )}
+                  </div>
+                ) : (
+                  <div>
+                    <input
+                      type="number"
+                      value={groupedCustomRate}
+                      onChange={(e) => setGroupedCustomRate(e.target.value)}
+                      placeholder="Saisir un montant (facultatif)"
+                      className="w-full rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] outline-none focus:border-primary-blue"
+                    />
+                    <p className="mt-1 text-xs text-[#6b7280]">Laissez vide pour utiliser le taux actuel du contrat</p>
+                  </div>
+                )}
+              </div>
               <div className="mb-4">
                 <label className="mb-1 block text-sm font-medium text-[#111111]">
                   TVA (%)
@@ -322,7 +388,7 @@ export default function PendingCrasPage() {
               </div>
               <div className="flex justify-end gap-3">
                 <button
-                  onClick={() => { setShowGroupedModal(false); setGroupedVatRate('20'); setGroupedDelai(''); setGroupedBdcAssignments({}); }}
+                    onClick={() => { setShowGroupedModal(false); setGroupedVatRate('20'); setGroupedDelai(''); setGroupedAppliedRate(''); setGroupedCustomRate(''); setGroupedShowCustomRate(false); setGroupedBdcAssignments({}); }}
                   className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-4 py-2 text-sm text-[#111111] transition-colors hover:bg-[#f3f4f6]"
                 >
                   Annuler
@@ -340,17 +406,22 @@ export default function PendingCrasPage() {
                     };
                     const delaiNum = parseInt(groupedDelai, 10);
                     if (!isNaN(delaiNum) && delaiNum > 0) payload.delai = delaiNum;
+                    const rateNum = groupedShowCustomRate ? parseFloat(groupedCustomRate) : parseFloat(groupedAppliedRate);
+                    if (!isNaN(rateNum) && rateNum > 0) payload.appliedDailyRate = rateNum;
                     if (bdcAssignments.length > 0) payload.bdcAssignments = bdcAssignments;
                     groupedMutation.mutate(
                       payload as unknown as Parameters<typeof groupedMutation.mutate>[0],
                       {
                         onSuccess: () => {
                           toast.success('Facture groupée générée avec succès');
-                          setShowGroupedModal(false);
-                          setGroupedMode(false);
-                          setSelectedTsIds([]);
-                          setGroupedVatRate('20');
-                          setGroupedDelai('');
+                    setShowGroupedModal(false);
+                    setGroupedMode(false);
+                    setSelectedTsIds([]);
+                    setGroupedVatRate('20');
+                    setGroupedDelai('');
+                    setGroupedAppliedRate('');
+                    setGroupedCustomRate('');
+                    setGroupedShowCustomRate(false);
                           setGroupedBdcAssignments({});
                         },
                         onError: (err) => {
