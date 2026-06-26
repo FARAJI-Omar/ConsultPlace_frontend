@@ -148,7 +148,7 @@ export default function GenerateInvoiceModal({
             </div>
             {timesheetId > 0 && (
               <div className="rounded-[8px] border border-[#e5e7eb] bg-[#f9fafb] p-3">
-                <label className="block text-sm font-medium text-[#111111] mb-2">Taux journalier appliqué <span className="text-xs text-[#6b7280]">(Contrat)</span></label>
+                <label className="block text-sm font-medium text-[#111111] mb-2">Taux journalier appliqué</label>
                 {ratesLoading ? (
                   <p className="text-xs text-[#6b7280]">Chargement...</p>
                 ) : contractRates ? (
