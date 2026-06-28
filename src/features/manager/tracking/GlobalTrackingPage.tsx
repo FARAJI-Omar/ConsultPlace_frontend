@@ -1,10 +1,12 @@
-import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Eye, FileDown } from 'lucide-react';
 import { formatDate } from '../../../lib/utils';
 import { DataTable } from '../../../components/common/DataTable';
 import { useGlobalTracking, exportTrackingCSV } from '../../../hooks/manager/useAdvancedTracking';
+import apiClient from '../../../lib/apiClient';
 import { toast } from 'sonner';
+import { useQuery } from '@tanstack/react-query';
 import type { Column } from '../../../components/common/DataTable';
 import type { TrackingRow } from '../../../types/manager';
 
@@ -64,16 +66,18 @@ function computeDateRange(
         endDate: now.toISOString(),
       };
     }
-    case 'CUSTOM':
-      if (customStart && customEnd) {
+    case 'CUSTOM': {
+      const result: Record<string, string> = {};
+      if (customStart) {
         const [sd, sm, sy] = customStart.split('/');
-        const [ed, em, ey] = customEnd.split('/');
-        return {
-          startDate: `${sy}-${sm}-${sd}T00:00:00.000Z`,
-          endDate: `${ey}-${em}-${ed}T23:59:59.000Z`,
-        };
+        result.startDate = `${sy}-${sm}-${sd}T00:00:00.000Z`;
       }
-      return {};
+      if (customEnd) {
+        const [ed, em, ey] = customEnd.split('/');
+        result.endDate = `${ey}-${em}-${ed}T23:59:59.000Z`;
+      }
+      return result;
+    }
     default:
       return {};
   }
@@ -105,8 +109,6 @@ export default function GlobalTrackingPage() {
     [periodeFilter, customStart, customEnd],
   );
 
-  const allClientsRef = useRef<Set<string>>(new Set());
-
   const { data, isLoading } = useGlobalTracking(page, limit, {
     status: statusFilter || undefined,
     client: clientFilter || undefined,
@@ -115,11 +117,16 @@ export default function GlobalTrackingPage() {
     sort,
   });
 
-  if (data?.data) {
-    data.data.forEach((r) => { if (r.client) allClientsRef.current.add(r.client); });
-  }
+  const { data: clientNames } = useQuery({
+    queryKey: ['client-names'],
+    queryFn: () =>
+      apiClient.get<{ data: { id: number; raison_sociale: string }[] }>('/clients/names').then((r) => r.data.data),
+  });
 
-  const clientOptions = Array.from(allClientsRef.current).sort((a, b) => a.localeCompare(b, 'fr'));
+  const clientOptions = useMemo(
+    () => (clientNames ?? []).map((c) => c.raison_sociale).sort((a, b) => a.localeCompare(b, 'fr')),
+    [clientNames],
+  );
 
   const handlePageChange = useCallback((p: number) => setPage(p), []);
   const handlePageSizeChange = useCallback((s: number) => { setLimit(s); setPage(1); }, []);
