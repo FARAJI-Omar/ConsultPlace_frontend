@@ -242,7 +242,7 @@ export default function TimesheetDetailsPage() {
                 className={`rounded-[6px] py-2 text-sm ${
                   hasEntry
                     ? 'bg-[#3b82f6] font-medium text-[#ffffff]'
-                    : 'text-[#6b7280]'
+                    : 'bg-[#f3f4f6] text-[#6b7280]'
                 }`}
               >
                 <div>{day}</div>
@@ -274,7 +274,8 @@ export default function TimesheetDetailsPage() {
               >
                 {truncateFilename(att.filename)}
               </a>
-              <p className="text-xs text-[#6b7280]">{typeLabel[att.type] ?? att.type}</p>
+              <br />
+              <span className={`text-xs ${att.type === 'CONSULTANT_FACTURE' ? 'bg-[#fef3c7] p-1 rounded' : ''} text-gray-700`}>{typeLabel[att.type] ?? att.type}</span>
             </div>
             <button
               type="button"

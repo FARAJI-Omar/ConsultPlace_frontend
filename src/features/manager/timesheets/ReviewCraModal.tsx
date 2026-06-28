@@ -16,6 +16,16 @@ function formatMonth(month: string) {
   return `${months[parseInt(m, 10) - 1]} ${y}`;
 }
 
+function getMonthDays(year: number, month: number) {
+  return new Date(year, month, 0).getDate();
+}
+
+function getFirstDayOfMonth(year: number, month: number) {
+  return new Date(year, month - 1, 1).getDay();
+}
+
+const DAY_LABELS = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+
 export default function ReviewCraModal({ timesheetId, open, onClose }: ReviewCraModalProps) {
   const [rejectMode, setRejectMode] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
@@ -60,6 +70,26 @@ export default function ReviewCraModal({ timesheetId, open, onClose }: ReviewCra
   };
 
   const attachments = timesheet?.attachments ?? [];
+  const typeLabel: Record<string, string> = { PROOF: 'Justificatif', CONSULTANT_FACTURE: 'Facture consultant', MISSION_DOC: 'Document de mission' };
+
+  const [yearStr, monthStr] = timesheet?.month?.split('-') ?? [];
+  const year = Number(yearStr);
+  const monthNum = Number(monthStr);
+  const entriesByDay: Record<number, number> = {};
+  if (timesheet) {
+    for (const e of timesheet.dailyEntries) {
+      entriesByDay[e.day] = e.hours;
+    }
+  }
+  const totalDays = timesheet ? getMonthDays(year, monthNum) : 0;
+  const firstDay = timesheet ? getFirstDayOfMonth(year, monthNum) : 0;
+  const calendarCells: (number | null)[] = [];
+  for (let i = 0; i < firstDay; i++) {
+    calendarCells.push(null);
+  }
+  for (let d = 1; d <= totalDays; d++) {
+    calendarCells.push(d);
+  }
 
   return (
     <>
@@ -111,23 +141,30 @@ export default function ReviewCraModal({ timesheetId, open, onClose }: ReviewCra
 
               <div>
                 <h3 className="mb-2 text-sm font-medium text-[#111111]">Saisie journalière</h3>
-                <div className="overflow-x-auto">
-                  <table className="w-full border-collapse text-sm">
-                    <thead>
-                      <tr className="border-b border-[#e5e7eb]">
-                        <th className="px-3 py-2 text-left text-xs font-medium text-[#6b7280]">Jour</th>
-                        <th className="px-3 py-2 text-left text-xs font-medium text-[#6b7280]">Heures</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {timesheet.dailyEntries.map((entry) => (
-                        <tr key={entry.day} className="border-b border-[#e5e7eb]">
-                          <td className="px-3 py-2 text-[#111111]">{entry.day}</td>
-                          <td className="px-3 py-2 text-[#111111]">{entry.hours}h</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                <div className="grid grid-cols-7 gap-1 text-center text-sm">
+                  {DAY_LABELS.map((label) => (
+                    <div key={label} className="py-1 text-xs font-medium text-[#6b7280]">{label}</div>
+                  ))}
+                  {calendarCells.map((day, idx) => {
+                    if (day === null) {
+                      return <div key={`empty-${idx}`} />;
+                    }
+                    const hours = entriesByDay[day];
+                    const hasEntry = hours !== undefined;
+                    return (
+                      <div
+                        key={day}
+                        className={`rounded-[6px] py-2 text-sm ${
+                          hasEntry
+                            ? 'bg-[#3b82f6] font-medium text-[#ffffff]'
+                            : 'bg-[#f3f4f6] text-[#6b7280]'
+                        }`}
+                      >
+                        <div>{day}</div>
+                        {hasEntry && <div className="text-[16px] font-bold opacity-80">{hours}h</div>}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -141,9 +178,10 @@ export default function ReviewCraModal({ timesheetId, open, onClose }: ReviewCra
                         href={att.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-block rounded-full bg-[#f3f4f6] px-3 py-1 text-xs text-[#3b82f6] hover:underline"
+                        className="rounded-full bg-[#f3f4f6] px-3 py-1 text-xs text-[#3b82f6] hover:underline"
                       >
-                        {truncateFilename(att.filename)}
+                        <div>{truncateFilename(att.filename)}</div>
+                        <div className={`${att.type === 'CONSULTANT_FACTURE' ? 'bg-[#fef3c7] px-2 py-0.5 rounded' : ''} text-gray-700`}>{typeLabel[att.type] ?? att.type}</div>
                       </a>
                     ))}
                   </div>
