@@ -1,4 +1,4 @@
-import { useMemo, useEffect } from 'react';
+import { useMemo, useEffect, useRef } from 'react';
 import { useGetBdcsByMission } from '../../../hooks/useBdc';
 import type { BonDeCommande } from '../../../types/models';
 
@@ -83,9 +83,12 @@ export default function BdcSelectorForTimesheet({
     return Object.values(bdcInfo).some((i) => i.overflow);
   }, [selectedBdcIds, bdcWarning, bdcInfo]);
 
+  const onValidationChangeRef = useRef(onValidationChange);
+  onValidationChangeRef.current = onValidationChange;
+
   useEffect(() => {
-    onValidationChange?.(timesheetId, hasBdcError);
-  }, [timesheetId, hasBdcError, onValidationChange]);
+    onValidationChangeRef.current?.(timesheetId, hasBdcError);
+  }, [timesheetId, hasBdcError]);
 
   const toggleBdc = (bdcId: number) => {
     const next = selectedBdcIds.includes(bdcId)

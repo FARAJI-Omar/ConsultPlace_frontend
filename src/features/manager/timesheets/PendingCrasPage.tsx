@@ -85,6 +85,14 @@ export default function PendingCrasPage() {
     setPage(1);
   }, []);
 
+  const handleBdcChange = useCallback((timesheetId: number, bdcIds: number[]) => {
+    setGroupedBdcAssignments((prev) => ({ ...prev, [timesheetId]: bdcIds }));
+  }, []);
+
+  const handleBdcValidationChange = useCallback((timesheetId: number, hasError: boolean) => {
+    setBdcValidationErrors((prev) => ({ ...prev, [timesheetId]: hasError }));
+  }, []);
+
   const filteredData = (data?.data ?? []).filter((ts) => ts.status !== 'BROUILLON');
   const valideCount = filteredData.filter((ts) => ts.status === 'VALIDE').length;
 
@@ -254,19 +262,11 @@ export default function PendingCrasPage() {
       {showGroupedModal && (() => {
         const selected = filteredData.filter((ts) => selectedTsIds.includes(ts.id));
 
-        const handleBdcChange = (timesheetId: number, bdcIds: number[]) => {
-          setGroupedBdcAssignments((prev) => ({ ...prev, [timesheetId]: bdcIds }));
-        };
-
         const allSelections = selected.map((ts) => ({
           timesheetId: ts.id,
           days: ts.days,
           selectedBdcIds: groupedBdcAssignments[ts.id] ?? [],
         }));
-
-        const handleBdcValidationChange = (timesheetId: number, hasError: boolean) => {
-          setBdcValidationErrors((prev) => ({ ...prev, [timesheetId]: hasError }));
-        };
 
         const hasBdcErrors = selected.some((ts) => bdcValidationErrors[ts.id]);
 
