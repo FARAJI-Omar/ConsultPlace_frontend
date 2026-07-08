@@ -4,13 +4,15 @@ import { toast } from 'sonner';
 import { Eye, BookOpenCheck, Receipt } from 'lucide-react';
 import { DataTable } from '../../../components/common/DataTable';
 import { useManagerTimesheets } from '../../../hooks/manager/useManagerTimesheets';
-import { useGenerateGroupedInvoice, useContractRates } from '../../../hooks/manager/useInvoices';
+import { useGenerateGroupedInvoice } from '../../../hooks/manager/useInvoices';
+import { useQueries } from '@tanstack/react-query';
+import apiClient from '../../../lib/apiClient';
 import { formatDate } from '../../../lib/utils';
 import ReviewCraModal from './ReviewCraModal';
 import GenerateInvoiceModal from './GenerateInvoiceModal';
 import BdcSelectorForTimesheet from './BdcSelectorForTimesheet';
 import type { Column } from '../../../components/common/DataTable';
-import type { ManagerTimesheet } from '../../../types/manager';
+import type { ManagerTimesheet, ContractRates } from '../../../types/manager';
 
 const STATUS_OPTIONS = [
   { value: '', label: 'Tous' },
@@ -47,9 +49,8 @@ export default function PendingCrasPage() {
   const [showGroupedModal, setShowGroupedModal] = useState(false);
   const [groupedVatRate, setGroupedVatRate] = useState('20');
   const [groupedDelai, setGroupedDelai] = useState('');
-  const [groupedAppliedRate, setGroupedAppliedRate] = useState('');
-  const [groupedCustomRate, setGroupedCustomRate] = useState('');
-  const [groupedShowCustomRate, setGroupedShowCustomRate] = useState(false);
+  const [groupedDailyRateMode, setGroupedDailyRateMode] = useState<Record<number, 'current' | 'old' | 'custom'>>({});
+  const [groupedCustomDailyRates, setGroupedCustomDailyRates] = useState<Record<number, string>>({});
   const [groupedBdcAssignments, setGroupedBdcAssignments] = useState<Record<number, number[]>>({});
   const [bdcValidationErrors, setBdcValidationErrors] = useState<Record<number, boolean>>({});
   const [showHint, setShowHint] = useState(true);
@@ -67,8 +68,22 @@ export default function PendingCrasPage() {
 
   const { data, isLoading } = useManagerTimesheets(page, limit, statusFilter || undefined);
   const groupedMutation = useGenerateGroupedInvoice();
-  const firstTsId = showGroupedModal && selectedTsIds.length > 0 ? selectedTsIds[0] : null;
-  const { data: groupedContractRates, isLoading: groupedRatesLoading } = useContractRates(firstTsId);
+
+  const filteredData = (data?.data ?? []).filter((ts) => ts.status !== 'BROUILLON');
+  const selected = filteredData.filter((ts) => selectedTsIds.includes(ts.id));
+  const valideCount = filteredData.filter((ts) => ts.status === 'VALIDE').length;
+
+  const ratesQueries = useQueries({
+    queries: (showGroupedModal ? selected.map((ts) => ts.id) : []).map((id) => ({
+      queryKey: ['contract-rates', id],
+      queryFn: () =>
+        apiClient
+          .get<{ success: boolean; data: ContractRates }>(`/invoices/contract-rates/${id}`)
+          .then((res) => res.data.data),
+    })),
+  });
+
+  const anyRateLoading = ratesQueries.some((q) => q.isLoading);
 
   const handleToggleSelection = (id: number) => {
     setSelectedTsIds((prev) =>
@@ -92,9 +107,6 @@ export default function PendingCrasPage() {
   const handleBdcValidationChange = useCallback((timesheetId: number, hasError: boolean) => {
     setBdcValidationErrors((prev) => ({ ...prev, [timesheetId]: hasError }));
   }, []);
-
-  const filteredData = (data?.data ?? []).filter((ts) => ts.status !== 'BROUILLON');
-  const valideCount = filteredData.filter((ts) => ts.status === 'VALIDE').length;
 
   const columns: Column<ManagerTimesheet>[] = [
     { key: '#', label: '#', render: (_item, idx) => String(idx + 1) },
@@ -260,8 +272,6 @@ export default function PendingCrasPage() {
       )}
 
       {showGroupedModal && (() => {
-        const selected = filteredData.filter((ts) => selectedTsIds.includes(ts.id));
-
         const allSelections = selected.map((ts) => ({
           timesheetId: ts.id,
           days: ts.days,
@@ -280,87 +290,94 @@ export default function PendingCrasPage() {
                 Vous allez générer une facture unique pour les {selected.length} relevés suivants&nbsp;:
               </p>
               <div className="mb-4 space-y-4">
-                {selected.map((ts) => (
-                  <div key={ts.id} className="rounded-[8px] border border-[#e5e7eb] p-4">
-                    <div className="mb-2 flex items-center justify-between">
-                      <span className="text-sm font-medium text-[#111111]">{ts.consultant.name}</span>
-                      <span className="text-xs text-[#6b7280]">{formatMonth(ts.month)} — {ts.mission.title} — {ts.days} jours</span>
+                {selected.map((ts, idx) => {
+                  const query = ratesQueries[idx];
+                  const isLoadingRate = !query || query.isLoading;
+                  return (
+                    <div key={ts.id} className="rounded-[8px] border border-[#e5e7eb] p-4 bg-[#ffffff]">
+                      <div className="mb-2 flex items-center justify-between">
+                        <span className="text-sm font-medium text-[#111111]">{ts.consultant.name}</span>
+                        <span className="text-xs text-[#6b7280]">{formatMonth(ts.month)} — {ts.mission.title} — {ts.days} jours</span>
+                      </div>
+                      <div className="pl-2 space-y-3">
+                        <div>
+                          <label className="mb-1 block text-xs font-medium text-[#6b7280]">Bons de commande (facultatif)</label>
+                          <BdcSelectorForTimesheet
+                            missionId={ts.mission.id}
+                            timesheetId={ts.id}
+                            timesheetDays={ts.days}
+                            selectedBdcIds={groupedBdcAssignments[ts.id] ?? []}
+                            onChange={handleBdcChange}
+                            allSelections={allSelections}
+                            onValidationChange={handleBdcValidationChange}
+                          />
+                        </div>
+                        <div className="rounded-[8px] border border-[#e5e7eb] bg-[#f9fafb] p-3">
+                          <label className="mb-2 block text-xs font-medium text-[#111111]">Taux journalier appliqué</label>
+                          {isLoadingRate ? (
+                            <p className="text-xs text-[#6b7280]">Chargement...</p>
+                          ) : query?.data ? (() => {
+                            const rates = query.data;
+                            const mode = groupedDailyRateMode[ts.id] ?? 'current';
+                            return (
+                              <div className="space-y-1">
+                                <label className={`flex items-center gap-2 cursor-pointer rounded-[6px] border px-3 py-2 transition-colors ${mode === 'current' ? 'border-primary-blue bg-[#EFF6FF]' : 'border-[#e5e7eb] bg-[#ffffff] hover:bg-[#f3f4f6]'}`}>
+                                  <input
+                                    type="radio"
+                                    name={`dailyRate-${ts.id}`}
+                                    checked={mode === 'current'}
+                                    onChange={() => setGroupedDailyRateMode(prev => ({ ...prev, [ts.id]: 'current' }))}
+                                    className="cursor-pointer"
+                                  />
+                                  <span className="text-sm text-[#111111]">Taux actuel (contrat) — {rates.currentDailyRate.toLocaleString('fr-FR')} DH</span>
+                                </label>
+                                {rates.oldDailyRate > 0 && rates.oldDailyRate !== rates.currentDailyRate && (
+                                  <label className={`flex items-center gap-2 cursor-pointer rounded-[6px] border px-3 py-2 transition-colors ${mode === 'old' ? 'border-primary-blue bg-[#EFF6FF]' : 'border-[#e5e7eb] bg-[#ffffff] hover:bg-[#f3f4f6]'}`}>
+                                    <input
+                                      type="radio"
+                                      name={`dailyRate-${ts.id}`}
+                                      checked={mode === 'old'}
+                                      onChange={() => setGroupedDailyRateMode(prev => ({ ...prev, [ts.id]: 'old' }))}
+                                      className="cursor-pointer"
+                                    />
+                                    <span className="text-sm text-[#111111]">Taux initial — {rates.oldDailyRate.toLocaleString('fr-FR')} DH</span>
+                                  </label>
+                                )}
+                                <label className={`flex items-center gap-2 cursor-pointer rounded-[6px] border px-3 py-2 transition-colors ${mode === 'custom' ? 'border-primary-blue bg-[#EFF6FF]' : 'border-[#e5e7eb] bg-[#ffffff] hover:bg-[#f3f4f6]'}`}>
+                                  <input
+                                    type="radio"
+                                    name={`dailyRate-${ts.id}`}
+                                    checked={mode === 'custom'}
+                                    onChange={() => setGroupedDailyRateMode(prev => ({ ...prev, [ts.id]: 'custom' }))}
+                                    className="cursor-pointer"
+                                  />
+                                  <span className="text-sm text-[#111111]">Autre</span>
+                                </label>
+                                {mode === 'custom' && (
+                                  <input
+                                    type="number"
+                                    value={groupedCustomDailyRates[ts.id] ?? ''}
+                                    onChange={(e) => setGroupedCustomDailyRates(prev => ({ ...prev, [ts.id]: e.target.value }))}
+                                    placeholder="Saisir un montant"
+                                    className="mt-1 w-full rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] outline-none focus:border-[#111111]"
+                                  />
+                                )}
+                              </div>
+                            );
+                          })() : (
+                            <input
+                              type="number"
+                              value={groupedCustomDailyRates[ts.id] ?? ''}
+                              onChange={(e) => setGroupedCustomDailyRates(prev => ({ ...prev, [ts.id]: e.target.value }))}
+                              placeholder="Saisir un montant (facultatif)"
+                              className="w-full rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] outline-none focus:border-[#111111]"
+                            />
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    <div className="pl-2">
-                      <label className="mb-1 block text-xs font-medium text-[#6b7280]">Bons de commande (facultatif)</label>
-                      <BdcSelectorForTimesheet
-                        missionId={ts.mission.id}
-                        timesheetId={ts.id}
-                        timesheetDays={ts.days}
-                        selectedBdcIds={groupedBdcAssignments[ts.id] ?? []}
-                        onChange={handleBdcChange}
-                        allSelections={allSelections}
-                        onValidationChange={handleBdcValidationChange}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div className="mb-4 rounded-[8px] border border-[#e5e7eb] bg-[#f9fafb] p-3">
-                <label className="mb-2 block text-sm font-medium text-[#111111]">Taux journalier appliqué</label>
-                {groupedRatesLoading ? (
-                  <p className="text-xs text-[#6b7280]">Chargement...</p>
-                ) : groupedContractRates ? (
-                  <div className="space-y-1">
-                    <label className={`flex items-center gap-2 cursor-pointer rounded-[6px] border px-3 py-2 transition-colors ${!groupedShowCustomRate && groupedAppliedRate === '' ? 'border-primary-blue bg-[#EFF6FF]' : 'border-[#e5e7eb] bg-[#ffffff] hover:bg-[#f3f4f6]'}`}>
-                      <input
-                        type="radio"
-                        name="groupedDailyRate"
-                        checked={!groupedShowCustomRate && groupedAppliedRate === ''}
-                        onChange={() => { setGroupedAppliedRate(''); setGroupedShowCustomRate(false); }}
-                        className="cursor-pointer"
-                      />
-                      <span className="text-sm text-[#111111]">Taux actuel (contrat) — {groupedContractRates.currentDailyRate.toLocaleString('fr-FR')} DH</span>
-                    </label>
-                    {groupedContractRates.oldDailyRate > 0 && groupedContractRates.oldDailyRate !== groupedContractRates.currentDailyRate && (
-                      <label className={`flex items-center gap-2 cursor-pointer rounded-[6px] border px-3 py-2 transition-colors ${!groupedShowCustomRate && groupedAppliedRate === String(groupedContractRates.oldDailyRate) ? 'border-primary-blue bg-[#EFF6FF]' : 'border-[#e5e7eb] bg-[#ffffff] hover:bg-[#f3f4f6]'}`}>
-                        <input
-                          type="radio"
-                          name="groupedDailyRate"
-                          checked={!groupedShowCustomRate && groupedAppliedRate === String(groupedContractRates.oldDailyRate)}
-                          onChange={() => { setGroupedAppliedRate(String(groupedContractRates.oldDailyRate)); setGroupedShowCustomRate(false); }}
-                          className="cursor-pointer"
-                        />
-                        <span className="text-sm text-[#111111]">Taux initial — {groupedContractRates.oldDailyRate.toLocaleString('fr-FR')} DH</span>
-                      </label>
-                    )}
-                    <label className={`flex items-center gap-2 cursor-pointer rounded-[6px] border px-3 py-2 transition-colors ${groupedShowCustomRate ? 'border-primary-blue bg-[#EFF6FF]' : 'border-[#e5e7eb] bg-[#ffffff] hover:bg-[#f3f4f6]'}`}>
-                      <input
-                        type="radio"
-                        name="groupedDailyRate"
-                        checked={groupedShowCustomRate}
-                        onChange={() => { setGroupedShowCustomRate(true); setGroupedAppliedRate(''); }}
-                        className="cursor-pointer"
-                      />
-                      <span className="text-sm text-[#111111]">Autre</span>
-                    </label>
-                    {groupedShowCustomRate && (
-                      <input
-                        type="number"
-                        value={groupedCustomRate}
-                        onChange={(e) => setGroupedCustomRate(e.target.value)}
-                        placeholder="Saisir un montant"
-                        className="mt-1 w-full rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] outline-none focus:border-primary-blue"
-                      />
-                    )}
-                  </div>
-                ) : (
-                  <div>
-                    <input
-                      type="number"
-                      value={groupedCustomRate}
-                      onChange={(e) => setGroupedCustomRate(e.target.value)}
-                      placeholder="Saisir un montant (facultatif)"
-                      className="w-full rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] outline-none focus:border-primary-blue"
-                    />
-                    <p className="mt-1 text-xs text-[#6b7280]">Laissez vide pour utiliser le taux actuel du contrat</p>
-                  </div>
-                )}
+                  );
+                })}
               </div>
               <div className="mb-4">
                 <label className="mb-1 block text-sm font-medium text-[#111111]">
@@ -388,7 +405,14 @@ export default function PendingCrasPage() {
               </div>
               <div className="flex justify-end gap-3">
                 <button
-                    onClick={() => { setShowGroupedModal(false); setGroupedVatRate('20'); setGroupedDelai(''); setGroupedAppliedRate(''); setGroupedCustomRate(''); setGroupedShowCustomRate(false); setGroupedBdcAssignments({}); }}
+                  onClick={() => {
+                    setShowGroupedModal(false);
+                    setGroupedVatRate('20');
+                    setGroupedDelai('');
+                    setGroupedDailyRateMode({});
+                    setGroupedCustomDailyRates({});
+                    setGroupedBdcAssignments({});
+                  }}
                   className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-4 py-2 text-sm text-[#111111] transition-colors hover:bg-[#f3f4f6]"
                 >
                   Annuler
@@ -406,22 +430,32 @@ export default function PendingCrasPage() {
                     };
                     const delaiNum = parseInt(groupedDelai, 10);
                     if (!isNaN(delaiNum) && delaiNum > 0) payload.delai = delaiNum;
-                    const rateNum = groupedShowCustomRate ? parseFloat(groupedCustomRate) : parseFloat(groupedAppliedRate);
-                    if (!isNaN(rateNum) && rateNum > 0) payload.appliedDailyRate = rateNum;
+
+                    const appliedDailyRates = selected.map((ts, idx) => {
+                      const rates = ratesQueries[idx]?.data;
+                      const mode = groupedDailyRateMode[ts.id] ?? 'current';
+                      let rate = 0;
+                      if (mode === 'current') rate = rates?.currentDailyRate ?? 0;
+                      else if (mode === 'old') rate = rates?.oldDailyRate ?? 0;
+                      else rate = parseFloat(groupedCustomDailyRates[ts.id]) || 0;
+                      return { timesheetId: ts.id, rate };
+                    });
+                    payload.appliedDailyRates = appliedDailyRates;
+
                     if (bdcAssignments.length > 0) payload.bdcAssignments = bdcAssignments;
+
                     groupedMutation.mutate(
                       payload as unknown as Parameters<typeof groupedMutation.mutate>[0],
                       {
                         onSuccess: () => {
                           toast.success('Facture groupée générée avec succès');
-                    setShowGroupedModal(false);
-                    setGroupedMode(false);
-                    setSelectedTsIds([]);
-                    setGroupedVatRate('20');
-                    setGroupedDelai('');
-                    setGroupedAppliedRate('');
-                    setGroupedCustomRate('');
-                    setGroupedShowCustomRate(false);
+                          setShowGroupedModal(false);
+                          setGroupedMode(false);
+                          setSelectedTsIds([]);
+                          setGroupedVatRate('20');
+                          setGroupedDelai('');
+                          setGroupedDailyRateMode({});
+                          setGroupedCustomDailyRates({});
                           setGroupedBdcAssignments({});
                         },
                         onError: (err) => {
@@ -432,7 +466,22 @@ export default function PendingCrasPage() {
                       },
                     );
                   }}
-                  disabled={groupedMutation.isPending || hasBdcErrors}
+                  disabled={
+                    groupedMutation.isPending ||
+                    hasBdcErrors ||
+                    anyRateLoading ||
+                    selected.some((ts, idx) => {
+                      const mode = groupedDailyRateMode[ts.id] ?? 'current';
+                      if (mode === 'custom') {
+                        const v = parseFloat(groupedCustomDailyRates[ts.id]);
+                        return isNaN(v) || v <= 0;
+                      }
+                      const rates = ratesQueries[idx]?.data;
+                      if (!rates) return true;
+                      if (mode === 'old') return rates.oldDailyRate <= 0;
+                      return rates.currentDailyRate <= 0;
+                    })
+                  }
                   className="cursor-pointer rounded-[8px] bg-[#10b981] px-4 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-90 disabled:opacity-50"
                 >
                   {groupedMutation.isPending ? 'Génération...' : 'Confirmer'}

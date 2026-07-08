@@ -101,7 +101,7 @@ interface GenerateGroupedPayload {
   timesheetIds: number[];
   vatRate?: number;
   delai?: number;
-  appliedDailyRate?: number;
+  appliedDailyRates?: { timesheetId: number; rate: number }[];
   bdcAssignments?: { timesheetId: number; bdcId: number }[];
 }
 
