@@ -137,7 +137,7 @@ function RejectedCard({
 }: RejectedCardProps) {
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
-  const [fileError, setFileError] = useState<string | null>(null);
+
 
   const handleConfirmSubmit = async () => {
     setShowSubmitConfirm(false);
@@ -242,20 +242,18 @@ function RejectedCard({
               <input
                 id={`rejected-proof-input-${item.id}`}
                 type="file"
-                accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+                accept=".pdf,application/pdf"
                 multiple
                 onChange={(e) => {
-                  setFileError(null);
                   const selected = e.target.files;
                   if (!selected || selected.length === 0) return;
                   const incoming = Array.from(selected);
                   const invalid = incoming.find(
-                    (f) => !['application/pdf', 'image/jpeg', 'image/png'].includes(f.type) &&
-                      !['.pdf', '.jpg', '.jpeg', '.png'].some((ext) => f.name.toLowerCase().endsWith(ext)),
+                    (f) => !f.type.includes('pdf') && !f.name.toLowerCase().endsWith('.pdf'),
                   );
-                  if (invalid) { setFileError('Seuls les fichiers PDF, JPG et PNG sont acceptés.'); e.target.value = ''; return; }
+                  if (invalid) { toast.error('Seuls les fichiers PDF sont acceptés.'); e.target.value = ''; return; }
                   const oversized = incoming.find((f) => f.size > MAX_FILE_SIZE);
-                  if (oversized) { setFileError('Chaque fichier ne doit pas dépasser 10 Mo.'); e.target.value = ''; return; }
+                  if (oversized) { toast.error('Chaque fichier ne doit pas dépasser 10 Mo.'); e.target.value = ''; return; }
                   onUploadFiles(incoming, 'PROOF');
                   e.target.value = '';
                 }}
@@ -333,18 +331,16 @@ function RejectedCard({
                   <input
                     id={`rejected-facture-input-${item.id}`}
                     type="file"
-                    accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+                    accept=".pdf,application/pdf"
                     onChange={(e) => {
-                      setFileError(null);
                       const selected = e.target.files;
                       if (!selected || selected.length === 0) return;
                       const file = selected[0];
-                      if (!['application/pdf', 'image/jpeg', 'image/png'].includes(file.type) &&
-                        !['.pdf', '.jpg', '.jpeg', '.png'].some((ext) => file.name.toLowerCase().endsWith(ext))) {
-                        setFileError('Seuls les fichiers PDF, JPG et PNG sont acceptés.'); e.target.value = ''; return;
+                      if (!file.type.includes('pdf') && !file.name.toLowerCase().endsWith('.pdf')) {
+                        toast.error('Seuls les fichiers PDF sont acceptés.'); e.target.value = ''; return;
                       }
                       if (file.size > MAX_FILE_SIZE) {
-                        setFileError('Chaque fichier ne doit pas dépasser 10 Mo.'); e.target.value = ''; return;
+                        toast.error('Chaque fichier ne doit pas dépasser 10 Mo.'); e.target.value = ''; return;
                       }
                       onUploadFiles([file], 'CONSULTANT_FACTURE');
                       e.target.value = '';
@@ -354,10 +350,6 @@ function RejectedCard({
                 </>
               )}
             </div>
-
-            {fileError && (
-              <p className="text-xs font-medium text-[#ef4444]">{fileError}</p>
-            )}
 
             {(!attachments || attachments.length === 0) && (
               <p className="text-xs text-[#6b7280]">Aucune pièce jointe pour ce relevé.</p>

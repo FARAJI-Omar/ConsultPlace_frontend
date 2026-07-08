@@ -76,7 +76,7 @@ export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?:
   const [touchedByMonth, setTouchedByMonth] = useState<Record<string, string[]>>({});
   const [proofFiles, setProofFiles] = useState<File[]>([]);
   const [factureFile, setFactureFile] = useState<File | null>(null);
-  const [fileError, setFileError] = useState<string | null>(null);
+
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
   const [showWeekendWarning, setShowWeekendWarning] = useState(false);
   const [weekendDayLabels, setWeekendDayLabels] = useState<string[]>([]);
@@ -197,8 +197,8 @@ export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?:
     setPendingWeekendAction(null);
   }
 
-  const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png'];
-  const allowedExts = ['.pdf', '.jpg', '.jpeg', '.png'];
+  const allowedTypes = ['application/pdf'];
+  const allowedExts = ['.pdf'];
 
   function isValidFile(file: File): boolean {
     return allowedTypes.includes(file.type) || allowedExts.some((ext) => file.name.toLowerCase().endsWith(ext));
@@ -208,11 +208,11 @@ export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?:
     const valid: File[] = [];
     for (const f of Array.from(incoming)) {
       if (f.size > MAX_FILE_SIZE) {
-        setFileError('Chaque fichier ne doit pas dépasser 10 Mo.');
+        toast.error('Chaque fichier ne doit pas dépasser 10 Mo.');
         return [];
       }
       if (!isValidFile(f)) {
-        setFileError('Seuls les fichiers PDF, JPG et PNG sont acceptés.');
+        toast.error('Seuls les fichiers PDF sont acceptés.');
         return [];
       }
       valid.push(f);
@@ -221,12 +221,11 @@ export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?:
   }
 
   function addProofFiles(incoming: FileList | File[]) {
-    setFileError(null);
     const valid = validateFiles(incoming);
     if (valid.length === 0) return;
     const combined = [...proofFiles, ...valid];
     if (combined.length > MAX_PROOF_FILES) {
-      setFileError(`Maximum ${MAX_PROOF_FILES} fichiers pour le rapport d'activité.`);
+      toast.error(`Maximum ${MAX_PROOF_FILES} fichiers pour le rapport d'activité.`);
       return;
     }
     setProofFiles(combined);
@@ -239,11 +238,9 @@ export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?:
       if (removed) untrackFile(removed);
       return prev.filter((_, i) => i !== index);
     });
-    setFileError(null);
   }
 
   function setFactureFileValidated(incoming: FileList | File[]) {
-    setFileError(null);
     const valid = validateFiles(incoming);
     if (valid.length === 0) return;
     setFactureFile(valid[0]);
@@ -253,7 +250,6 @@ export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?:
   function removeFactureFile() {
     if (factureFile) untrackFile(factureFile);
     setFactureFile(null);
-    setFileError(null);
   }
 
   function handleProofDrop(e: React.DragEvent) {
@@ -331,8 +327,6 @@ export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?:
   async function handleSaveDraft() {
     if (!selectedMissionId) return;
     
-    setFileError(null);
-
     try {
       const timesheet = await createTimesheet.mutateAsync({
         missionId: selectedMissionId,
@@ -355,8 +349,6 @@ export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?:
   async function handleSubmit() {
     if (!selectedMissionId) return;
     
-    setFileError(null);
-
     try {
       const timesheet = await createTimesheet.mutateAsync({
         missionId: selectedMissionId,
@@ -389,12 +381,6 @@ export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?:
   return (
     <LoadingOverlay isLoading={isOrchestrating}>
       <div className="space-y-6">
-      {fileError && (
-        <div className="rounded-[8px] bg-[#ef4444]/10 border border-[#ef4444] px-4 py-3 text-sm font-medium text-[#ef4444]">
-          {fileError}
-        </div>
-      )}
-
       <div className="flex flex-wrap items-end gap-4 rounded-[12px] bg-[#ffffff] border border-[#e5e7eb] p-4">
         <div className="flex flex-col gap-1.5">
           <label className="text-xs font-medium uppercase tracking-wider text-[#6b7280]">
@@ -479,12 +465,12 @@ export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?:
               Glissez-déposez vos fichiers ici ou cliquez pour parcourir
             </p>
             <p className="text-[8px] md:text-xs text-[#6b7280] mt-1">
-              Maximum {MAX_PROOF_FILES} fichiers, 10 Mo chacun
+              Maximum {MAX_PROOF_FILES} fichiers PDF, 10 Mo chacun
             </p>
             <input
               ref={proofInputRef}
               type="file"
-              accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+              accept=".pdf,application/pdf"
               multiple
               onChange={handleProofFileSelect}
               className="hidden"
@@ -561,12 +547,12 @@ export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?:
                 Glissez-déposez votre fichier ici ou cliquez pour parcourir
               </p>
               <p className="text-[8px] md:text-xs text-[#6b7280] mt-1">
-                1 fichier uniquement, 10 Mo maximum
+                1 fichier PDF uniquement, 10 Mo maximum
               </p>
               <input
                 ref={factureInputRef}
                 type="file"
-                accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+                accept=".pdf,application/pdf"
                 onChange={handleFactureFileSelect}
                 className="hidden"
               />

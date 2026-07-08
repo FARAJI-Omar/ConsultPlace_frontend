@@ -24,6 +24,13 @@ export default function BdcDetailPage() {
     const files = Array.from(e.target.files ?? []);
     if (files.length === 0) return;
 
+    const invalid = files.find((f) => !f.type.includes('pdf') && !f.name.toLowerCase().endsWith('.pdf'));
+    if (invalid) {
+      toast.error('Seuls les fichiers PDF sont acceptés.');
+      e.target.value = '';
+      return;
+    }
+
     const oversized = files.filter((f) => f.size > MAX_FILE_SIZE);
     if (oversized.length > 0) {
       toast.error('Certains fichiers dépassent la limite de 10 Mo');
@@ -241,7 +248,7 @@ export default function BdcDetailPage() {
             <input
               id="bdc-upload"
               type="file"
-              accept=".pdf,.jpg,.jpeg,.png"
+              accept=".pdf"
               multiple
               onChange={handleFileUpload}
               className="hidden"

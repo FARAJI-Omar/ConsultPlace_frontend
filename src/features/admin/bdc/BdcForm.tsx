@@ -94,6 +94,13 @@ export default function BdcForm({ onSuccess, bdc }: BdcFormProps) {
     const remaining = MAX_FILES - files.length;
     const allowed = selected.slice(0, remaining);
 
+    const invalid = allowed.find((f) => !f.type.includes('pdf') && !f.name.toLowerCase().endsWith('.pdf'));
+    if (invalid) {
+      toast.error('Seuls les fichiers PDF sont acceptés.');
+      if (fileRef.current) fileRef.current.value = '';
+      return;
+    }
+
     const oversized = allowed.filter((f) => f.size > MAX_FILE_SIZE);
     if (oversized.length > 0) {
       toast.error('Certains fichiers dépassent la limite de 10 Mo');
@@ -387,12 +394,12 @@ export default function BdcForm({ onSuccess, bdc }: BdcFormProps) {
           >
             <Upload className="h-4 w-4 shrink-0" />
             <span>Cliquez pour ajouter des fichiers</span>
-            <span className="w-full text-[8px] md:text-xs text-[#6b7280]">(PDF, JPG, PNG, max 10 fichiers, 10 Mo chacun)</span>
+            <span className="w-full text-[8px] md:text-xs text-[#6b7280]">(PDF, max 10 fichiers, 10 Mo chacun)</span>
           </div>
           <input
             ref={fileRef}
             type="file"
-            accept=".pdf,.jpg,.jpeg,.png"
+            accept=".pdf"
             multiple
             onChange={handleFileSelect}
             className="hidden"
