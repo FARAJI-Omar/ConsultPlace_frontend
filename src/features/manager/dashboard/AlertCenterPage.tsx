@@ -285,7 +285,7 @@ export default function AlertCenterPage() {
             <p className="mb-4 text-sm text-[#6b7280]">Facture #{payoutAlert.payload.entityId}</p>
 
             <p className="mb-3 text-sm text-[#6b7280]">
-              Reste à payer : <span className="font-bold bg-green-500/20 px-4 py-1 rounded text-[#111111]">{consultantPayoutRest.toLocaleString()} DH</span>
+              Reste à payer (TTC) : <span className="font-bold bg-green-500/20 px-4 py-1 rounded text-[#111111]">{consultantPayoutRest.toLocaleString()} DH</span>
             </p>
 
             <div className="mb-4">

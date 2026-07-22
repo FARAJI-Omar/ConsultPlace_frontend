@@ -406,7 +406,7 @@ export default function InvoiceDetailsPage() {
                       </span>
                     </div>
                     <div className="space-y-1 text-sm">
-                      <div className="flex justify-between"><span className="text-[#6b7280]">Montant à payer</span><span className="text-[#111111]">{cp.payoutAmount.toLocaleString()} DH</span></div>
+                      <div className="flex justify-between"><span className="text-[#6b7280]">Montant à payer (TTC)</span><span className="text-[#111111]">{cp.payoutAmount.toLocaleString()} DH</span></div>
                       <div className="flex justify-between"><span className="text-[#6b7280]">Payé</span><span className="text-[#111111]">{cp.paid.toLocaleString()} DH</span></div>
                       <div className="flex justify-between"><span className="text-[#6b7280]">Reste</span><span className={`font-medium ${cp.rest > 0 ? 'text-[#ef4444]' : 'text-[#111111]'}`}>{cp.rest.toLocaleString()} DH</span></div>
                     </div>
@@ -457,7 +457,7 @@ export default function InvoiceDetailsPage() {
                 </>
               )}
               <div className="flex justify-between border-t border-[#e5e7eb] pt-2">
-                <span className="text-[#6b7280]">Montant à payer au consultant</span>
+                <span className="text-[#6b7280]">Montant à payer au consultant (TTC)</span>
                 <span className="font-medium text-[#111111]">{(invoice.consultantPayout ?? 0).toLocaleString()} DH</span>
               </div>
               <div className="flex justify-between">

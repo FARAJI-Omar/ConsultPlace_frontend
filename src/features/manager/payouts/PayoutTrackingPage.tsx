@@ -263,7 +263,7 @@ export default function PayoutTrackingPage() {
             <p className="mb-4 text-sm text-[#6b7280]">Facture {payoutModal.ref}</p>
 
             <p className="mb-3 text-sm text-[#6b7280]">
-              Reste à payer : <span className="font-bold bg-green-500/20 px-4 py-1 rounded text-[#111111]">{(payoutModal.consultantPayoutRest ?? 0).toLocaleString()} DH</span>
+              Reste à payer (TTC) : <span className="font-bold bg-green-500/20 px-4 py-1 rounded text-[#111111]">{(payoutModal.consultantPayoutRest ?? 0).toLocaleString()} DH</span>
             </p>
 
             {(payoutModal.consultantsPayouts && payoutModal.consultantsPayouts.length > 0 || payoutModal.consultantPayouts && payoutModal.consultantPayouts.length > 0) && (
