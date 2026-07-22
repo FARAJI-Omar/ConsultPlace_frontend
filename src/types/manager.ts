@@ -227,6 +227,7 @@ export interface TrackingRow {
   consultantPaymentDate: string | null | (string | null)[];
   timesheetIds?: number[];
   bdcs?: { id: number; bdc: string; totalDays: number; consumedDays: number; timesheetId: number }[];
+  isSent?: boolean;
 }
 
 export interface TurnoverForecast {

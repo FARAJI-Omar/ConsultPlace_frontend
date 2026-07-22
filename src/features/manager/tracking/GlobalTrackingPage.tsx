@@ -1,12 +1,19 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
-import { Eye, FileDown } from 'lucide-react';
+import { Eye, FileDown, MoreVertical } from 'lucide-react';
 import { formatDate } from '../../../lib/utils';
 import { DataTable } from '../../../components/common/DataTable';
 import { useGlobalTracking, exportTrackingCSV } from '../../../hooks/manager/useAdvancedTracking';
+import { useMarkPaid, useEmailInvoice, useInvoiceDetail } from '../../../hooks/manager/useInvoices';
+import { useSendReminder } from '../../../hooks/manager/useReminders';
+import { useTriggerPayout } from '../../../hooks/manager/usePayouts';
+import { useJobStatus } from '../../../hooks/manager/useJobStatus';
+import { validateInvoiceEmail, storeJob, clearJob } from '../../../utils/email';
+import type { StoredJob } from '../../../utils/email';
 import apiClient from '../../../lib/apiClient';
 import { toast } from 'sonner';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { Column } from '../../../components/common/DataTable';
 import type { TrackingRow } from '../../../types/manager';
 
@@ -94,6 +101,213 @@ export default function GlobalTrackingPage() {
   const [sort, setSort] = useState<'asc' | 'desc'>('desc');
   const [exporting, setExporting] = useState(false);
   const [detailRow, setDetailRow] = useState<TrackingRow | null>(null);
+  const [openMenu, setOpenMenu] = useState<{ rowId: number; x: number; y: number } | null>(null);
+  const { data: menuInvoiceRes } = useInvoiceDetail(openMenu?.rowId ?? null);
+  const menuInvoice = menuInvoiceRes?.data ?? null;
+
+  const [actionType, setActionType] = useState<'markPaid' | 'email' | 'reminder' | 'payout' | null>(null);
+  const [actionInvoiceId, setActionInvoiceId] = useState<number | null>(null);
+  const { data: actionInvoiceRes } = useInvoiceDetail(actionInvoiceId);
+  const actionInvoice = actionInvoiceRes?.data ?? null;
+
+  const [markPaidDate, setMarkPaidDate] = useState(new Date().toISOString().split('T')[0]);
+  const [markPaidComment, setMarkPaidComment] = useState('');
+  const [payoutMode, setPayoutMode] = useState<'DH' | '%'>('DH');
+  const [payoutAmount, setPayoutAmount] = useState('');
+  const [payoutComment, setPayoutComment] = useState('');
+  const [payoutConsultantId, setPayoutConsultantId] = useState<number | ''>('');
+  const [pendingJob, setPendingJob] = useState<StoredJob | null>(null);
+
+  const queryClient = useQueryClient();
+  const markPaidMutation = useMarkPaid();
+  const emailMutation = useEmailInvoice();
+  const sendReminderMutation = useSendReminder();
+  const payoutMutation = useTriggerPayout();
+  const jobStatusQuery = useJobStatus(pendingJob?.jobId ?? null);
+
+  useEffect(() => {
+    if (!jobStatusQuery.data || !pendingJob) return;
+    const d = jobStatusQuery.data.data;
+    if (d.status === 'COMPLETED') {
+      toast.success(pendingJob.type === 'email' ? 'Email envoyé avec succès' : 'Relance envoyée avec succès');
+      clearJob(pendingJob.jobId);
+      setPendingJob(null);
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+    } else if (d.status === 'FAILED') {
+      toast.error(`Échec d'envoi : ${d.lastError ?? 'Erreur inconnue'}`, {
+        action: {
+          label: 'Réessayer',
+          onClick: () => {
+            if (pendingJob.type === 'email') {
+              emailMutation.mutate(pendingJob.invoiceId, {
+                onSuccess: (res) => {
+                  const j: StoredJob = { ...pendingJob, jobId: res.data.jobId };
+                  storeJob(j);
+                  setPendingJob(j);
+                  toast("Email mis en file d'attente...");
+                },
+              });
+            } else {
+              sendReminderMutation.mutate(pendingJob.invoiceId, {
+                onSuccess: (res) => {
+                  const j: StoredJob = { ...pendingJob, jobId: res.data.jobId };
+                  storeJob(j);
+                  setPendingJob(j);
+                  toast("Relance mise en file d'attente...");
+                },
+              });
+            }
+          },
+        },
+      });
+      clearJob(pendingJob.jobId);
+      setPendingJob(null);
+    }
+  }, [jobStatusQuery.data, pendingJob, queryClient, emailMutation, sendReminderMutation]);
+
+  const closeActionModal = () => {
+    setActionType(null);
+    setActionInvoiceId(null);
+    setMarkPaidDate(new Date().toISOString().split('T')[0]);
+    setMarkPaidComment('');
+    setPayoutAmount('');
+    setPayoutComment('');
+    setPayoutConsultantId('');
+  };
+
+  const handleMarkPaid = () => {
+    if (!actionInvoice) return;
+    if (markPaidDate < actionInvoice.issueDate.split('T')[0]) {
+      toast.error(`La date de paiement ne peut pas être antérieure à la date d'émission de la facture (${actionInvoice.issueDate.split('T')[0]})`);
+      return;
+    }
+    markPaidMutation.mutate(
+      { invoiceId: actionInvoice.id, paymentDate: markPaidDate, comment: markPaidComment || undefined },
+      {
+        onSuccess: () => {
+          queryClient.setQueriesData({ queryKey: ['tracking-global'] }, (old: { data: TrackingRow[] } | undefined) => {
+            if (!old) return old;
+            return { ...old, data: old.data.map((r) => r.id === actionInvoice.id ? {
+              ...r,
+              status: 'PAID',
+              clientStatus: 'PAID',
+              paymentDate: markPaidDate,
+              consultantStatus: r.grouped ? r.consultants.map(() => 'PAYE') : 'PAYE',
+              consultants: r.consultants.map((c) => ({ ...c, consultantStatus: 'PAYE' })),
+            } : r) };
+          });
+          queryClient.invalidateQueries({ queryKey: ['tracking-global'] });
+          toast.success(`Facture ${actionInvoice.ref} marquée comme payée`);
+          closeActionModal();
+        },
+        onError: (err) => toast.error((err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error?.message ?? "Erreur lors du marquage"),
+      },
+    );
+  };
+
+  const handleEmailInvoice = () => {
+    if (!actionInvoice) return;
+    const error = validateInvoiceEmail(actionInvoice.client?.email);
+    if (error) { toast.error(error); closeActionModal(); return; }
+    closeActionModal();
+    toast("Email mis en file d'attente...");
+    emailMutation.mutate(actionInvoice.id, {
+      onSuccess: (res) => {
+        queryClient.setQueriesData({ queryKey: ['tracking-global'] }, (old: { data: TrackingRow[] } | undefined) => {
+          if (!old) return old;
+          return { ...old, data: old.data.map((r) => r.id === actionInvoice.id ? { ...r, isSent: true } : r) };
+        });
+        queryClient.invalidateQueries({ queryKey: ['tracking-global'] });
+        const job: StoredJob = { jobId: res.data.jobId, invoiceId: actionInvoice.id, type: 'email', invoiceRef: actionInvoice.ref };
+        storeJob(job);
+        setPendingJob(job);
+      },
+      onError: (err) => {
+        toast.error((err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error?.message ?? "Erreur lors de l'envoi");
+      },
+    });
+  };
+
+  const handleSendReminder = () => {
+    if (!actionInvoice) return;
+    const error = validateInvoiceEmail(actionInvoice.client?.email);
+    if (error) { toast.error(error); closeActionModal(); return; }
+    closeActionModal();
+    toast("Relance mise en file d'attente...");
+    sendReminderMutation.mutate(actionInvoice.id, {
+      onSuccess: (res) => {
+        const job: StoredJob = { jobId: res.data.jobId, invoiceId: actionInvoice.id, type: 'reminder', invoiceRef: actionInvoice.ref };
+        storeJob(job);
+        setPendingJob(job);
+      },
+      onError: (err) => {
+        toast.error((err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error?.message ?? "Erreur lors de l'envoi");
+      },
+    });
+  };
+
+  const payoutRest = actionInvoice?.consultantPayoutRest ?? 0;
+  const payoutBase = actionInvoice?.consultantsPayouts && payoutConsultantId
+    ? (actionInvoice.consultantsPayouts.find((cp) => cp.consultantId === payoutConsultantId)?.rest ?? payoutRest)
+    : actionInvoice?.consultantPayouts && payoutConsultantId
+      ? (actionInvoice.consultantPayouts.find((cp) => cp.consultantId === payoutConsultantId)?.payoutAmount ?? payoutRest)
+      : payoutRest;
+
+  const handlePayout = () => {
+    if (!actionInvoice) return;
+    const parsed = parseFloat(payoutAmount);
+    if (isNaN(parsed) || parsed <= 0) {
+      toast.error('Le montant doit être supérieur à 0');
+      return;
+    }
+    if (payoutMode === 'DH' && parsed > payoutBase) {
+      toast.error("Le montant ne peut pas dépasser le restant dû");
+      return;
+    }
+    const dhAmount = payoutMode === '%'
+      ? Math.round(payoutBase * parsed / 100 * 100) / 100
+      : parsed;
+    payoutMutation.mutate(
+      { invoiceId: actionInvoice.id, consultantId: Number(payoutConsultantId) || undefined, amount: dhAmount, comment: payoutComment || undefined },
+      {
+        onSuccess: () => {
+          const isFullyPaid = dhAmount >= payoutBase;
+          const paidConsultantId = Number(payoutConsultantId) || undefined;
+          queryClient.setQueriesData({ queryKey: ['tracking-global'] }, (old: { data: TrackingRow[] } | undefined) => {
+            if (!old) return old;
+            return { ...old, data: old.data.map((r) => {
+              if (r.id !== actionInvoice.id) return r;
+              if (isFullyPaid && paidConsultantId) {
+                return {
+                  ...r,
+                  consultantStatus: r.grouped ? r.consultants.map((c) => c.consultantId === paidConsultantId ? 'PAYE' : c.consultantStatus) : 'PAYE',
+                  consultants: r.consultants.map((c) => c.consultantId === paidConsultantId ? { ...c, consultantStatus: 'PAYE' } : c),
+                };
+              }
+              return {
+                ...r,
+                consultantStatus: r.grouped ? r.consultants.map((c) => c.consultantId === paidConsultantId ? 'PARTIAL_PAID' : c.consultantStatus) : 'PARTIAL_PAID',
+                consultants: r.consultants.map((c) => c.consultantId === paidConsultantId ? { ...c, consultantStatus: 'PARTIAL_PAID' } : c),
+              };
+            }) };
+          });
+          queryClient.invalidateQueries({ queryKey: ['tracking-global'] });
+          toast.success(`Paiement déclenché pour ${actionInvoice.ref}`);
+          closeActionModal();
+        },
+        onError: (err) => {
+          const axiosErr = err as { response?: { data?: { error?: { message?: string } } } };
+          toast.error(axiosErr.response?.data?.error?.message ?? "Erreur lors du paiement");
+        },
+      },
+    );
+  };
+
+  const openAction = (type: typeof actionType, rowId: number) => {
+    setOpenMenu(null);
+    setActionType(type);
+    setActionInvoiceId(rowId);
+  };
 
   useEffect(() => {
     if (detailRow) {
@@ -103,6 +317,25 @@ export default function GlobalTrackingPage() {
     }
     return () => { document.body.style.overflow = ''; };
   }, [detailRow]);
+
+  useEffect(() => {
+    if (openMenu === null) return;
+    const close = () => setOpenMenu(null);
+    document.addEventListener('click', close);
+    return () => document.removeEventListener('click', close);
+  }, [openMenu]);
+
+  useEffect(() => {
+    if (!openMenu) return;
+    const el = document.querySelector(`[data-menu-for="${openMenu.rowId}"]`);
+    if (!el) return;
+    const onScroll = () => {
+      const rect = el.getBoundingClientRect();
+      setOpenMenu((prev) => prev?.rowId === openMenu.rowId ? { ...prev, x: rect.right, y: rect.bottom + 4 } : prev);
+    };
+    window.addEventListener('scroll', onScroll, true);
+    return () => window.removeEventListener('scroll', onScroll, true);
+  }, [openMenu]);
 
   const dateRange = useMemo(
     () => computeDateRange(periodeFilter, customStart, customEnd),
@@ -128,8 +361,8 @@ export default function GlobalTrackingPage() {
     [clientNames],
   );
 
-  const handlePageChange = useCallback((p: number) => setPage(p), []);
-  const handlePageSizeChange = useCallback((s: number) => { setLimit(s); setPage(1); }, []);
+  const handlePageChange = useCallback((p: number) => { setOpenMenu(null); setPage(p); }, []);
+  const handlePageSizeChange = useCallback((s: number) => { setOpenMenu(null); setLimit(s); setPage(1); }, []);
 
   const handleExport = async () => {
     setExporting(true);
@@ -295,13 +528,26 @@ export default function GlobalTrackingPage() {
       key: 'actions',
       label: 'Actions',
       render: (r) => (
-        <button
-          onClick={(e) => { e.stopPropagation(); setDetailRow(r); }}
-          className="inline-flex cursor-pointer items-center gap-1 rounded-[8px] border border-[#bdbdbd] bg-[#ffffff] px-3 py-1.5 text-xs font-medium text-[#111111] transition-colors hover:bg-[#f3f4f6]"
-        >
-          <Eye size={14} className="md:hidden" />
-          <span className="hidden md:inline">Détail</span>
-        </button>
+        <div className="flex gap-1.5 items-center">
+          <button
+            data-menu-for={r.id}
+            onClick={(e) => {
+              e.stopPropagation();
+              const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                setOpenMenu(openMenu?.rowId === r.id ? null : { rowId: r.id, x: rect.right, y: rect.bottom + 4 });
+            }}
+            className="cursor-pointer rounded-[8px] border border-[#bdbdbd] bg-[#ffffff] p-1.5 text-[#111111] transition-colors hover:bg-[#f3f4f6]"
+          >
+            <MoreVertical size={14} />
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); setDetailRow(r); }}
+            className="inline-flex cursor-pointer items-center gap-1 rounded-[8px] border border-[#bdbdbd] bg-[#ffffff] px-3 py-1.5 text-xs font-medium text-[#111111] transition-colors hover:bg-[#f3f4f6]"
+          >
+            <Eye size={14} className="md:hidden" />
+            <span className="hidden md:inline">Détail</span>
+          </button>
+        </div>
       ),
     },
   ];
@@ -563,7 +809,7 @@ export default function GlobalTrackingPage() {
                         <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${consultantStatusBadge[c.consultantStatus] || 'bg-[#fef3c7] text-[#f59e0b]'}`}>{consultantStatusLabels[c.consultantStatus] ?? 'Pas encore'}</span>
                       </div>
                       <div className="flex items-center gap-2 text-sm">
-                        <span className="text-[#6b7280] shrink-0">Net</span>
+                        <span className="text-[#6b7280] shrink-0">Net (TTC)</span>
                         <span className="flex-1 border-b border-dashed border-[#d1d5db] min-w-[8px]" />
                         <span className="text-[#111111] font-semibold shrink-0">{c.totalPaid.toLocaleString()} DH</span>
                       </div>
@@ -582,7 +828,7 @@ export default function GlobalTrackingPage() {
                       <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium shrink-0 ${consultantStatusBadge[detailRow.consultantStatus as string] || 'bg-[#fef3c7] text-[#f59e0b]'}`}>{consultantStatusLabels[detailRow.consultantStatus as string] ?? 'Pas encore'}</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
-                      <span className="text-[#6b7280] shrink-0">Net</span>
+                      <span className="text-[#6b7280] shrink-0">Net (TTC)</span>
                       <span className="flex-1 border-b border-dashed border-[#d1d5db] min-w-[8px]" />
                       <span className="text-[#111111] font-semibold shrink-0">{(detailRow.totalPaid ?? 0).toLocaleString()} DH</span>
                     </div>
@@ -609,7 +855,7 @@ export default function GlobalTrackingPage() {
                     <span className="text-[#111111] font-semibold shrink-0">{(detailRow.amount ?? 0).toLocaleString()} DH</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
-                    <span className="text-[#6b7280] shrink-0">Versé conseil.</span>
+                    <span className="text-[#6b7280] shrink-0">Versé conseil. (TTC)</span>
                     <span className="flex-1 border-b border-dashed border-[#d1d5db] min-w-[8px]" />
                     <span className="text-[#111111] font-semibold shrink-0">- {(detailRow.totalPaid ?? 0).toLocaleString()} DH</span>
                   </div>
@@ -620,6 +866,170 @@ export default function GlobalTrackingPage() {
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {openMenu && (() => {
+        const row = (data?.data ?? []).find((r) => r.id === openMenu.rowId);
+        if (!row) return null;
+        const isPaid = row.status === 'PAID';
+        const isPending = row.status === 'PENDING' || row.status === 'PARTIAL_PAID';
+        const isLate = row.dueDate && new Date(row.dueDate) < new Date() && isPending;
+        const consultantUnpaid = row.grouped
+          ? row.consultants.some((c) => c.consultantStatus !== 'PAYE')
+          : (row.consultantStatus as string) !== 'PAYE';
+        return createPortal(
+          <div
+            style={{ position: 'fixed', left: openMenu.x, top: openMenu.y, zIndex: 9999, transform: 'translateX(-100%)' }}
+            className="w-56 rounded-[8px] border border-[#afafaf] bg-[#ffffff] p-2 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {isPaid && consultantUnpaid && (
+              <button onClick={() => openAction('payout', row.id)} className="w-full cursor-pointer py-2 text-center text-xs font-medium text-[#111111] hover:bg-[#e4eae4] rounded-lg border border-[#dbdbdb] bg-[#f7f9f7] mb-1">
+                Payer consultant
+              </button>
+            )}
+            {isPending && (
+              <button onClick={() => openAction('markPaid', row.id)} className="w-full cursor-pointer py-2 text-center text-xs font-medium text-[#111111] hover:bg-[#e4eae4] rounded-lg border border-[#dbdbdb] bg-[#f7f9f7] mb-1">
+                Marquer facture payée
+              </button>
+            )}
+            <button onClick={() => openAction('email', row.id)} className={`w-full cursor-pointer py-2 text-center text-xs font-medium hover:bg-[#e4eae4] rounded-lg border border-[#dbdbdb] bg-[#f7f9f7] mb-1 ${menuInvoice?.isSent ? 'text-green-500' : 'text-[#111111]'}`}>
+              {menuInvoice?.isSent ? 'Renvoyer l\'email' : 'Envoyer facture par email'}
+            </button>
+            {isLate && (
+              <button onClick={() => openAction('reminder', row.id)} className="w-full cursor-pointer py-2 text-center text-xs font-medium text-[#111111] hover:bg-[#e4eae4] rounded-lg border border-[#dbdbdb] bg-[#f7f9f7] mb-1">
+                Envoyer relance
+              </button>
+            )}
+          </div>,
+          document.body,
+        );
+      })()}
+
+      {actionType === 'markPaid' && actionInvoice && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div className="w-full max-w-sm rounded-[12px] bg-[#ffffff] p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <h2 className="mb-2 text-lg font-semibold text-[#111111]">Marquer comme payée</h2>
+            <p className="mb-4 text-sm text-[#6b7280]">Confirmer que la facture {actionInvoice.ref} est payée&nbsp;?</p>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-[#111111] mb-1">Date de paiement</label>
+              <input type="date" value={markPaidDate} onChange={(e) => setMarkPaidDate(e.target.value)} autoComplete="off" className="w-full rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111]" />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-[#111111] mb-1">Commentaire (optionnel)</label>
+              <textarea value={markPaidComment} onChange={(e) => setMarkPaidComment(e.target.value)} rows={2} className="w-full rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111]" />
+            </div>
+            <div className="flex justify-end gap-3">
+              <button onClick={closeActionModal} className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-4 py-2 text-sm text-[#111111] transition-colors hover:bg-[#f3f4f6]">Annuler</button>
+              <button onClick={handleMarkPaid} disabled={markPaidMutation.isPending} className="cursor-pointer rounded-[8px] bg-[#10b981] px-4 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-90 disabled:opacity-50">
+                {markPaidMutation.isPending ? 'Traitement...' : 'Confirmer'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {actionType === 'email' && actionInvoice && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div className="w-full max-w-sm rounded-[12px] bg-[#ffffff] p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <h2 className="mb-2 text-lg font-semibold text-[#111111]">{actionInvoice.isSent ? 'Renvoyer par email' : 'Envoyer par email'}</h2>
+            <p className="mb-6 text-sm text-[#6b7280]">Envoyer {actionInvoice.ref} à {actionInvoice.client?.email ?? 'aucun email'}&nbsp;?</p>
+            <div className="flex justify-end gap-3">
+              <button onClick={closeActionModal} className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-4 py-2 text-sm text-[#111111] transition-colors hover:bg-[#f3f4f6]">Annuler</button>
+              <button onClick={handleEmailInvoice} disabled={emailMutation.isPending} className="cursor-pointer rounded-[8px] bg-[#3b82f6] px-4 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-90 disabled:opacity-50">
+                {emailMutation.isPending ? 'Envoi...' : 'Confirmer'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {actionType === 'reminder' && actionInvoice && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div className="w-full max-w-sm rounded-[12px] bg-[#ffffff] p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <h2 className="mb-2 text-lg font-semibold text-[#111111]">Envoyer une relance</h2>
+            <p className="mb-6 text-sm text-[#6b7280]">Envoyer un email de relance pour {actionInvoice.ref}&nbsp;?</p>
+            <div className="flex justify-end gap-3">
+              <button onClick={closeActionModal} className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-4 py-2 text-sm text-[#111111] transition-colors hover:bg-[#f3f4f6]">Annuler</button>
+              <button onClick={handleSendReminder} disabled={sendReminderMutation.isPending} className="cursor-pointer rounded-[8px] bg-[#3b82f6] px-4 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-90 disabled:opacity-50">
+                {sendReminderMutation.isPending ? 'Envoi...' : 'Confirmer'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {actionType === 'payout' && actionInvoice && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div className="w-full max-w-sm rounded-[12px] bg-[#ffffff] p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <h2 className="mb-4 text-lg font-semibold text-[#111111]">Payer le consultant</h2>
+            <p className="mb-4 text-sm text-[#6b7280]">Facture {actionInvoice.ref}</p>
+
+            <p className="mb-3 text-sm text-[#6b7280]">
+              Reste à payer (TTC) : <span className="font-bold bg-green-500/20 px-4 py-1 rounded text-[#111111]">{(actionInvoice.consultantPayoutRest ?? 0).toLocaleString()} DH</span>
+            </p>
+
+            {(actionInvoice.consultantsPayouts && actionInvoice.consultantsPayouts.length > 0 || actionInvoice.consultantPayouts && actionInvoice.consultantPayouts.length > 0) && (
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-[#111111] mb-1">Consultant</label>
+                <select value={payoutConsultantId} onChange={(e) => setPayoutConsultantId(e.target.value ? Number(e.target.value) : '')} className="w-full rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111]">
+                  <option value="">Sélectionner un consultant</option>
+                  {actionInvoice.consultantsPayouts && actionInvoice.consultantsPayouts.length > 0
+                    ? actionInvoice.consultantsPayouts.filter((cp) => cp.rest > 0).map((cp) => {
+                        const consultant = actionInvoice.consultants?.find((c) => c.id === cp.consultantId);
+                        const name = consultant?.name ?? `Consultant #${cp.consultantId}`;
+                        return (
+                          <option key={cp.consultantId} value={cp.consultantId}>
+                            {name} — reste {cp.rest.toLocaleString()} DH
+                          </option>
+                        );
+                      })
+                    : actionInvoice.consultantPayouts?.map((cp) => {
+                        const consultant = actionInvoice.consultants?.find((c) => c.id === cp.consultantId);
+                        const name = consultant?.name ?? `Consultant #${cp.consultantId}`;
+                        return (
+                          <option key={cp.consultantId} value={cp.consultantId}>
+                            {name} — {cp.payoutAmount.toLocaleString()} DH
+                          </option>
+                        );
+                      })
+                  }
+                </select>
+              </div>
+            )}
+
+            <div>
+              <label className="block text-sm font-medium text-[#111111] mb-1">
+                {payoutMode === 'DH' ? 'Montant (DH)' : 'Pourcentage (%)'}
+              </label>
+              <div className="flex items-center gap-2">
+                <input type="number" value={payoutAmount} onChange={(e) => setPayoutAmount(e.target.value)} autoComplete="off" className="flex-1 rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none" min={0} step="any" />
+                <div className="flex rounded-[8px] border border-[#e5e7eb] overflow-hidden shrink-0">
+                  <button type="button" onClick={() => { setPayoutMode('DH'); setPayoutAmount(String(payoutBase)); }} className={`cursor-pointer px-3 py-2 text-xs font-semibold transition-colors ${payoutMode === 'DH' ? 'bg-[#111111] text-[#ffffff]' : 'bg-[#ffffff] text-[#6b7280] hover:bg-[#f3f4f6]'}`}>
+                    DH
+                  </button>
+                  <button type="button" onClick={() => { setPayoutMode('%'); setPayoutAmount('100'); }} className={`cursor-pointer px-3 py-2 text-xs font-semibold transition-colors ${payoutMode === '%' ? 'bg-[#111111] text-[#ffffff]' : 'bg-[#ffffff] text-[#6b7280] hover:bg-[#f3f4f6]'}`}>
+                    %
+                  </button>
+                </div>
+              </div>
+              {payoutMode === '%' && payoutAmount && !isNaN(parseFloat(payoutAmount)) && (
+                <p className="mt-1 text-xs text-[#6b7280]">
+                  Montant calculé : {Math.round(payoutBase * parseFloat(payoutAmount) / 100 * 100) / 100} DH
+                </p>
+              )}
+            </div>
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-[#111111] mb-1">Commentaire (optionnel)</label>
+              <textarea value={payoutComment} onChange={(e) => setPayoutComment(e.target.value)} rows={2} className="w-full rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111] resize-none" />
+            </div>
+            <div className="mt-6 flex justify-end gap-3">
+              <button onClick={closeActionModal} className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-4 py-2 text-sm text-[#111111] transition-colors hover:bg-[#f3f4f6]">Annuler</button>
+              <button onClick={handlePayout} disabled={payoutMutation.isPending || !payoutAmount || parseFloat(payoutAmount) <= 0 || parseFloat(payoutAmount) > (payoutMode === 'DH' ? payoutBase : 100)} className="cursor-pointer rounded-[8px] bg-[#10b981] px-4 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-90 disabled:opacity-50">
+                {payoutMutation.isPending ? 'Traitement...' : 'Confirmer le paiement'}
+              </button>
             </div>
           </div>
         </div>
