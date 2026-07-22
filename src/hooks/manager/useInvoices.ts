@@ -47,13 +47,13 @@ interface EmailResponse {
   data: { jobId: number; status: string; sentTo: string; invoiceRef: string };
 }
 
-export function useInvoices(page: number, limit: number, status?: string) {
+export function useInvoices(page: number, limit: number, status?: string, client?: string, month?: string) {
   return useQuery({
-    queryKey: ['invoices', { page, limit, status }],
+    queryKey: ['invoices', { page, limit, status, client, month }],
     queryFn: () =>
       apiClient
         .get<InvoiceListResponse>('/invoices', {
-          params: { page, limit, ...(status ? { status } : {}) },
+          params: { page, limit, ...(status ? { status } : {}), ...(client ? { client } : {}), ...(month ? { month } : {}) },
         })
         .then((res) => res.data),
     placeholderData: (prev) => prev,

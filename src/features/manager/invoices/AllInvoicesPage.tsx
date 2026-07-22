@@ -8,7 +8,8 @@ import { useJobStatus } from '../../../hooks/manager/useJobStatus';
 import { useManagerTimesheets } from '../../../hooks/manager/useManagerTimesheets';
 import { useGetBdcsByMission } from '../../../hooks/useBdc';
 import { toast } from 'sonner';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useQuery } from '@tanstack/react-query';
+import apiClient from '../../../lib/apiClient';
 import LoadingOverlay from '../../../components/common/LoadingOverlay';
 import { validateInvoiceEmail, storeJob, clearJob } from '../../../utils/email';
 import type { StoredJob } from '../../../utils/email';
@@ -33,6 +34,8 @@ export default function AllInvoicesPage() {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [statusFilter, setStatusFilter] = useState('');
+  const [clientFilter, setClientFilter] = useState('');
+  const [monthFilter, setMonthFilter] = useState('');
   const [generateModal, setGenerateModal] = useState(false);
   const [generateTimesheetId, setGenerateTimesheetId] = useState('');
   const [vatRate, setVatRate] = useState('20');
@@ -58,7 +61,18 @@ export default function AllInvoicesPage() {
   const [reminderModal, setReminderModal] = useState<Invoice | null>(null);
   const [reminderFrequency, setReminderFrequency] = useState<'7' | '15' | '30'>('15');
 
-  const { data, isLoading } = useInvoices(page, limit, statusFilter || undefined);
+  const monthParam = monthFilter ? monthFilter.replace('-', '/') : undefined;
+  const { data, isLoading } = useInvoices(page, limit, statusFilter || undefined, clientFilter || undefined, monthParam);
+
+  const { data: clientNames } = useQuery({
+    queryKey: ['client-names'],
+    queryFn: () =>
+      apiClient.get<{ data: { id: number; raison_sociale: string }[] }>('/clients/names').then((r) => r.data.data),
+  });
+  const clientOptions = useMemo(
+    () => (clientNames ?? []).map((c) => c.raison_sociale).sort((a, b) => a.localeCompare(b, 'fr')),
+    [clientNames],
+  );
   const validTimesheetsQuery = useManagerTimesheets(1, 1000, 'VALIDE');
   const { data: contractRates, isLoading: ratesLoading } = useContractRates(generateTimesheetId ? parseInt(generateTimesheetId, 10) : null);
   const markPaidMutation = useMarkPaid();
@@ -490,9 +504,9 @@ export default function AllInvoicesPage() {
   return (
     <LoadingOverlay isLoading={markPaidMutation.isPending || payoutMutation.isPending || generateMutation.isPending || cancelMutation.isPending || downloadPdfMutation.isPending || setAutoReminderMutation.isPending || stopAutoReminderMutation.isPending}>
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <label className="text-sm text-[#6b7280]">Statut:</label>
+      <div className="flex flex-wrap items-end gap-4">
+        <div className="flex flex-col gap-1">
+          <label className="text-sm text-[#6b7280]">Statut</label>
           <select
             value={statusFilter}
             onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
@@ -505,6 +519,29 @@ export default function AllInvoicesPage() {
             <option value="CANCELED">Annulé</option>
           </select>
         </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-sm text-[#6b7280]">Client</label>
+          <select
+            value={clientFilter}
+            onChange={(e) => { setClientFilter(e.target.value); setPage(1); }}
+            className="rounded-[8px] border border-[#e5e7eb] bg-white px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111] min-w-[180px]"
+          >
+            <option value="">Tous les clients</option>
+            {clientOptions.map((name) => (
+              <option key={name} value={name}>{name}</option>
+            ))}
+          </select>
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-sm text-[#6b7280]">Mois</label>
+          <input
+            type="month"
+            value={monthFilter}
+            onChange={(e) => { setMonthFilter(e.target.value); setPage(1); }}
+            className="rounded-[8px] border border-[#e5e7eb] bg-white px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111]"
+          />
+        </div>
+        <div className="flex-1" />
         <button
           onClick={() => setGenerateModal(true)}
           className="cursor-pointer rounded-[8px] bg-[#003ea8] px-4 py-2 text-sm font-medium text-[#ffffff] transition-colors hover:bg-[#2563eb]"
@@ -757,7 +794,7 @@ export default function AllInvoicesPage() {
             <p className="mb-4 text-sm text-[#6b7280]">Facture {payoutModal.ref}</p>
 
             <p className="mb-3 text-sm text-[#6b7280]">
-              Reste à payer : <span className="font-bold bg-green-500/20 px-4 py-1 rounded text-[#111111]">{(payoutModal.consultantPayoutRest ?? 0).toLocaleString()} DH</span>
+              Reste à payer (TTC) : <span className="font-bold bg-green-500/20 px-4 py-1 rounded text-[#111111]">{(payoutModal.consultantPayoutRest ?? 0).toLocaleString()} DH</span>
             </p>
 
               {(payoutModal.consultantsPayouts && payoutModal.consultantsPayouts.length > 0 || payoutModal.consultantPayouts && payoutModal.consultantPayouts.length > 0) && (
