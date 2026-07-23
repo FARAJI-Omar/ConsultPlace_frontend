@@ -873,7 +873,6 @@ export default function GlobalTrackingPage() {
       {openMenu && (() => {
         const row = (data?.data ?? []).find((r) => r.id === openMenu.rowId);
         if (!row) return null;
-        const isPaid = row.status === 'PAID';
         const isPending = row.status === 'PENDING' || row.status === 'PARTIAL_PAID';
         const isLate = row.dueDate && new Date(row.dueDate) < new Date() && isPending;
         const consultantUnpaid = row.grouped
@@ -885,7 +884,7 @@ export default function GlobalTrackingPage() {
             className="w-56 rounded-[8px] border border-[#afafaf] bg-[#ffffff] p-2 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
-            {isPaid && consultantUnpaid && (
+            {consultantUnpaid && (
               <button onClick={() => openAction('payout', row.id)} className="w-full cursor-pointer py-2 text-center text-xs font-medium text-[#111111] hover:bg-[#e4eae4] rounded-lg border border-[#dbdbdb] bg-[#f7f9f7] mb-1">
                 Payer consultant
               </button>

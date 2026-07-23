@@ -10,7 +10,7 @@ import LoadingOverlay from '../../../components/common/LoadingOverlay';
 
 export default function PayoutTrackingPage() {
   const { data, isLoading } = usePayoutsHistory();
-  const paidInvoicesQuery = useInvoices(1, 1000, 'PAID');
+  const paidInvoicesQuery = useInvoices(1, 1000);
   const payoutMutation = useTriggerPayout();
   const [payoutModal, setPayoutModal] = useState<{
     id: number;

@@ -425,23 +425,21 @@ export default function AllInvoicesPage() {
               Marquer payée
             </button>
           )}
-          {inv.status === 'PAID' && (
-            (inv.consultantPayoutRest ?? 0) <= 0
-              ? (
-                <span className="inline-flex items-center rounded-[8px] bg-green-50 px-2.5 py-1 text-xs font-medium text-green-700">
-                  Le consultant est rémunéré.
-                </span>
-              )
-              : (
-                <button
-                  onClick={() => setPayoutModal(inv)}
-                  disabled={payoutMutation.isPending}
-                  className="cursor-pointer rounded-[8px] border border-[#bdbdbd] bg-[#ffffff] px-2 py-1 text-xs font-medium text-[#111111] transition-colors hover:bg-[#f3f4f6] disabled:cursor-not-allowed disabled:text-[#d1d5db]"
-                >
-                  Payer consultant
-                </button>
-              )
-          )}
+          {(inv.consultantPayoutRest ?? 0) <= 0
+            ? (
+              <span className="inline-flex items-center rounded-[8px] bg-green-50 px-2.5 py-1 text-xs font-medium text-green-700">
+                Le consultant est rémunéré.
+              </span>
+            )
+            : (
+              <button
+                onClick={() => setPayoutModal(inv)}
+                disabled={payoutMutation.isPending}
+                className="cursor-pointer rounded-[8px] border border-[#bdbdbd] bg-[#ffffff] px-2 py-1 text-xs font-medium text-[#111111] transition-colors hover:bg-[#f3f4f6] disabled:cursor-not-allowed disabled:text-[#d1d5db]"
+              >
+                Payer consultant
+              </button>
+            )}
           <button
             onClick={() => handleDownloadPdf(inv.id)}
             disabled={downloadPdfMutation.isPending}

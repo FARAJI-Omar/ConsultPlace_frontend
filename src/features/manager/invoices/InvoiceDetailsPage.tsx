@@ -582,23 +582,21 @@ export default function InvoiceDetailsPage() {
             Marquer payee
           </button>
         )}
-        {invoice.status === 'PAID' && (
-          payoutRest <= 0
-            ? (
-              <span className="inline-flex items-center rounded-[8px] bg-green-50 px-3 py-2 text-sm font-medium text-green-700">
-                Le consultant est rémunéré.
-              </span>
-            )
-            : (
-              <button
-                onClick={() => setShowPayoutModal(true)}
-                disabled={payoutMutation.isPending}
-                className="inline-flex items-center gap-2 cursor-pointer rounded-[8px] bg-[#3b82f6] px-4 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-90 disabled:opacity-50"
-              >
-                Payer consultant
-              </button>
-            )
-        )}
+        {payoutRest <= 0
+          ? (
+            <span className="inline-flex items-center rounded-[8px] bg-green-50 px-3 py-2 text-sm font-medium text-green-700">
+              Le consultant est rémunéré.
+            </span>
+          )
+          : (
+            <button
+              onClick={() => setShowPayoutModal(true)}
+              disabled={payoutMutation.isPending}
+              className="inline-flex items-center gap-2 cursor-pointer rounded-[8px] bg-[#3b82f6] px-4 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-90 disabled:opacity-50"
+            >
+              Payer consultant
+            </button>
+          )}
         <button
           onClick={handleDownload}
           disabled={downloadPdfMutation.isPending}
