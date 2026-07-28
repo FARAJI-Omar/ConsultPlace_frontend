@@ -23,10 +23,6 @@ export default function PaymentsHistoryPage() {
       render: (item) => formatDate(item.date),
     },
     {
-      key: 'paymentRef',
-      label: 'Ref Paiement',
-    },
-    {
       key: 'missionTitle',
       label: 'Mission',
       render: (item) => (
@@ -39,15 +35,24 @@ export default function PaymentsHistoryPage() {
       ),
     },
     {
+      key: 'releve',
+      label: 'Relevé associé',
+      render: (item) =>
+        item.timesheetId ? (
+          <button
+            onClick={() => navigate(`/consultant/timesheets/${item.timesheetId}`)}
+            className="cursor-pointer text-[#3b82f6] hover:underline text-left"
+          >
+            {item.missionTitle}—{item.timesheetMonth}
+          </button>
+        ) : (
+          <span className="text-[#9ca3af]">—</span>
+        ),
+    },
+    {
       key: 'paymentAmount',
       label: 'Virement',
       render: (item) => `${(item.paymentAmount ?? 0).toLocaleString()} DH`,
-    },
-    {
-      key: 'invoices',
-      label: 'Ref Facture',
-      render: (item) =>
-        item.invoices.map((inv) => inv.ref).join(', ') || '-',
     },
   ];
 

@@ -47,7 +47,6 @@ function generateDefaultEntries(year: number, month: number, holidays: { date: s
   return entries;
 }
 
-const MAX_PROOF_FILES = 9;
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?: number }) {
@@ -223,13 +222,10 @@ export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?:
   function addProofFiles(incoming: FileList | File[]) {
     const valid = validateFiles(incoming);
     if (valid.length === 0) return;
-    const combined = [...proofFiles, ...valid];
-    if (combined.length > MAX_PROOF_FILES) {
-      toast.error(`Maximum ${MAX_PROOF_FILES} fichiers pour le rapport d'activité.`);
-      return;
-    }
-    setProofFiles(combined);
-    trackFiles(valid);
+    const removed = proofFiles[0];
+    if (removed) untrackFile(removed);
+    setProofFiles([valid[0]]);
+    trackFiles([valid[0]]);
   }
 
   function removeProofFile(index: number) {
@@ -455,60 +451,46 @@ export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?:
             Rapport d'activité <span className="text-xs text-[#ff0909]">*</span>
           </label>
 
-          <div
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={handleProofDrop}
-            onClick={() => proofInputRef.current?.click()}
-            className="cursor-pointer rounded-[12px] border-2 border-dashed border-[#e5e7eb] bg-[#ffffff] px-6 py-6 text-center transition-colors hover:border-[#111111]"
-          >
-            <p className="text-sm text-[#6b7280]">
-              Glissez-déposez vos fichiers ici ou cliquez pour parcourir
-            </p>
-            <p className="text-[8px] md:text-xs text-[#6b7280] mt-1">
-              Maximum {MAX_PROOF_FILES} fichiers PDF, 10 Mo chacun
-            </p>
-            <input
-              ref={proofInputRef}
-              type="file"
-              accept=".pdf,application/pdf"
-              multiple
-              onChange={handleProofFileSelect}
-              className="hidden"
-            />
-          </div>
-
-          {proofFiles.length > 0 && (
-            <ul className="space-y-1.5">
-              {proofFiles.map((file, i) => (
-                <li
-                  key={`proof-${file.name}-${i}`}
-                  className="flex items-center justify-between rounded-[8px] bg-[#f5f5f5] px-4 py-2"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="inline-block rounded-[9999px] bg-[#e5e7eb] px-2 py-0.5 text-xs text-[#6b7280]">
-                      {file.name.split('.').pop()?.toUpperCase() ?? 'FICHIER'}
-                    </span>
-                    <span className="text-xs md:text-sm text-[#111111]">{truncateFilename(file.name)}</span>
-                    {compressingFiles.has(file) && (
-                      <Loader2 className="h-3.5 w-3.5 animate-spin text-[#6b7280] shrink-0" />
-                    )}
-                    <span className="text-xs text-[#6b7280]">
-                      ({(file.size / 1024 / 1024).toFixed(1)} Mo)
-                    </span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => removeProofFile(i)}
-                    disabled={isOrchestrating}
-                    title="Retirer"
-                    className="inline-flex cursor-pointer items-center gap-1 rounded-[8px] px-2 py-1 text-xs font-semibold text-[#dc5252] hover:bg-[#fef2f2] disabled:opacity-50 transition-colors"
-                  >
-                    <Delete size={14} className="md:hidden" />
-                    <span className="hidden md:inline">Retirer</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
+          {proofFiles.length > 0 ? (
+            <div className="rounded-[12px] border-2 border-solid border-[#e5e7eb] bg-[#f9f9f9] px-6 py-6 text-center">
+              <p className="text-sm text-[#6b7280]">
+                Fichier sélectionné : <span className="font-medium text-xs md:text-sm text-[#111111]">{truncateFilename(proofFiles[0].name)}</span>
+                {compressingFiles.has(proofFiles[0]) && (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin text-[#6b7280] shrink-0 ml-1 inline-block align-middle" />
+                )}
+              </p>
+              <button
+                type="button"
+                onClick={() => removeProofFile(0)}
+                disabled={isOrchestrating}
+                title="Retirer"
+                className="inline-flex cursor-pointer items-center gap-1 rounded-[8px] px-3 py-1.5 mt-3 text-xs font-semibold text-[#dc5252] hover:bg-[#fef2f2] disabled:opacity-50 transition-colors"
+              >
+                <Delete size={14} className="md:hidden" />
+                <span className="hidden md:inline">Retirer</span>
+              </button>
+            </div>
+          ) : (
+            <div
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={handleProofDrop}
+              onClick={() => proofInputRef.current?.click()}
+              className="cursor-pointer rounded-[12px] border-2 border-dashed border-[#e5e7eb] bg-[#ffffff] px-6 py-6 text-center transition-colors hover:border-[#111111]"
+            >
+              <p className="text-sm text-[#6b7280]">
+                Glissez-déposez votre fichier ici ou cliquez pour parcourir
+              </p>
+              <p className="text-[8px] md:text-xs text-[#6b7280] mt-1">
+                1 fichier PDF, 10 Mo maximum
+              </p>
+              <input
+                ref={proofInputRef}
+                type="file"
+                accept=".pdf,application/pdf"
+                onChange={handleProofFileSelect}
+                className="hidden"
+              />
+            </div>
           )}
         </div>
 

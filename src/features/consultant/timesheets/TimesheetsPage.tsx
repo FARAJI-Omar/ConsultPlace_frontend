@@ -5,7 +5,6 @@ import { useConsultantTimesheets } from '../../../hooks/consultant/useConsultant
 import { DataTable, type Column } from '../../../components/common/DataTable';
 import { formatDate } from '../../../lib/utils';
 import type { Timesheet } from '../../../types/models';
-import type { TimesheetStatus } from '../../../types/models';
 
 const monthNames = [
   'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
@@ -20,19 +19,19 @@ function formatMonth(month: string) {
 const statusStyles: Record<string, string> = {
   BROUILLON: 'bg-[#6b7280]/10 text-[#6b7280]',
   SOUMIS: 'bg-[#f59e0b]/10 text-[#f59e0b]',
-  VALIDE: 'bg-[#10b981]/10 text-[#10b981]',
-  FACTURE: 'bg-[#fb923c]/10 text-[#fb923c]',
-  PAYE: 'bg-[#10b981]/10 text-[#10b981]',
+  VALIDE: 'bg-[#f59e0b]/10 text-[#f59e0b]',
   REJETE: 'bg-[#ef4444]/10 text-[#ef4444]',
+  FACTURE: 'bg-[#f59e0b]/10 text-[#f59e0b]',
+  PAYE: 'bg-[#10b981]/10 text-[#10b981]',
 };
 
 const statusLabels: Record<string, string> = {
   BROUILLON: 'Brouillon',
-  SOUMIS: 'Soumis',
-  VALIDE: 'Validé',
-  FACTURE: 'Facturé',
-  PAYE: 'Payé',
+  SOUMIS: 'En attente',
+  VALIDE: 'En attente',
   REJETE: 'Rejeté',
+  FACTURE: 'En attente',
+  PAYE: 'Payé',
 };
 
 const columns: Column<Timesheet>[] = [
@@ -65,23 +64,19 @@ const columns: Column<Timesheet>[] = [
   },
 ];
 
-const statusOptions: { value: TimesheetStatus | ''; label: string }[] = [
+const statusOptions: { value: string; label: string }[] = [
   { value: '', label: 'Tous les statuts' },
   { value: 'BROUILLON', label: 'Brouillon' },
-  { value: 'SOUMIS', label: 'Soumis' },
-  { value: 'VALIDE', label: 'Validé' },
+  { value: 'EN_ATTENTE', label: 'En attente' },
   { value: 'REJETE', label: 'Rejeté' },
-  { value: 'FACTURE', label: 'Facturé' },
   { value: 'PAYE', label: 'Payé' },
 ];
 
 export default function TimesheetsPage() {
-  const { data: timesheets, isLoading, isError } = useConsultantTimesheets();
-  const [statusFilter, setStatusFilter] = useState<TimesheetStatus | ''>('');
+  const [statusFilter, setStatusFilter] = useState<string>('');
+  const { data: timesheets, isLoading, isError } = useConsultantTimesheets(statusFilter || undefined);
 
-  const filtered = timesheets?.filter(
-    (t) => !statusFilter || t.status === statusFilter,
-  ) ?? [];
+  const filtered = timesheets ?? [];
 
   return (
     <div className="overflow-hidden">
@@ -91,7 +86,7 @@ export default function TimesheetsPage() {
         </h1>
         <select
           value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value as TimesheetStatus | '')}
+          onChange={(e) => setStatusFilter(e.target.value)}
           className="h-10 rounded-[8px] border border-[#e5e7eb] bg-[#ffffff] px-3 text-sm text-[#111111] focus:border-[#111111] focus:outline-none"
         >
           {statusOptions.map((opt) => (

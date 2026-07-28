@@ -164,6 +164,7 @@ export interface PayoutPayload {
   invoiceId: number;
   consultantId?: number;
   amount: number;
+  paymentDate: string;
   comment?: string;
 }
 

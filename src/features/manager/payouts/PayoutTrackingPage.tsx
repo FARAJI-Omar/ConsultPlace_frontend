@@ -24,8 +24,11 @@ export default function PayoutTrackingPage() {
   const [payoutMode, setPayoutMode] = useState<'DH' | '%'>('DH');
   const [payoutAmount, setPayoutAmount] = useState('');
   const [payoutComment, setPayoutComment] = useState('');
+  const [payoutDate, setPayoutDate] = useState(new Date().toISOString().split('T')[0]);
   const [payoutConsultantId, setPayoutConsultantId] = useState<number | ''>('');
   const [selectedHistoriqueId, setSelectedHistoriqueId] = useState<number | null>(null);
+  const [histPage, setHistPage] = useState(1);
+  const HIST_PAGE_SIZE = 10;
   const [selectedUnpaidId, setSelectedUnpaidId] = useState<number | null>(null);
   const [exportModal, setExportModal] = useState(false);
   const [exportMonth, setExportMonth] = useState(new Date().toISOString().slice(5, 7));
@@ -64,6 +67,7 @@ export default function PayoutTrackingPage() {
         invoiceId: payoutModal.id,
         consultantId: Number(payoutConsultantId) || undefined,
         amount: dhAmount,
+        paymentDate: payoutDate,
         comment: payoutComment || undefined,
       },
       {
@@ -103,6 +107,8 @@ export default function PayoutTrackingPage() {
   const payoutData = data?.data;
   const totals = payoutData?.totals;
   const history = payoutData?.history ?? [];
+  const histTotalPages = Math.max(1, Math.ceil(history.length / HIST_PAGE_SIZE));
+  const paginatedHistory = history.slice((histPage - 1) * HIST_PAGE_SIZE, histPage * HIST_PAGE_SIZE);
 
   return (
     <LoadingOverlay isLoading={payoutMutation.isPending || exportPdfMutation.isPending}>
@@ -195,7 +201,7 @@ export default function PayoutTrackingPage() {
                 </tr>
               </thead>
               <tbody>
-                {history.map((entry) => (
+                {paginatedHistory.map((entry) => (
                   <tr
                     key={entry.id}
                     onClick={() => setSelectedHistoriqueId(selectedHistoriqueId === entry.id ? null : entry.id)}
@@ -212,6 +218,28 @@ export default function PayoutTrackingPage() {
                 ))}
               </tbody>
             </table>
+            <div className="flex items-center justify-between px-4 py-3">
+              <div className="text-xs md:text-sm text-[#6b7280]">
+                {history.length} entrées
+              </div>
+              <div className="flex items-center gap-2 text-xs md:text-sm text-[#6b7280]">
+                <span>Page {histPage} sur {histTotalPages}</span>
+                <button
+                  onClick={() => { setSelectedHistoriqueId(null); setHistPage((p) => Math.max(1, p - 1)); }}
+                  disabled={histPage <= 1}
+                  className="cursor-pointer rounded border border-[#e5e7eb] px-3 py-1 text-[#111111] transition-colors hover:bg-[#f3f4f6] disabled:cursor-not-allowed disabled:text-[#d1d5db] disabled:hover:bg-transparent"
+                >
+                  Précédent
+                </button>
+                <button
+                  onClick={() => { setSelectedHistoriqueId(null); setHistPage((p) => Math.min(histTotalPages, p + 1)); }}
+                  disabled={histPage >= histTotalPages}
+                  className="cursor-pointer rounded border border-[#e5e7eb] px-3 py-1 text-[#111111] transition-colors hover:bg-[#f3f4f6] disabled:cursor-not-allowed disabled:text-[#d1d5db] disabled:hover:bg-transparent"
+                >
+                  Suivant
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -335,6 +363,17 @@ export default function PayoutTrackingPage() {
                   Montant calculé : {Math.round(payoutBase * parseFloat(payoutAmount) / 100 * 100) / 100} DH
                 </p>
               )}
+            </div>
+
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-[#111111] mb-1">Date de paiement</label>
+              <input
+                type="date"
+                value={payoutDate}
+                onChange={(e) => setPayoutDate(e.target.value)}
+                autoComplete="off"
+                className="w-full rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111]"
+              />
             </div>
 
             <div className="mt-4">

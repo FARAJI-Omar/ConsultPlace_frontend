@@ -38,10 +38,12 @@ export interface SubmitTimesheetResponse {
 }
 
 export interface TrackingEntry {
+  paymentId: number;
   timesheetId: number;
   date: string;
   missionTitle: string;
   missionId: number;
+  timesheetMonth: string;
   timesheetStatus: string;
   paymentRef: string;
   paymentAmount: number;

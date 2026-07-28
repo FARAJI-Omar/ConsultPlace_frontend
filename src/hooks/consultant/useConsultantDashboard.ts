@@ -31,12 +31,13 @@ function useConsultantMissionsCount(status?: string) {
   });
 }
 
-export function useConsultantTimesheets() {
+export function useConsultantTimesheets(status?: string) {
   return useQuery({
-    queryKey: ['consultant-timesheets'],
+    queryKey: ['consultant-timesheets', status ?? 'all'],
     queryFn: async () => {
+      const params = status ? `?status=${status}` : '';
       const { data } = await apiClient.get<ApiResponse<Timesheet[]>>(
-        '/consultant/timesheets',
+        `/consultant/timesheets${params}`,
       );
       return data.data;
     },

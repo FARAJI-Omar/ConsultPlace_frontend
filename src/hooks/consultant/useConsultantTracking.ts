@@ -7,10 +7,12 @@ interface TrackingInvoice {
 }
 
 interface TrackingEntry {
+  paymentId: number;
   timesheetId: number;
   date: string;
   missionTitle: string;
   missionId: number;
+  timesheetMonth: string;
   timesheetStatus: string;
   paymentRef: string;
   paymentAmount: number;

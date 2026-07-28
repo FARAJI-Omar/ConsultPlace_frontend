@@ -57,6 +57,7 @@ export default function AllInvoicesPage() {
   const [payoutMode, setPayoutMode] = useState<'DH' | '%'>('DH');
   const [payoutAmount, setPayoutAmount] = useState('');
   const [payoutComment, setPayoutComment] = useState('');
+  const [payoutDate, setPayoutDate] = useState(new Date().toISOString().split('T')[0]);
   const [payoutConsultantId, setPayoutConsultantId] = useState<number | ''>('');
   const [reminderModal, setReminderModal] = useState<Invoice | null>(null);
   const [reminderFrequency, setReminderFrequency] = useState<'7' | '15' | '30'>('15');
@@ -222,7 +223,7 @@ export default function AllInvoicesPage() {
       ? Math.round(payoutBase * parsed / 100 * 100) / 100
       : parsed;
     payoutMutation.mutate(
-      { invoiceId: payoutModal.id, consultantId: Number(payoutConsultantId) || undefined, amount: dhAmount, comment: payoutComment || undefined },
+      { invoiceId: payoutModal.id, consultantId: Number(payoutConsultantId) || undefined, amount: dhAmount, paymentDate: payoutDate, comment: payoutComment || undefined },
       {
         onSuccess: () => {
           toast.success(`Paiement déclenché pour ${payoutModal.ref}`);
@@ -864,6 +865,16 @@ export default function AllInvoicesPage() {
                   Montant calculé : {Math.round(payoutBase * parseFloat(payoutAmount) / 100 * 100) / 100} DH
                 </p>
               )}
+            </div>
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-[#111111] mb-1">Date de paiement</label>
+              <input
+                type="date"
+                value={payoutDate}
+                onChange={(e) => setPayoutDate(e.target.value)}
+                autoComplete="off"
+                className="w-full rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111]"
+              />
             </div>
             <div className="mt-4">
               <label className="block text-sm font-medium text-[#111111] mb-1">Commentaire (optionnel)</label>
