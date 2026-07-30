@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { FileText, Download, Mail, ClipboardList /*, XCircle */ } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import apiClient from '../../../lib/apiClient';
 import { formatDate, truncateFilename } from '../../../lib/utils';
 import { Skeleton } from '../../../components/ui/skeleton';
 import LoadingOverlay from '../../../components/common/LoadingOverlay';
@@ -48,6 +49,12 @@ export default function InvoiceDetailsPage() {
   const [payoutConsultantId, setPayoutConsultantId] = useState<number | ''>('');
   const [showReminderModal, setShowReminderModal] = useState(false);
   const [reminderFrequency, setReminderFrequency] = useState<'7' | '15' | '30'>('15');
+  const [showReceiptModal, setShowReceiptModal] = useState(false);
+  const [receiptTitle, setReceiptTitle] = useState('');
+  const [receiptTitleTouched, setReceiptTitleTouched] = useState(false);
+  const [receiptDate, setReceiptDate] = useState('');
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const [receiptUploading, setReceiptUploading] = useState(false);
   const invoice = data?.data;
 
   const markPaidMutation = useMarkPaid();
@@ -519,7 +526,7 @@ export default function InvoiceDetailsPage() {
           label: g.label,
           items: docs.filter((d) => g.types.includes(d.type)),
         })).concat(others.length > 0 ? [{ label: 'Autres', items: others }] : []);
-        const hasAny = grouped.some((g) => g.items.length > 0);
+        const hasAny = grouped.some((g) => g.items.length > 0) || (invoice.receipts?.length ?? 0) > 0;
         return (
           <div className="rounded-[12px] bg-[#ffffff] border border-[#e5e7eb] p-6">
             <h2 className="mb-4 text-lg font-semibold text-[#111111]">Documents associés</h2>
@@ -566,6 +573,44 @@ export default function InvoiceDetailsPage() {
                       </div>
                     </div>
                   ) : null
+                )}
+                {(invoice.receipts?.length ?? 0) > 0 && (
+                  <div>
+                    <h3 className="mb-3 text-sm font-semibold text-[#111111]">Accusé de réception</h3>
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      {invoice.receipts?.map((receipt) => {
+                        const filename = receipt.filename;
+                        return (
+                          <div
+                            key={receipt.id}
+                            className="flex items-center gap-3 rounded-[8px] border border-[#e5e7eb] bg-[#ffffff] px-4 py-3"
+                          >
+                            <div className="flex h-10 w-10 items-center justify-center rounded-[8px] bg-[#eff6ff]">
+                              <FileText className="h-5 w-5 text-[#3b82f6]" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <a
+                                href={receipt.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="truncate text-xs md:text-sm font-medium text-[#111111] hover:underline"
+                              >
+                                {receipt.title}
+                              </a>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => downloadFile(receipt.url, filename)}
+                              title="Telecharger"
+                              className="cursor-pointer rounded p-2 text-[#6b7280] transition-colors hover:bg-[#4cd64e4d] hover:text-[#111111]"
+                            >
+                              <Download className="h-4 w-4" />
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
                 )}
               </div>
             )}
@@ -615,6 +660,20 @@ export default function InvoiceDetailsPage() {
           <span className="group-hover:hidden">{invoice.isSent ? 'Facture envoyée' : 'Envoyer facture par email'}</span>
           <span className="hidden group-hover:inline">{invoice.isSent ? 'Renvoyer l\'email' : 'Envoyer facture par email'}</span>
         </button>
+        {(invoice.receipts?.length ?? 0) > 0
+          ? (
+            <span className="inline-flex items-center rounded-[8px] bg-green-50 px-3 py-2 text-sm font-medium text-green-700">
+              Accusé de réception ✔
+            </span>
+          )
+          : (
+            <button
+              onClick={() => { setReceiptTitle(`Accusé de réception - facture ${invoice.ref}`); setReceiptTitleTouched(false); setReceiptDate(''); setReceiptFile(null); setShowReceiptModal(true); }}
+              className="inline-flex items-center gap-2 cursor-pointer rounded-[8px] border border-[#e5e7eb] bg-red-100/60 px-4 py-2 text-sm font-medium text-[#111111] transition-colors hover:bg-[#f3f4f6]"
+            >
+              Accusé de réception
+            </button>
+          )}
         {(invoice.status === 'PENDING' || invoice.status === 'PARTIAL_PAID') && (
           <>
             <button
@@ -856,6 +915,103 @@ export default function InvoiceDetailsPage() {
               <button onClick={() => setConfirmEmail(false)} className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-4 py-2 text-sm text-[#111111] transition-colors hover:bg-[#f3f4f6]">Annuler</button>
               <button onClick={handleEmail} disabled={emailMutation.isPending} className="cursor-pointer rounded-[8px] bg-[#3b82f6] px-4 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-90 disabled:opacity-50">
                 {emailMutation.isPending ? 'Envoi...' : 'Confirmer'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showReceiptModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div className="w-full max-w-md rounded-[12px] bg-[#ffffff] p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <h2 className="mb-4 text-lg font-semibold text-[#111111]">Accusé de réception</h2>
+            <p className="mb-4 text-sm text-[#6b7280]">Facture {invoice.ref}</p>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-[#111111] mb-1">Titre</label>
+              <input
+                type="text"
+                value={receiptTitle}
+                onChange={(e) => { setReceiptTitle(e.target.value); setReceiptTitleTouched(true); }}
+                onBlur={() => setReceiptTitleTouched(true)}
+                className="w-full rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111]"
+              />
+              {receiptTitleTouched && !receiptTitle.trim() && <p className="mt-1 text-xs text-red-500">Le titre est requis</p>}
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-[#111111] mb-1">Date (optionnelle)</label>
+              <input
+                type="date"
+                value={receiptDate}
+                onChange={(e) => setReceiptDate(e.target.value)}
+                className="w-full rounded-[8px] border border-[#e5e7eb] px-3 py-2 text-sm text-[#111111] focus:outline-none focus:border-[#111111]"
+              />
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-[#111111] mb-1">Document</label>
+              {receiptFile ? (
+                <div className="flex items-center gap-3 rounded-[8px] border border-[#e5e7eb] bg-[#ffffff] px-4 py-3">
+                  <FileText className="h-5 w-5 text-[#3b82f6]" />
+                  <span className="flex-1 truncate text-sm text-[#111111]">{receiptFile.name}</span>
+                  <button
+                    onClick={() => setReceiptFile(null)}
+                    className="cursor-pointer text-sm text-[#ef4444] hover:underline"
+                  >
+                    Retirer 
+                  </button>
+                </div>
+              ) : (
+                <div
+                  onDragOver={(e) => { e.preventDefault(); e.currentTarget.style.borderColor = '#3b82f6'; }}
+                  onDragLeave={(e) => { e.currentTarget.style.borderColor = '#d1d5db'; }}
+                  onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) setReceiptFile(f); }}
+                  onClick={() => document.getElementById('detail-receipt-file-input')?.click()}
+                  className="flex cursor-pointer flex-col items-center gap-2 rounded-[8px] border-2 border-dashed border-[#d1d5db] p-4 text-center transition-colors hover:border-[#3b82f6]"
+                >
+                  <p className="text-xs text-[#6b7280]">Glissez-déposez un fichier ici</p>
+                  <p className="text-xs text-[#9ca3af]">ou cliquez pour sélectionner</p>
+                  <p className="mt-1 text-xs text-[#9ca3af]">PDF, JPG, PNG (max 10 Mo)</p>
+                </div>
+              )}
+              <input
+                id="detail-receipt-file-input"
+                type="file"
+                accept=".pdf,.jpg,.jpeg,.png"
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) setReceiptFile(f); }}
+                className="hidden"
+              />
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <button onClick={() => { setShowReceiptModal(false); setReceiptFile(null); }} className="cursor-pointer rounded-[8px] border border-[#e5e7eb] px-4 py-2 text-sm text-[#111111] transition-colors hover:bg-[#f3f4f6]">Annuler</button>
+              <button
+                onClick={async () => {
+                  if (!receiptFile) return;
+                  setReceiptUploading(true);
+                  try {
+                    const formData = new FormData();
+                    formData.append('file', receiptFile);
+                    formData.append('title', receiptTitle);
+                    if (receiptDate) formData.append('date', receiptDate);
+                    await apiClient.post(`/invoices/${invoice.id}/receipt`, formData, {
+                      headers: { 'Content-Type': 'multipart/form-data' },
+                    });
+                    toast.success('Accusé de réception enregistré');
+                    queryClient.invalidateQueries({ queryKey: ['invoices', invoice.id] });
+                    setShowReceiptModal(false);
+                    setReceiptFile(null);
+                  } catch (err: any) {
+                    toast.error(err?.response?.data?.error?.message ?? "Erreur lors de l'envoi");
+                  } finally {
+                    setReceiptUploading(false);
+                  }
+                }}
+                disabled={!receiptFile || !receiptTitle.trim() || receiptUploading}
+                className="cursor-pointer rounded-[8px] bg-[#3b82f6] px-4 py-2 text-sm font-medium text-[#ffffff] transition-opacity hover:opacity-90 disabled:opacity-50"
+              >
+                {receiptUploading ? 'Envoi...' : 'Confirmer'}
               </button>
             </div>
           </div>

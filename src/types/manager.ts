@@ -128,6 +128,16 @@ export interface Invoice {
   months?: string[];
   delai?: number;
   bdcConsumptions?: { id: number; invoiceId: number; timesheetId: number; bdcId: number; daysConsumed: number; bdc?: { id: number; bdc: string } }[];
+  receipts?: InvoiceReceipt[];
+}
+
+export interface InvoiceReceipt {
+  id: number;
+  title: string;
+  date: string | null;
+  url: string;
+  filename: string;
+  uploadedAt: string;
 }
 
 export interface PaymentRecord {
