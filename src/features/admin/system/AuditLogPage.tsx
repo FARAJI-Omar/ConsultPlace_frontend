@@ -133,7 +133,7 @@ export default function AuditLogPage() {
     {
       key: 'userEmail',
       label: 'Utilisateur',
-      render: (item) => item.details?.userName ? item.details.userName as string : item.userEmail.split('@')[0],
+      render: (item) => item.details?.['Nom utilisateur'] ? item.details['Nom utilisateur'] as string : item.userEmail.split('@')[0],
     },
     {
       key: 'userRole',
@@ -304,8 +304,8 @@ export default function AuditLogPage() {
                 value={
                   <span className="space-y-0.5">
                     <div><span className="text-[#8b92a1]">Email</span> {selectedEntry.userEmail}</div>
-                    {!!selectedEntry.details?.userName && (
-                      <div><span className="text-[#8b92a1]">Nom</span> {String(selectedEntry.details.userName)}</div>
+                    {!!selectedEntry.details?.['Nom utilisateur'] && (
+                      <div><span className="text-[#8b92a1]">Nom</span> {String(selectedEntry.details['Nom utilisateur'])}</div>
                     )}
                     {selectedEntry.userIp && <div><span className="text-[#8b92a1]">IP</span> {selectedEntry.userIp}</div>}
                   </span>
