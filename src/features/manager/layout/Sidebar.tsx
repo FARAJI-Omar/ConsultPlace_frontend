@@ -10,6 +10,7 @@ import {
   Activity,
   TrendingUp,
   ClipboardList,
+  ClipboardClock,
   PanelLeftClose,
   PanelLeftOpen,
   type LucideIcon,
@@ -37,6 +38,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Bons de commande', path: '/manager/bons-de-commande', icon: ClipboardList },
   { label: 'Paiements consultants', path: '/manager/payouts', icon: Wallet },
   { label: 'Suivi Global', path: '/manager/tracking', icon: Activity },
+  { label: "Suivi d'avancement", path: '/manager/progress', icon: ClipboardClock },
   { label: 'Prévisions et Rentabilité ', path: '/manager/forecasts', icon: TrendingUp },
 ];
 

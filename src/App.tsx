@@ -34,6 +34,7 @@ import InvoiceDetailsPage from './features/manager/invoices/InvoiceDetailsPage';
 import PartialPaymentsPage from './features/manager/invoices/PartialPaymentsPage';
 import PayoutTrackingPage from './features/manager/payouts/PayoutTrackingPage';
 import GlobalTrackingPage from './features/manager/tracking/GlobalTrackingPage';
+import MissionsProgressPage from './features/manager/tracking/MissionsProgressPage';
 import ForecastsPage from './features/manager/tracking/ForecastsPage';
 import ManagerBdcPage from './features/manager/bdc/ManagerBdcPage';
 import ManagerBdcDetailPage from './features/manager/bdc/ManagerBdcDetailPage';
@@ -133,6 +134,7 @@ const router = createBrowserRouter([
               { path: 'bons-de-commande', element: <ManagerBdcPage /> },
               { path: 'bons-de-commande/:id', element: <ManagerBdcDetailPage /> },
               { path: 'tracking', element: <GlobalTrackingPage /> },
+              { path: 'progress', element: <MissionsProgressPage /> },
               { path: 'forecasts', element: <ForecastsPage /> },
             ],
           },

@@ -321,3 +321,21 @@ export interface JobStatusResponse {
     lastError?: string;
   };
 }
+
+export interface MissionsProgressRow {
+  missionId: number;
+  client: string;
+  mission: string;
+  consultantId: number;
+  consultantName: string;
+  month: string;
+  relevDate: string | null;
+  relevRejected: boolean;
+  invoiceDate: string | null;
+  invoiceRef: string | null;
+  invoiceId: number | null;
+  invoicePaidDate: string | null;
+  invoicePaidPct: number | null;
+  consultantPaidDate: string | null;
+  consultantPaidPct: number | null;
+}
