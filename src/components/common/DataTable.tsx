@@ -1,10 +1,17 @@
 import { memo, useCallback, useState } from 'react';
+import { ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
 import type { Pagination } from '../../types/api';
 
 export interface Column<T> {
   key: string;
   label: React.ReactNode;
   render?: (item: T, index: number) => React.ReactNode;
+  sortValue?: (item: T) => string | number | null;
+}
+
+export interface TableSort {
+  key: string;
+  direction: 'asc' | 'desc';
 }
 
 interface DataTableProps<T> {
@@ -16,6 +23,8 @@ interface DataTableProps<T> {
   emptyMessage?: string;
   onPageChange: (page: number) => void;
   onPageSizeChange: (pageSize: number) => void;
+  sort?: TableSort;
+  onSortChange?: (key: string, direction: 'asc' | 'desc') => void;
 }
 
 const PAGE_SIZES = [10, 20, 50];
@@ -29,6 +38,8 @@ function DataTableInner<T>({
   emptyMessage = 'Aucune donnée',
   onPageChange,
   onPageSizeChange,
+  sort,
+  onSortChange,
 }: DataTableProps<T>) {
   const [selectedRow, setSelectedRow] = useState<number | null>(null);
 
@@ -96,7 +107,22 @@ function DataTableInner<T>({
           <tr className="border-b border-[#e5e7eb]">
             {columns.map((col, idx) => (
               <th key={col.key} className={`${headerClass}${col.key === 'actions' ? ` ${lastColClass} bg-[#E1E2ED] text-center` : idx === columns.length - 1 ? ` ${lastColClass} text-center` : ''}`}>
-                {col.label}
+                {col.sortValue ? (
+                  <button
+                    type="button"
+                    onClick={() => onSortChange?.(col.key, sort?.key === col.key && sort.direction === 'asc' ? 'desc' : 'asc')}
+                    className="inline-flex w-full cursor-pointer items-center justify-between gap-1"
+                  >
+                    {col.label}
+                    {sort?.key === col.key ? (
+                      sort.direction === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />
+                    ) : (
+                      <ChevronsUpDown size={12} className="text-[#b6bac4]" />
+                    )}
+                  </button>
+                ) : (
+                  col.label
+                )}
               </th>
             ))}
           </tr>

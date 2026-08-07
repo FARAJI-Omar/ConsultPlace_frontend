@@ -56,37 +56,70 @@ export default function MissionsProgressPage() {
       .filter((r) => !clientFilter || r.client === clientFilter)
       .filter((r) => !missionFilter || r.mission === missionFilter)
       .filter((r) => !consultantFilter || r.consultantName === consultantFilter)
-      .filter((r) => !monthFilter || r.month.slice(0, 7) === monthFilter)
-      .sort(
-        (a, b) =>
-          a.client.localeCompare(b.client) ||
-          a.mission.localeCompare(b.mission) ||
-          b.month.localeCompare(a.month),
-      );
+      .filter((r) => !monthFilter || r.month.slice(0, 7) === monthFilter);
   }, [rows, clientFilter, missionFilter, consultantFilter, monthFilter]);
 
-  const totalPages = Math.max(1, Math.ceil(filteredRows.length / pageSize));
-  const paginatedRows = filteredRows.slice((page - 1) * pageSize, page * pageSize);
+  const [sortKey, setSortKey] = useState<string>('month');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+
+  const SORT_ACCESSORS: Record<string, (r: MissionsProgressRow) => string | number | null> = {
+    client: (r) => r.client,
+    mission: (r) => r.mission,
+    consultant: (r) => r.consultantName,
+    month: (r) => r.month,
+    relevDate: (r) => r.relevDate,
+    invoiceDate: (r) => r.invoiceDate,
+    invoiceRef: (r) => r.invoiceRef,
+    invoicePaidDate: (r) => r.invoicePaidDate,
+    consultantPaidDate: (r) => r.consultantPaidDate,
+  };
+
+  const sortRows = (a: MissionsProgressRow, b: MissionsProgressRow): number => {
+    const x = SORT_ACCESSORS[sortKey]?.(a) ?? null;
+    const y = SORT_ACCESSORS[sortKey]?.(b) ?? null;
+    if (x === null && y === null) return 0;
+    if (x === null) return 1;
+    if (y === null) return -1;
+    if (typeof x === 'string' && typeof y === 'string') return x.localeCompare(y, undefined, { numeric: true });
+    return Number(x) - Number(y);
+  };
+
+  const sortedRows = useMemo(() => {
+    const result = [...filteredRows];
+    result.sort((a, b) => (sortDir === 'asc' ? sortRows(a, b) : sortRows(b, a)));
+    return result;
+  }, [filteredRows, sortKey, sortDir]);
+
+  const totalPages = Math.max(1, Math.ceil(sortedRows.length / pageSize));
+  const paginatedRows = sortedRows.slice((page - 1) * pageSize, page * pageSize);
 
   const changeFilter = (setter: (v: string) => void, v: string) => {
     setter(v);
     setPage(1);
   };
 
+  const handleSortChange = (key: string, direction: 'asc' | 'desc') => {
+    setSortKey(key);
+    setSortDir(direction);
+    setPage(1);
+  };
+
   const columns: Column<MissionsProgressRow>[] = [
-    { key: 'client', label: 'Client', render: (r) => <span className="inline-block rounded-full px-2.5 py-0.5 text-sm font-semibold bg-[#eff6ff] text-[#3b82f6]">{r.client}</span> },
-    { key: 'mission', label: 'Mission', render: (r) => r.mission },
+    { key: 'client', label: 'Client', sortValue: (r) => r.client, render: (r) => <span className="inline-block rounded-full px-2.5 py-0.5 text-sm font-semibold bg-[#eff6ff] text-[#3b82f6]">{r.client}</span> },
+    { key: 'mission', label: 'Mission', sortValue: (r) => r.mission, render: (r) => r.mission },
     {
       key: 'consultant',
       label: 'Consultant',
+      sortValue: (r) => r.consultantName,
       render: (r) => (
         <span className="inline-block rounded-full px-2.5 py-0.5 text-xs font-medium bg-[#f5f3ff] text-[#7c3aed]">{r.consultantName}</span>
       ),
     },
-    { key: 'month', label: 'Mois', render: (r) => <span className="text-[#6b7280]">{monthLabel(r.month)}</span> },
+    { key: 'month', label: 'Mois', sortValue: (r) => r.month, render: (r) => <span className="text-[#6b7280]">{monthLabel(r.month)}</span> },
     {
       key: 'relevDate',
       label: 'Relevé reçu',
+      sortValue: (r) => r.relevDate,
       render: (r) =>
         r.relevDate ? (
           <span className="flex items-center gap-2">
@@ -97,10 +130,11 @@ export default function MissionsProgressPage() {
           pendingLabel()
         ),
     },
-    { key: 'invoiceDate', label: 'Facture envoyée', render: (r) => (r.invoiceDate ? highlightDate(r.invoiceDate) : pendingLabel()) },
+    { key: 'invoiceDate', label: 'Facture envoyée', sortValue: (r) => r.invoiceDate, render: (r) => (r.invoiceDate ? highlightDate(r.invoiceDate) : pendingLabel()) },
     {
       key: 'invoiceRef',
       label: 'Référence',
+      sortValue: (r) => r.invoiceRef,
       render: (r) =>
         r.invoiceRef && r.invoiceId ? (
           <span className="flex justify-center">
@@ -113,6 +147,7 @@ export default function MissionsProgressPage() {
     {
       key: 'invoicePaidDate',
       label: 'Facture payée',
+      sortValue: (r) => r.invoicePaidDate,
       render: (r) =>
         <span className="flex justify-center">
           {r.invoicePaidDate ? highlightDate(r.invoicePaidDate)
@@ -124,6 +159,7 @@ export default function MissionsProgressPage() {
     {
       key: 'consultantPaidDate',
       label: 'Consultant payé',
+      sortValue: (r) => r.consultantPaidDate,
       render: (r) =>
         <span className="flex justify-center">
           {r.consultantPaidDate ? highlightDate(r.consultantPaidDate)
@@ -205,12 +241,14 @@ export default function MissionsProgressPage() {
         <DataTable
           columns={columns}
           data={paginatedRows}
-          pagination={{ totalItems: filteredRows.length, totalPages, currentPage: page, itemsPerPage: pageSize }}
+          pagination={{ totalItems: sortedRows.length, totalPages, currentPage: page, itemsPerPage: pageSize }}
           isLoading={false}
-          isEmpty={filteredRows.length === 0}
+          isEmpty={sortedRows.length === 0}
           emptyMessage="Aucune donnée pour ces critères"
           onPageChange={setPage}
           onPageSizeChange={(s) => { setPageSize(s); setPage(1); }}
+          sort={{ key: sortKey, direction: sortDir }}
+          onSortChange={handleSortChange}
         />
       </div>
     </div>
