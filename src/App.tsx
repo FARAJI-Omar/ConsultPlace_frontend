@@ -38,6 +38,7 @@ import MissionsProgressPage from './features/manager/tracking/MissionsProgressPa
 import ForecastsPage from './features/manager/tracking/ForecastsPage';
 import ManagerBdcPage from './features/manager/bdc/ManagerBdcPage';
 import ManagerBdcDetailPage from './features/manager/bdc/ManagerBdcDetailPage';
+import DocumentsPage from './features/manager/documents/DocumentsPage';
 import ManagerLayout from './features/manager/layout/ManagerLayout';
 import ConsultantLayout from './features/consultant/layout/ConsultantLayout';
 import ConsultantDashboard from './features/consultant/dashboard/ConsultantDashboard';
@@ -133,6 +134,7 @@ const router = createBrowserRouter([
               { path: 'payouts', element: <PayoutTrackingPage /> },
               { path: 'bons-de-commande', element: <ManagerBdcPage /> },
               { path: 'bons-de-commande/:id', element: <ManagerBdcDetailPage /> },
+              { path: 'documents', element: <DocumentsPage /> },
               { path: 'tracking', element: <GlobalTrackingPage /> },
               { path: 'progress', element: <MissionsProgressPage /> },
               { path: 'forecasts', element: <ForecastsPage /> },
