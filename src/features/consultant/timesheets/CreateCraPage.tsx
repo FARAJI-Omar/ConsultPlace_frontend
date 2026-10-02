@@ -34,9 +34,9 @@ export default function CreateCraPage() {
           !
         </button>
         {showHint && (
-          <div ref={hintRef} className="absolute left-20 top-full mt-2 bg-white border border-[#ff0000] rounded-lg shadow-lg p-6 text-sm text-[#6b7280] z-10 max-w-xs">
-            -0h pour les jours non travaillés.<br />
-            -4h ou moins pour une demi-journée.
+          <div ref={hintRef} className="absolute left-20 top-full mt-2 bg-white border border-[#ff0000] rounded-lg shadow-lg p-6 text-sm text-[#6b7280] z-10 ">
+            -Cliquez sur un jour : "Complet" = journée complète, <br />"Demi" = demi-journée,<br />
+            -"—" = jour non travaillé. <br />-Un 3ᵉ clic réinitialise le jour.
           </div>
         )}
       </div>

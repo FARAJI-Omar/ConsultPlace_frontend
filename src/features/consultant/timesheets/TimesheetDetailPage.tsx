@@ -120,17 +120,29 @@ export default function TimesheetDetailPage() {
             }
             const hours = entriesByDay[day];
             const hasEntry = hours !== undefined;
+            const isHalf = hasEntry && hours <= 4;
             return (
               <div
                 key={day}
                 className={`rounded-[6px] py-1 md:py-2 text-sm ${
-                  hasEntry
-                    ? 'bg-[#3b82f6] font-medium text-[#ffffff]'
-                    : 'bg-[#f5f5f5c5] text-[#6b7280]'
+                  !hasEntry
+                    ? 'bg-[#f5f5f5c5] text-[#6b7280]'
+                    : isHalf
+                      ? 'font-medium text-[#111111]'
+                      : 'bg-[#16a34a] font-medium text-[#ffffff]'
                 }`}
+                style={
+                  isHalf
+                    ? { background: 'linear-gradient(to right, #4ade80 0%, #4ade80 50%, #ffffff 50%, #ffffff 100%)' }
+                    : undefined
+                }
               >
                 <div>{day}</div>
-                {hasEntry && <div className="text-sm font-bold opacity-80">{hours}h</div>}
+                {hasEntry && (
+                  <div className="hidden md:block text-xs font-bold">
+                    {isHalf ? 'Demi' : 'Complet'}
+                  </div>
+                )}
               </div>
             );
           })}

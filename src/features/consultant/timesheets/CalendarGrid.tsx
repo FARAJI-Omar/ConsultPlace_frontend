@@ -90,6 +90,28 @@ export default function CalendarGrid({ year, month, entries, holidays, touchedDa
     return '#f3f4f6';
   }
 
+  function getStateText(hours: number): string {
+    if (hours <= 0) return '—';
+    if (hours <= 4) return 'Demi';
+    return 'Complet';
+  }
+
+  function getStateStyle(hours: number): { background: string; color: string } {
+    if (hours <= 0) return { background: '#ffffff', color: '#9ca3af' };
+    if (hours <= 4) {
+      return {
+        background: 'linear-gradient(to right, #4ade80 0%, #4ade80 50%, #ffffff 50%, #ffffff 100%)',
+        color: '#111111',
+      };
+    }
+    return { background: '#16a34a', color: '#ffffff' };
+  }
+
+  const totalDays = useMemo(
+    () => Object.values(entries).reduce((s, h) => s + (h > 0 ? (h <= 4 ? 0.5 : 1) : 0), 0),
+    [entries],
+  );
+
   return (
     <div className="space-y-2">
       <div className="grid grid-cols-7 gap-px">
@@ -132,18 +154,20 @@ export default function CalendarGrid({ year, month, entries, holidays, touchedDa
                   <span className="text-[10px] leading-tight text-center text-[#6b7280] truncate w-full" title={holidayName}>{holidayName}</span>
                 )}
                 <div className="w-full">
-                  <input
-                    type="number"
-                    min={0}
-                    max={24}
-                    step={0.5}
-                    value={value}
-                    onChange={(e) => {
-                      const v = parseFloat(e.target.value);
-                      onChange(dayKey, isNaN(v) || v < 0 ? 0 : Math.min(v, 24));
-                    }}
-                    className="w-full rounded-[4px] border border-[#e5e7eb] bg-[#ffffff] px-1.5 py-1.5 text-center text-[12px] font-bold text-black focus:border-[#111111] focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                  />
+                  <button
+                    type="button"
+                    onClick={() => onChange(dayKey, value <= 0 ? 4 : value <= 4 ? 8 : 0)}
+                    aria-label={`Jour ${day} — ${getStateText(value)}`}
+                    className="w-full cursor-pointer rounded-[4px] border border-[#e5e7eb] px-1.5 py-1.5 text-center text-[10px] md:text-xs font-bold transition-opacity hover:opacity-80 focus:border-[#111111] focus:outline-none"
+                    style={getStateStyle(value)}
+                  >
+                    {value <= 0 ? '—' : (
+                      <>
+                        <span className="hidden md:inline">{getStateText(value)}</span>
+                        <span className="md:hidden">&nbsp;</span>
+                      </>
+                    )}
+                  </button>
                 </div>
               </div>
             );
@@ -151,8 +175,14 @@ export default function CalendarGrid({ year, month, entries, holidays, touchedDa
         )}
       </div>
 
-      <div className="flex items-center justify-end gap-1.5 text-right">
-        <span className="text-xs text-[#6b7280]">Total des heures :</span>
+      <div className="flex items-center justify-end gap-1.5 text-right pr-4">
+        <span className="text-sm text-[#5b5c5f]">Total des jours :</span>
+        <span className="text-xs md:text-sm font-semibold text-[#111111]">
+          {Number.isInteger(totalDays) ? totalDays : totalDays.toFixed(1).replace('.', ',')}j
+        </span>
+      </div>
+      <div className="flex items-center justify-end gap-1.5 text-right pr-4">
+        <span className="text-sm text-[#5b5c5f]">Total des heures :</span>
         <span className="text-xs md:text-sm font-semibold text-[#111111]">{totalHours}h</span>
       </div>
 

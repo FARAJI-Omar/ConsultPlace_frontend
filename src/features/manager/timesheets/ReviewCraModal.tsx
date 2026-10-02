@@ -151,17 +151,29 @@ export default function ReviewCraModal({ timesheetId, open, onClose }: ReviewCra
                     }
                     const hours = entriesByDay[day];
                     const hasEntry = hours !== undefined;
+                    const isHalf = hasEntry && hours <= 4;
                     return (
                       <div
                         key={day}
                         className={`rounded-[6px] py-2 text-sm ${
-                          hasEntry
-                            ? 'bg-[#3b82f6] font-medium text-[#ffffff]'
-                            : 'bg-[#f3f4f6] text-[#6b7280]'
+                          !hasEntry
+                            ? 'bg-[#f3f4f6] text-[#6b7280]'
+                            : isHalf
+                              ? 'font-medium text-[#111111]'
+                              : 'bg-[#3b82f6] font-medium text-[#ffffff]'
                         }`}
+                        style={
+                          isHalf
+                            ? { background: 'linear-gradient(to right, #60a5fa 0%, #60a5fa 50%, #ffffff 50%, #ffffff 100%)' }
+                            : undefined
+                        }
                       >
                         <div>{day}</div>
-                        {hasEntry && <div className="text-[16px] font-bold opacity-80">{hours}h</div>}
+                        {hasEntry && (
+                          <div className="hidden md:block text-xs font-bold">
+                            {isHalf ? 'Demi' : 'Complet'}
+                          </div>
+                        )}
                       </div>
                     );
                   })}
