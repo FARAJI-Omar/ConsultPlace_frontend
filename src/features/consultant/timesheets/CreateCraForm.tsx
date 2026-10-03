@@ -9,6 +9,7 @@ import { useMoroccoHolidays } from '../../../hooks/consultant/useMoroccoHolidays
 import { truncateFilename } from '../../../lib/utils';
 import { Loader2, CalendarX2, Send, Delete } from 'lucide-react';
 import CalendarGrid from './CalendarGrid';
+import PrintReleveButton from './PrintReleveButton';
 import LoadingOverlay from '../../../components/common/LoadingOverlay';
 import type { DailyEntry } from '../../../types/models';
 
@@ -367,6 +368,7 @@ export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?:
   }
 
   const missions = (missionsData?.data ?? []).filter((m) => m.canCreateTimesheet);
+  const selectedMission = selectedMissionId !== null ? missions.find((m) => m.id === selectedMissionId) : undefined;
 
   useEffect(() => {
     if (!missionsLoading && selectedMissionId !== null && !missions.find((m) => m.id === selectedMissionId)) {
@@ -441,6 +443,16 @@ export default function CreateCraForm({ defaultMissionId }: { defaultMissionId?:
         touchedDays={touchedDays}
         totalHours={totalHours}
         onChange={handleEntryChange}
+        printButton={
+          <PrintReleveButton
+            year={selectedYear}
+            month={selectedMonth}
+            entries={entries}
+            missionTitle={selectedMission?.title ?? ''}
+            clientName={selectedMission?.contract.client.raison_sociale ?? ''}
+            disabled={!selectedMissionId}
+          />
+        }
       />
 
       <div className="space-y-4">

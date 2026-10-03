@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState, useEffect } from 'react';
+import type { ReactNode } from 'react';
 import type { HolidayInfo } from '../../../hooks/consultant/useMoroccoHolidays';
 
 const DAY_HEADERS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
@@ -28,10 +29,11 @@ export interface CalendarGridProps {
   holidays: HolidayInfo[];
   touchedDays: Set<string>;
   totalHours?: number;
+  printButton?: ReactNode;
   onChange: (dayKey: string, hours: number) => void;
 }
 
-export default function CalendarGrid({ year, month, entries, holidays, touchedDays, totalHours: totalHoursProp, onChange }: CalendarGridProps) {
+export default function CalendarGrid({ year, month, entries, holidays, touchedDays, totalHours: totalHoursProp, printButton, onChange }: CalendarGridProps) {
   const [tooltip, setTooltip] = useState<{ text: string; top: number; left: number } | null>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
 
@@ -175,15 +177,20 @@ export default function CalendarGrid({ year, month, entries, holidays, touchedDa
         )}
       </div>
 
-      <div className="flex items-center justify-end gap-1.5 text-right pr-4">
-        <span className="text-sm text-[#5b5c5f]">Total des jours :</span>
-        <span className="text-xs md:text-sm font-semibold text-[#111111]">
-          {Number.isInteger(totalDays) ? totalDays : totalDays.toFixed(1).replace('.', ',')}j
-        </span>
-      </div>
-      <div className="flex items-center justify-end gap-1.5 text-right pr-4">
-        <span className="text-sm text-[#5b5c5f]">Total des heures :</span>
-        <span className="text-xs md:text-sm font-semibold text-[#111111]">{totalHours}h</span>
+      <div className="flex items-center justify-between gap-3">
+        <div>{printButton}</div>
+        <div>
+          <div className="flex items-center justify-end gap-1.5 text-right pr-4">
+            <span className="text-sm text-[#5b5c5f]">Total des jours :</span>
+            <span className="text-xs md:text-sm font-semibold text-[#111111]">
+              {Number.isInteger(totalDays) ? totalDays : totalDays.toFixed(1).replace('.', ',')}j
+            </span>
+          </div>
+          <div className="flex items-center justify-end gap-1.5 text-right pr-4">
+            <span className="text-sm text-[#5b5c5f]">Total des heures :</span>
+            <span className="text-xs md:text-sm font-semibold text-[#111111]">{totalHours}h</span>
+          </div>
+        </div>
       </div>
 
       {tooltip && (

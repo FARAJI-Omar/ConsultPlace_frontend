@@ -1,9 +1,11 @@
 import { useState, useCallback, useMemo } from 'react';
 import { toast } from 'sonner';
 import { useTimesheetById } from '../../../hooks/consultant/useTimesheets';
+import { useConsultantMissions } from '../../../hooks/consultant/useConsultantMissions';
 import { useUpdateTimesheet } from '../../../hooks/consultant/useUpdateTimesheet';
 import { useMoroccoHolidays } from '../../../hooks/consultant/useMoroccoHolidays';
 import CalendarGrid from './CalendarGrid';
+import PrintReleveButton from './PrintReleveButton';
 import LoadingOverlay from '../../../components/common/LoadingOverlay';
 
 const monthNames = [
@@ -29,6 +31,7 @@ function buildTouchedSet(
 
 export default function EditCraForm({ timesheetId, onClose }: { timesheetId: number; onClose: () => void }) {
   const { data: timesheet, isLoading } = useTimesheetById(timesheetId);
+  const { data: missionsData } = useConsultantMissions({ limit: 500 });
   const updateTimesheet = useUpdateTimesheet();
   const holidays = useMoroccoHolidays(timesheet ? parseInt(timesheet.month.split('-')[0], 10) : new Date().getFullYear());
 
@@ -40,6 +43,7 @@ export default function EditCraForm({ timesheetId, onClose }: { timesheetId: num
 
   const year = timesheet ? parseInt(timesheet.month.split('-')[0], 10) : 0;
   const month = timesheet ? parseInt(timesheet.month.split('-')[1], 10) - 1 : 0;
+  const editMission = missionsData?.data.find((m) => m.id === timesheet?.missionId);
 
   const totalHours = useMemo(
     () => Object.values(initializedEntries).reduce((s, h) => s + h, 0),
@@ -122,6 +126,15 @@ export default function EditCraForm({ timesheetId, onClose }: { timesheetId: num
         touchedDays={initializedTouched}
         totalHours={totalHours}
         onChange={handleChange}
+        printButton={
+          <PrintReleveButton
+            year={year}
+            month={month}
+            entries={initializedEntries}
+            missionTitle={timesheet.mission?.title ?? ''}
+            clientName={editMission?.contract.client.raison_sociale ?? ''}
+          />
+        }
       />
 
       <div className="flex items-center justify-end gap-3 pt-2">
