@@ -107,12 +107,12 @@ function PrintSheet({ year, month, entries, missionTitle, clientName, onClose }:
     setSaving(true);
     try {
       el.classList.add('cra-capturing');
-      const { toPng } = await import('html-to-image');
+      const { toJpeg } = await import('html-to-image');
       const { jsPDF } = await import('jspdf');
-      const dataUrl = await toPng(el, { pixelRatio: 2, backgroundColor: '#ffffff' });
+      const dataUrl = await toJpeg(el, { pixelRatio: 2, quality: 0.85, backgroundColor: '#ffffff' });
       el.classList.remove('cra-capturing');
-      const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
-      pdf.addImage(dataUrl, 'PNG', 0, 0, 297, 210);
+      const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4', compress: true });
+      pdf.addImage(dataUrl, 'JPEG', 0, 0, 297, 210);
       pdf.save(`releve-${String(month + 1).padStart(2, '0')}-${year}.pdf`);
     } catch {
       sheetRef.current?.classList.remove('cra-capturing');
