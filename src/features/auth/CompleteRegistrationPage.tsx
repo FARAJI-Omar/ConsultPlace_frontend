@@ -5,7 +5,7 @@ import { useMutation } from '@tanstack/react-query';
 import { useDispatch } from 'react-redux';
 import { clearCredentials } from '../../store/authSlice';
 import apiClient from '../../lib/apiClient';
-import newLogo from '../../assets/new-logo.png';
+import newLogo from '../../assets/new-logo2.png';
 import type { CompleteRegistrationPayload, CompleteRegistrationResponse } from '../../types/auth';
 import PasswordStrengthIndicator from '../../components/ui/PasswordStrengthIndicator';
 

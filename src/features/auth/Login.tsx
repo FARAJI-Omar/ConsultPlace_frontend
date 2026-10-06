@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 import { useLoginMutation } from './useLoginMutation';
-import newLogo from '../../assets/new-logo.png';
+import newLogo from '../../assets/new-logo2.png';
 
 interface FieldErrors {
   email?: string;

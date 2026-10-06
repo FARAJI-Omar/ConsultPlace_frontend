@@ -3,7 +3,7 @@ import type { ChangeEvent } from 'react';
 import { toast } from 'sonner';
 import { Printer, Pencil, Upload, X, Download, Loader2 } from 'lucide-react';
 import { useConsultantProfile } from '../../../hooks/consultant/useConsultantProfile';
-import newLogo from '../../../assets/new-logo.png';
+import newLogo from '../../../assets/new-logo2.png';
 
 const monthNames = [
   'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',

@@ -6,7 +6,7 @@ import { store } from './store';
 import AuthBootstrap from './components/common/AuthBootstrap';
 import App from './App';
 import './index.css';
-import favicon from './assets/favicon.ico';
+import favicon from './assets/favicon2.ico';
 
 const link = document.createElement('link');
 link.rel = 'icon';

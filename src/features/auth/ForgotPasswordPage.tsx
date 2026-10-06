@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Mail } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
 import apiClient from '../../lib/apiClient';
-import newLogo from '../../assets/new-logo.png';
+import newLogo from '../../assets/new-logo2.png';
 import type { ForgotPasswordPayload } from '../../types/auth';
 
 export default function ForgotPasswordPage() {

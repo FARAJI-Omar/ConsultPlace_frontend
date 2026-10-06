@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom';
-import smallLogo from '../../../assets/small_logo.png';
-import collapsedLogo from '../../../assets/collapsed_logo.png';
+import smallLogo from '../../../assets/small-logo2.png';
+import collapsedLogo from '../../../assets/collapsed-logo2.png';
 import {
   LayoutDashboard,
   Briefcase,
@@ -91,7 +91,7 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
         } lg:sticky lg:translate-x-0`}
       >
         <div className={`flex h-16 items-center border-b border-[#e5e7eb] shrink-0 ${collapsed ? 'justify-center px-0' : 'justify-between px-4 pt-2'}`}>
-          {collapsed ? <img src={collapsedLogo} alt="ConsultPlace" className="h-8 w-8" /> : <img src={smallLogo} alt="ConsultPlace" className="h-26 w-38" />}
+          {collapsed ? <img src={collapsedLogo} alt="ConsultPlace" className="h-8 w-8" /> : <img src={smallLogo} alt="ConsultPlace" className="h-auto w-38 object-contain" />}
           <button
             onClick={() => { onClose(); }}
             className={`cursor-pointer rounded p-1 text-[#6b7280] hover:bg-[#f3f4f6] lg:hidden ${collapsed ? 'mx-auto' : ''}`}
